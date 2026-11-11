@@ -1,0 +1,69 @@
+---
+// Planche de contrôle (développement uniquement) : toutes les étapes d'une scène à t = 0,05 / 0,5 / 1.
+// Sert à vérifier une scène d'un seul coup d'œil : node scripts/capture.mjs /dev/planche/<slug>/
+import '../../../styles/global.css';
+import '../../../styles/lecteur.css';
+
+export function getStaticPaths() {
+  if (import.meta.env.PROD) return [];
+  return Object.keys(import.meta.glob('../../../tp/*/scene.ts')).map((k) => ({ params: { slug: k.split('/').at(-2) } }));
+}
+const { slug } = Astro.params;
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Planche : {slug}</title>
+  </head>
+  <body>
+    <div id="planche" data-slug={slug}></div>
+  </body>
+</html>
+
+<script>
+  import { chargerScene, instancier, valeursDefaut } from '../../../lib/lecteur';
+
+  const racine = document.getElementById('planche')!;
+  const NS = 'http://www.w3.org/2000/svg';
+  try {
+    const scene = await chargerScene(racine.dataset.slug!);
+    const url = new URLSearchParams(location.search);
+    const p = valeursDefaut(scene);
+    for (const k in p) if (url.has(k)) p[k] = Number(url.get(k));
+    scene.etapes.forEach((e, i) => {
+      const h = document.createElement('h2');
+      h.textContent = `${i + 1}. ${e.titre} (${e.duree} s)`;
+      racine.appendChild(h);
+      const rang = document.createElement('div');
+      rang.className = 'rang';
+      for (const t of [0.05, 0.5, 1]) {
+        const c = document.createElement('figure');
+        const s = document.createElementNS(NS, 'svg') as SVGSVGElement;
+        const g = scene.graphique ? (document.createElementNS(NS, 'svg') as SVGSVGElement) : null;
+        c.append(s, ...(g ? [g] : []));
+        const leg = document.createElement('figcaption');
+        const mesures = instancier(scene, s, g)({ etape: i, t, T: 1.3 + t, p });
+        leg.textContent = `t = ${t}` + (mesures ? ' · ' + mesures.map((m) => `${m.label} : ${m.valeur}`).join(' · ') : '');
+        c.appendChild(leg);
+        rang.appendChild(c);
+      }
+      racine.appendChild(rang);
+    });
+  } catch (err) {
+    racine.textContent = `ERREUR : ${err}`;
+    console.error(err);
+  }
+  racine.dataset.pret = '1';
+</script>
+
+<style is:global>
+  body { background: #05070f; color: #eef1ff; padding: 12px; display: block; }
+  #planche h2 { font: 600 15px var(--mono); margin: 14px 0 6px; color: #4dd0e1; }
+  #planche .rang { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  #planche figure { margin: 0; background: #0b1022; border: 1px solid #232a4d; border-radius: 8px; overflow: hidden; display: grid; grid-template-columns: 4fr 3fr; align-items: center; }
+  #planche figure svg:only-of-type { grid-column: 1 / -1; }
+  #planche figcaption { grid-column: 1 / -1; font: 500 11px var(--mono); padding: 4px 8px; color: #9aa2c8; border-top: 1px solid #232a4d; }
+</style>

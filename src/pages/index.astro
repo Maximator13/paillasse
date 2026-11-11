@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Lecteur from '../components/Lecteur.astro';
+import CarteTp from '../components/CarteTp.astro';
+import { CYCLES, SITE } from '../data/site';
+
+const tps = (await getCollection('tp')).sort((a, b) => a.data.ordre - b.data.ordre);
+const cours = await getCollection('cours');
+const aLaUne = tps.slice(0, 6);
+---
+
+<Base titre={SITE.nom} description={SITE.description}>
+  <section class="hero">
+    <div class="conteneur hero-in">
+      <div>
+        <p class="surtitre">Cours et TP animés de physique-chimie</p>
+        <h1>Regardez l'expérience <em>se faire</em>.</h1>
+        <p class="chapo">
+          Chaque travail pratique se déroule sous vos yeux, étape par étape. Mettez en pause, revenez en arrière,
+          changez une concentration ou une masse, et voyez le phénomène réagir.
+        </p>
+        <p class="actions"><a class="btn principal" href="/tp/">Explorer les TP animés</a></p>
+        <ul class="chiffres">
+          <li><strong>{tps.length}</strong> TP animés</li>
+          <li><strong>{cours.length}</strong> chapitres de cours</li>
+          <li><strong>100 %</strong> interactif</li>
+        </ul>
+      </div>
+      <div class="hero-demo">
+        <Lecteur slug="titrage-ph-metrique" titre="Titrage pH-métrique" mode="demo" />
+        <p class="legende">En direct : titrage pH-métrique d'un acide par la soude.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section conteneur">
+    <p class="surtitre">Trois cycles</p>
+    <h2>Du collège à la prépa</h2>
+    <div class="grille">
+      {CYCLES.map((c) => (
+        <a class="carte cycle" href={c.url}>
+          <div class="carte-corps">
+            <span class:list={['etat', { dispo: c.dispo }]}>{c.dispo ? 'Disponible' : 'À venir'}</span>
+            <h3>{c.titre}</h3>
+            <p class="classes">{c.classes}</p>
+            <p>{c.resume}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="section conteneur">
+    <p class="surtitre">À la une</p>
+    <h2>Des TP qui bougent</h2>
+    <div class="grille">
+      {aLaUne.map((tp) => <CarteTp tp={tp} />)}
+    </div>
+    <p class="suite"><a href="/tp/">Voir les {tps.length} TP animés</a></p>
+  </section>
+</Base>
+
+<style>
+  .hero { position: relative; isolation: isolate; }
+  .hero::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    background:
+      linear-gradient(var(--ligne) 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(90deg, var(--ligne) 1px, transparent 1px) 0 0 / 28px 28px;
+    mask-image: linear-gradient(#000 55%, transparent);
+  }
+  .hero-in { display: grid; gap: 2.5rem; padding-block: clamp(2.5rem, 7vw, 5.5rem) clamp(3rem, 8vw, 6rem); align-items: center; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 980px) { .hero-in { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); } }
+  h1 em { font-style: normal; color: var(--accent); }
+  .actions { margin: 1.6rem 0; }
+  .chiffres { display: flex; flex-wrap: wrap; gap: .6rem 2rem; list-style: none; padding: 0; margin: 0; color: var(--doux); font-size: .95rem; }
+  .chiffres strong { display: block; font: 750 1.7rem/1.1 var(--titre); color: var(--encre); }
+  .legende { font: 500 .8rem/1.4 var(--mono); color: var(--doux); margin: .7rem 0 0; }
+  .cycle .etat { font: 600 .72rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--doux); }
+  .cycle .etat.dispo { color: var(--t-matiere); }
+  .cycle h3 { font-size: 1.7rem; }
+  .cycle .classes { font: 600 .9rem/1.3 var(--mono); color: var(--encre); }
+  .suite { margin-top: 1.5rem; font-weight: 600; }
+</style>

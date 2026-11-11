@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Lecteur from './Lecteur.astro';
+import { THEMES, slugDe } from '../data/site';
+
+interface Props {
+  tp: CollectionEntry<'tp'>;
+}
+const { tp } = Astro.props;
+const slug = slugDe(tp.id);
+---
+
+<a class="carte" href={`/${tp.data.niveau}/tp/${slug}/`} data-theme={tp.data.theme}>
+  <div class="vignette" aria-hidden="true"><Lecteur slug={slug} titre={tp.data.titre} mode="affiche" /></div>
+  <div class="carte-corps">
+    <h3>{tp.data.titre}</h3>
+    <p>{tp.data.description}</p>
+    <div class="meta">
+      <span class="pastille" data-theme={tp.data.theme}>{THEMES[tp.data.theme].court}</span>
+      <span>TP animé · {tp.data.duree}</span>
+    </div>
+  </div>
+</a>
+
+<style>
+  .vignette { background: var(--scene); aspect-ratio: 4 / 3; overflow: hidden; pointer-events: none; }
+</style>

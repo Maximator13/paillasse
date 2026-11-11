@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from 'astro:content';
+import 'katex/dist/katex.min.css';
+import Base from '../../../layouts/Base.astro';
+import CarteTp from '../../../components/CarteTp.astro';
+import { THEMES, slugDe } from '../../../data/site';
+
+export async function getStaticPaths() {
+  const cours = (await getCollection('cours', (c) => c.data.niveau === 'terminale')).sort((a, b) => a.data.ordre - b.data.ordre);
+  return cours.map((c, i) => ({
+    params: { slug: slugDe(c.id) },
+    props: { cours: c, precedent: cours[i - 1], suivant: cours[i + 1] },
+  }));
+}
+
+const { cours, precedent, suivant } = Astro.props;
+const { Content } = await render(cours);
+const tps = (await getCollection('tp')).filter((t) => cours.data.tp.includes(slugDe(t.id)));
+const d = cours.data;
+---
+
+<Base titre={`${d.titre} : cours de Terminale spécialité`} description={d.description} type="article">
+  <article class="section conteneur" data-theme={d.theme}>
+    <ol class="fil">
+      <li><a href="/">Accueil</a></li>
+      <li><a href="/terminale/">Terminale</a></li>
+      <li><a href={`/terminale/#${d.theme}`}>{THEMES[d.theme].court}</a></li>
+    </ol>
+    <p class="surtitre">Chapitre {d.ordre} · {d.duree} de lecture</p>
+    <h1>{d.titre}</h1>
+    <p class="chapo">{d.description}</p>
+
+    <div class="prose"><Content /></div>
+
+    {tps.length > 0 && (
+      <section class="tp-lies">
+        <h2>Voir l'expérience</h2>
+        <div class="grille">{tps.map((t) => <CarteTp tp={t} />)}</div>
+      </section>
+    )}
+
+    <nav class="voisins" aria-label="Chapitres voisins">
+      {precedent ? <a href={`/terminale/cours/${slugDe(precedent.id)}/`}><span>Chapitre précédent</span>{precedent.data.titre}</a> : <span />}
+      {suivant && <a class="droite" href={`/terminale/cours/${slugDe(suivant.id)}/`}><span>Chapitre suivant</span>{suivant.data.titre}</a>}
+    </nav>
+  </article>
+</Base>
+
+<style>
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
+  .prose { margin-top: 2.5rem; }
+  .tp-lies { margin-top: 4rem; }
+  .voisins { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 4rem; border-top: 1.5px solid var(--ligne); padding-top: 1.5rem; }
+  .voisins a { display: flex; flex-direction: column; gap: .3rem; text-decoration: none; font-weight: 650; color: var(--encre); padding: .5rem 0; }
+  .voisins a span { font: 500 .75rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--doux); }
+  .voisins .droite { text-align: right; align-items: flex-end; }
+</style>

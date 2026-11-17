@@ -1,18 +1,13 @@
 /* Lecteur de TP. Toujours sombre : c'est la "scène". */
 .lecteur {
   --l: var(--scene-ligne);
-  background: var(--scene); color: var(--scene-texte); border-radius: calc(var(--rayon) + 6px);
-  border: 1.5px solid var(--l); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr);
+  background: var(--scene); color: var(--scene-texte); border-radius: calc(var(--rayon) + 4px);
+  border: 1px solid var(--l); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr);
   box-shadow: 0 30px 60px -40px rgb(11 16 34 / .8);
 }
 .lecteur-ecran {
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
-  background:
-    radial-gradient(120% 90% at 20% 0%, rgb(91 140 255 / .13), transparent 60%),
-    linear-gradient(var(--l) 1px, transparent 1px) 0 0 / 32px 32px,
-    linear-gradient(90deg, var(--l) 1px, transparent 1px) 0 0 / 32px 32px,
-    var(--scene);
-  background-blend-mode: normal, soft-light, soft-light, normal;
+  background: radial-gradient(120% 90% at 20% 0%, rgb(91 140 255 / .1), transparent 60%), var(--scene);
 }
 .lecteur-scene, .lecteur-graph { width: 100%; height: auto; }
 .lecteur-scene { aspect-ratio: 4 / 3; }

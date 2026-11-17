@@ -1,22 +1,22 @@
 /* Jetons de design. Clair par défaut, sombre selon le système. Les scènes de TP sont toujours sur fond sombre. */
 :root {
-  --fond: #f6f3ec;
-  --surface: #fffdf8;
-  --encre: #14172b;
-  --doux: #555a72;
-  --ligne: #e0dacb;
-  --accent: #2d44d6;
+  --fond: #fbfaf7;
+  --surface: #ffffff;
+  --encre: #15171c;
+  --doux: #575c68;
+  --ligne: #e3e0d8;
+  --accent: #1f3a8a;
   --accent-encre: #ffffff;
-  --t-matiere: #08796b;
-  --t-mouvement: #b8440a;
-  --t-energie: #b32458;
-  --t-ondes: #2d44d6;
+  --t-matiere: #0b6b5e;
+  --t-mouvement: #9c3d0c;
+  --t-energie: #8f1f4a;
+  --t-ondes: #1f3a8a;
   --scene: #0b1022;
   --scene-ligne: #232a4d;
   --scene-texte: #eef1ff;
   --scene-doux: #9aa2c8;
-  --rayon: 18px;
-  --titre: 'Bricolage Grotesque Variable', 'Instrument Sans Variable', system-ui, sans-serif;
+  --rayon: 10px;
+  --titre: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
   --texte: 'Instrument Sans Variable', system-ui, sans-serif;
   --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
   --large: 1180px;
@@ -24,17 +24,17 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --fond: #0c0f1e;
-    --surface: #141830;
-    --encre: #eef0fb;
-    --doux: #a6accb;
-    --ligne: #272c4b;
-    --accent: #8ea0ff;
-    --accent-encre: #0c0f1e;
-    --t-matiere: #3ddc97;
-    --t-mouvement: #ff9f43;
-    --t-energie: #ff7ac6;
-    --t-ondes: #8ea0ff;
+    --fond: #0e1014;
+    --surface: #16191f;
+    --encre: #ecebe6;
+    --doux: #a3a7b3;
+    --ligne: #272b34;
+    --accent: #9db4ff;
+    --accent-encre: #0e1014;
+    --t-matiere: #5fcfa6;
+    --t-mouvement: #f0a35e;
+    --t-energie: #f08cc0;
+    --t-ondes: #9db4ff;
   }
 }
 
@@ -56,10 +56,10 @@ body {
 main { flex: 1; }
 img, svg { max-width: 100%; display: block; }
 a { color: var(--accent); text-underline-offset: .18em; }
-h1, h2, h3 { font-family: var(--titre); line-height: 1.12; letter-spacing: -.02em; margin: 0 0 .5em; text-wrap: balance; }
-h1 { font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 750; }
-h2 { font-size: clamp(1.55rem, 3.4vw, 2.3rem); font-weight: 700; }
-h3 { font-size: 1.2rem; font-weight: 650; }
+h1, h2, h3 { font-family: var(--titre); line-height: 1.15; letter-spacing: -.012em; margin: 0 0 .5em; text-wrap: balance; }
+h1 { font-size: clamp(2.3rem, 6vw, 4.1rem); font-weight: 600; }
+h2 { font-size: clamp(1.6rem, 3.4vw, 2.35rem); font-weight: 600; }
+h3 { font-size: 1.25rem; font-weight: 600; }
 p { margin: 0 0 1em; text-wrap: pretty; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
@@ -74,7 +74,7 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 /* Boutons */
 .btn {
   display: inline-flex; align-items: center; gap: .55rem; min-height: 48px; padding: .7rem 1.3rem;
-  border-radius: 999px; border: 1.5px solid var(--encre); background: transparent; color: var(--encre);
+  border-radius: 8px; border: 1px solid var(--encre); background: transparent; color: var(--encre);
   font: 600 1rem/1 var(--texte); text-decoration: none; cursor: pointer; transition: transform .15s, background .15s, color .15s;
 }
 .btn:hover { transform: translateY(-2px); }
@@ -83,7 +83,7 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 /* Pastilles de thème */
 .pastille {
   display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .7rem; border-radius: 999px;
-  font: 600 .78rem/1.4 var(--mono); border: 1.5px solid currentColor; color: var(--doux); white-space: nowrap;
+  font: 600 .78rem/1.4 var(--mono); border: 1px solid currentColor; color: var(--doux); white-space: nowrap;
 }
 .pastille::before { content: ''; width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; }
 [data-theme='matiere'] { --t: var(--t-matiere); }
@@ -95,10 +95,10 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 /* Cartes */
 .grille { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); }
 .carte {
-  position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1.5px solid var(--ligne);
+  position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--ligne);
   border-radius: var(--rayon); overflow: hidden; color: inherit; text-decoration: none; transition: transform .2s, border-color .2s, box-shadow .2s;
 }
-a.carte:hover { transform: translateY(-4px); border-color: var(--t, var(--accent)); box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--t, var(--accent)) 70%, transparent); }
+a.carte:hover { transform: translateY(-2px); border-color: var(--t, var(--accent)); box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--t, var(--accent)) 70%, transparent); }
 .carte-corps { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
 .carte h3 { margin: 0; }
 .carte p { margin: 0; color: var(--doux); font-size: .97rem; }
@@ -116,8 +116,8 @@ a.carte:hover { transform: translateY(-4px); border-color: var(--t, var(--accent
 .prose ul, .prose ol { padding-left: 1.3rem; margin: 0 0 1em; }
 .prose li { margin-bottom: .35em; }
 .prose blockquote {
-  margin: 1.5em 0; padding: 1rem 1.2rem; border-left: 5px solid var(--t, var(--accent));
-  background: color-mix(in srgb, var(--t, var(--accent)) 9%, var(--surface)); border-radius: 0 12px 12px 0;
+  margin: 1.5em 0; padding: 1rem 1.2rem; border-left: 3px solid var(--t, var(--accent));
+  background: color-mix(in srgb, var(--t, var(--accent)) 9%, var(--surface)); border-radius: 0 8px 8px 0;
 }
 .prose blockquote > :last-child { margin-bottom: 0; }
 .prose table { width: 100%; border-collapse: collapse; margin: 1.4em 0; font-size: .96rem; display: block; overflow-x: auto; }

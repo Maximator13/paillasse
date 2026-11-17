@@ -1,5 +1,5 @@
 ---
-import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/source-serif-4';
 import '@fontsource-variable/instrument-sans';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
@@ -102,15 +102,15 @@ const nav = [
 </html>
 
 <style>
-  .entete { background: color-mix(in srgb, var(--fond) 86%, transparent); backdrop-filter: blur(12px); border-bottom: 1.5px solid var(--ligne); }
+  .entete { background: color-mix(in srgb, var(--fond) 86%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--ligne); }
   @media (min-width: 720px) { .entete { position: sticky; top: 0; z-index: 20; } }
   .entete-in { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; flex-wrap: wrap; }
-  .logo { display: inline-flex; align-items: center; gap: .55rem; font: 750 1.35rem/1 var(--titre); letter-spacing: -.03em; color: var(--encre); text-decoration: none; min-height: 48px; }
+  .logo { display: inline-flex; align-items: center; gap: .55rem; font: 650 1.4rem/1 var(--titre); letter-spacing: -.01em; color: var(--encre); text-decoration: none; min-height: 48px; }
   nav ul { display: flex; gap: .2rem; list-style: none; margin: 0; padding: 0; overflow-x: auto; }
-  nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .8rem; border-radius: 999px; color: var(--encre); text-decoration: none; font-weight: 550; font-size: .97rem; white-space: nowrap; }
+  nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .8rem; border-radius: 8px; color: var(--encre); text-decoration: none; font-weight: 550; font-size: .97rem; white-space: nowrap; }
   nav a:hover { background: var(--ligne); }
   nav a[aria-current='page'] { background: var(--encre); color: var(--fond); }
-  .pied { border-top: 1.5px solid var(--ligne); margin-top: 3rem; padding-block: 2rem; color: var(--doux); font-size: .95rem; }
+  .pied { border-top: 1px solid var(--ligne); margin-top: 3rem; padding-block: 2rem; color: var(--doux); font-size: .95rem; }
   .pied-in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem 2rem; align-items: center; }
   .pied p { margin: 0; }
   .pied ul { display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; list-style: none; margin: 0; padding: 0; }

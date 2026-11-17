@@ -29,7 +29,7 @@ const couples = (j) => [
 const scene = [
   ['#eef1ff', '#0b1022', 4.5, 'scène : texte'], ['#9aa2c8', '#0b1022', 4.5, 'scène : texte secondaire'], ['#cdd3f2', '#0b1022', 4.5, 'scène : texte d\'étape'],
   ['#4dd0e1', '#0b1022', 4.5, 'scène : valeur de curseur'], ['#8f97bd', '#0b1022', 4.5, 'scène : graduations'], ['#8f97bd', '#141a36', 4.5, 'scène : titre d\'appareil'],
-  ['#0b1022', '#eef1ff', 4.5, 'scène : bouton lecture'], ['#232a4d', '#0b1022', 1.2, 'scène : quadrillage décoratif'],
+  ['#0b1022', '#eef1ff', 4.5, 'scène : bouton lecture'],
 ];
 let echecs = 0;
 for (const [nom, liste] of [['CLAIR', couples(clair)], ['SOMBRE', couples(sombre)], ['SCÈNE', scene]]) {

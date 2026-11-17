@@ -22,3 +22,26 @@ export const CYCLES = [
 
 /** Slug d'une entrée de collection : "terminale/titrages" -> "titrages". */
 export const slugDe = (id: string) => id.split('/').pop()!;
+
+/**
+ * Informations légales que seul le propriétaire du site connaît, reprises dans les pages
+ * Mentions légales, Confidentialité et CGU. Toute valeur entre crochets est provisoire :
+ * la remplacer avant la mise en ligne (rechercher « À COMPLÉTER »).
+ */
+export const LEGAL = {
+  editeur: {
+    nom: "[À COMPLÉTER : nom de l'éditeur]",
+    statut: "[À COMPLÉTER : statut de l'éditeur (particulier, association, société) et numéro d'immatriculation éventuel]",
+    adresse: "[À COMPLÉTER : adresse postale de l'éditeur]",
+    courriel: '[À COMPLÉTER : adresse électronique de contact]',
+    telephone: "[À COMPLÉTER : numéro de téléphone de l'éditeur]",
+  },
+  directeurPublication: '[À COMPLÉTER : nom du directeur de la publication]',
+  hebergeur: {
+    nom: "[À COMPLÉTER : nom de l'hébergeur]",
+    adresse: "[À COMPLÉTER : adresse de l'hébergeur]",
+    telephone: "[À COMPLÉTER : numéro de téléphone de l'hébergeur]",
+  },
+  /** Date de dernière mise à jour des textes légaux, à actualiser à chaque modification. */
+  miseAJour: '12 novembre 2026',
+} as const;

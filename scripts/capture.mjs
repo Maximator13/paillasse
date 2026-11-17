@@ -1,5 +1,5 @@
 // Capture d'écran d'une page du serveur de développement, avec le Chrome installé.
-// Usage : node scripts/capture.mjs <chemin> [sortie.png] [--mobile] [--el <selecteur>] [--port 4321]
+// Usage : node scripts/capture.mjs <chemin> [sortie.png] [--mobile] [--el <selecteur>] [--bandeau] [--sombre] [--port 4321]
 // Exemples :
 //   node scripts/capture.mjs /dev/planche/titrage-ph-metrique/                       planche de toutes les étapes
 //   node scripts/capture.mjs "/terminale/tp/titrage-ph-metrique/?etape=3&t=0.6" --el .lecteur   image figée du lecteur
@@ -11,14 +11,16 @@ import { dirname } from 'node:path';
 const args = process.argv.slice(2);
 const opt = (nom) => { const i = args.indexOf(nom); return i < 0 ? null : args.splice(i, 2)[1]; };
 const drapeau = (nom) => { const i = args.indexOf(nom); if (i < 0) return false; args.splice(i, 1); return true; };
-const port = opt('--port') ?? '4321', selecteur = opt('--el'), mobile = drapeau('--mobile');
+const port = opt('--port') ?? '4321', selecteur = opt('--el'), mobile = drapeau('--mobile'), bandeau = drapeau('--bandeau'), sombre = drapeau('--sombre');
 if (!args[0]) { console.error('Chemin manquant. Voir l\'en-tête du script.'); process.exit(1); }
 // Git Bash transforme "/dev/x" en "C:/Program Files/Git/dev/x" : on retire ce préfixe. Le chemin peut aussi être donné sans "/" initial.
 const chemin = '/' + args[0].replace(/^[A-Za-z]:[\\/].*?[\\/]Git(?=[\\/])/, '').replace(/^[\\/]+/, '');
 const sortie = args[1] ?? `.captures/${chemin.replace(/[^a-z0-9]+/gi, '_')}${mobile ? '_mobile' : ''}.png`;
 
 const nav = await chromium.launch({ channel: 'chrome' });
-const page = await nav.newPage({ viewport: mobile ? { width: 390, height: 844 } : { width: 1360, height: 900 }, deviceScaleFactor: mobile ? 2 : 1 });
+const page = await nav.newPage({ viewport: mobile ? { width: 390, height: 844 } : { width: 1360, height: 900 }, deviceScaleFactor: mobile ? 2 : 1, colorScheme: sombre ? 'dark' : 'light' });
+// Sans --bandeau, un refus de mesure d'audience est mémorisé avant le chargement : le bandeau ne masque pas le contenu.
+if (!bandeau) await page.addInitScript(() => { try { localStorage.setItem('paillasse-consentement', 'refuse'); } catch {} });
 const erreurs = [];
 page.on('console', (m) => m.type() === 'error' && erreurs.push(m.text()));
 page.on('pageerror', (e) => erreurs.push(String(e)));

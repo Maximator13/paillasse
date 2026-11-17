@@ -1,5 +1,94 @@
 ---
-// Bandeau de consentement : à implémenter (lot "légal et SEO").
-// Contrat : aucun script de mesure d'audience ne se charge avant un "Accepter" explicite.
-// Le bouton [data-cookies-ouvrir] du pied de page doit rouvrir le bandeau.
+// Bandeau de consentement. Aucun script de mesure d'audience ne se charge avant un « Accepter » explicite.
+// Le choix est mémorisé dans localStorage ; tout élément [data-cookies-ouvrir] rouvre le bandeau.
+const domaine = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
 ---
+
+<section
+  class="bandeau-cookies"
+  role="dialog"
+  aria-labelledby="cookies-titre"
+  aria-describedby="cookies-texte"
+  data-domaine={domaine}
+  hidden
+>
+  <div class="bc-in">
+    <div>
+      <h2 id="cookies-titre">Mesure d'audience</h2>
+      <p id="cookies-texte">
+        Avec votre accord, nous comptons les visites de façon anonyme (Plausible, sans cookie publicitaire) pour savoir
+        quels cours et TP sont utiles. Refuser n'empêche rien : tout le site reste accessible.{' '}
+        <a href="/confidentialite/">En savoir plus</a>
+      </p>
+    </div>
+    <div class="bc-actions">
+      <button type="button" class="btn" data-choix="refuse">Refuser</button>
+      <button type="button" class="btn" data-choix="accepte">Accepter</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  const CLE = 'paillasse-consentement';
+  const bandeau = document.querySelector<HTMLElement>('.bandeau-cookies');
+
+  const lire = (): string | null => {
+    try { return localStorage.getItem(CLE); } catch { return null; }
+  };
+  const ecrire = (v: string) => {
+    try { localStorage.setItem(CLE, v); } catch { /* stockage indisponible : le choix vaut pour cette page */ }
+  };
+
+  function chargerMesure() {
+    const domaine = bandeau?.dataset.domaine;
+    if (!domaine || document.querySelector('script[data-plausible]')) return;
+    const s = document.createElement('script');
+    s.defer = true;
+    s.src = 'https://plausible.io/js/script.js';
+    s.dataset.domain = domaine;
+    s.dataset.plausible = '';
+    document.head.append(s);
+  }
+
+  if (bandeau) {
+    const choix = lire();
+    if (choix === 'accepte') chargerMesure();
+    if (!choix) bandeau.hidden = false;
+
+    bandeau.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-choix]');
+      if (!b) return;
+      const v = b.dataset.choix!;
+      ecrire(v);
+      bandeau.hidden = true;
+      if (v === 'accepte') chargerMesure();
+      // Un refus après acceptation prend effet au prochain chargement de page (le script déjà chargé ne peut être retiré).
+    });
+    bandeau.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lire()) bandeau.hidden = true;
+    });
+    document.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement).closest('[data-cookies-ouvrir]')) return;
+      bandeau.hidden = false;
+      bandeau.querySelector<HTMLButtonElement>('[data-choix]')?.focus();
+    });
+  }
+</script>
+
+<style>
+  .bandeau-cookies {
+    position: fixed; inset: auto 0 0 0; z-index: 40; padding: 0 1rem 1rem;
+    pointer-events: none;
+  }
+  .bandeau-cookies[hidden] { display: none; }
+  .bc-in {
+    pointer-events: auto; max-width: 760px; margin-inline: auto; display: grid; gap: 1rem;
+    background: var(--surface); color: var(--encre); border: 1.5px solid var(--ligne); border-radius: var(--rayon);
+    padding: 1.1rem 1.2rem; box-shadow: 0 18px 40px -20px rgb(0 0 0 / .45);
+  }
+  @media (min-width: 720px) { .bc-in { grid-template-columns: 1fr auto; align-items: center; } }
+  h2 { font-size: 1.15rem; margin: 0 0 .3rem; }
+  p { margin: 0; font-size: .95rem; color: var(--doux); }
+  .bc-actions { display: flex; gap: .6rem; }
+  .bc-actions .btn { flex: 1; justify-content: center; min-width: 7.5rem; }
+</style>

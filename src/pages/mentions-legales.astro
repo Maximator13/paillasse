@@ -1,0 +1,66 @@
+---
+import Base from '../layouts/Base.astro';
+import { LEGAL, SITE } from '../data/site';
+const { editeur, hebergeur } = LEGAL;
+---
+
+<Base
+  titre="Mentions légales"
+  description={`Éditeur, directeur de la publication, hébergeur et propriété intellectuelle du site ${SITE.nom}, conformément à la loi pour la confiance dans l'économie numérique.`}
+>
+  <article class="section conteneur">
+    <ol class="fil"><li><a href="/">Accueil</a></li><li aria-current="page">Mentions légales</li></ol>
+    <p class="surtitre">Informations légales</p>
+    <h1>Mentions légales</h1>
+    <p class="chapo">Informations prévues par l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN).</p>
+
+    <div class="prose">
+      <h2>Éditeur du site</h2>
+      <ul>
+        <li>Nom ou raison sociale : {editeur.nom}</li>
+        <li>Statut : {editeur.statut}</li>
+        <li>Adresse : {editeur.adresse}</li>
+        <li>Courriel : {editeur.courriel}</li>
+        <li>Téléphone : {editeur.telephone}</li>
+      </ul>
+
+      <h2>Directeur de la publication</h2>
+      <p>{LEGAL.directeurPublication}</p>
+
+      <h2>Hébergeur</h2>
+      <ul>
+        <li>Nom : {hebergeur.nom}</li>
+        <li>Adresse : {hebergeur.adresse}</li>
+        <li>Téléphone : {hebergeur.telephone}</li>
+      </ul>
+
+      <h2>Propriété intellectuelle</h2>
+      <p>
+        Les textes, schémas, animations, codes et éléments graphiques de {SITE.nom} sont protégés par le Code de la
+        propriété intellectuelle. Les conditions de réutilisation (notamment en classe) sont précisées dans les
+        <a href="/cgu/">conditions générales d'utilisation</a>. Les polices de caractères employées sont distribuées sous
+        licence libre (SIL Open Font License).
+      </p>
+
+      <h2>Responsabilité</h2>
+      <p>
+        {SITE.nom} est un site éducatif gratuit. L'éditeur s'efforce d'assurer l'exactitude des contenus, conformes au
+        programme officiel, mais ne peut garantir l'absence d'erreur. Les TP animés sont des simulations : ils ne
+        remplacent ni une séance encadrée en laboratoire ni les consignes de sécurité de l'établissement. Pour signaler
+        une erreur, écrivez à {editeur.courriel}.
+      </p>
+
+      <h2>Liens externes</h2>
+      <p>L'éditeur n'exerce aucun contrôle sur les sites tiers éventuellement cités et décline toute responsabilité quant à leur contenu.</p>
+
+      <h2>Données personnelles</h2>
+      <p>Le traitement des données et la mesure d'audience sont décrits dans la <a href="/confidentialite/">politique de confidentialité</a>.</p>
+
+      <p class="maj">Dernière mise à jour : {LEGAL.miseAJour}.</p>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .maj { margin-top: 2.5rem; color: var(--doux); font-size: .92rem; }
+</style>

@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base titre="Page introuvable" description="Cette page n'existe pas ou a été déplacée : retrouvez les cours et les TP animés de physique-chimie depuis l'accueil." noindex>
+  <section class="section conteneur introuvable">
+    <svg class="fiole" viewBox="0 0 120 120" aria-hidden="true">
+      <path d="M46 14h28M50 14v32L22 94a9 9 0 0 0 8 13.5h60A9 9 0 0 0 98 94L70 46V14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path d="M34 82h52l7 12.5a3 3 0 0 1-2.6 4.5H29.6a3 3 0 0 1-2.6-4.5z" fill="var(--accent)"></path>
+      <circle class="b b1" cx="52" cy="76" r="3.5" fill="var(--accent)"></circle>
+      <circle class="b b2" cx="66" cy="70" r="2.5" fill="var(--accent)"></circle>
+      <circle class="b b3" cx="59" cy="62" r="2" fill="var(--accent)"></circle>
+    </svg>
+    <p class="surtitre">Erreur 404</p>
+    <h1>Réaction introuvable.</h1>
+    <p class="chapo">
+      Cette page s'est évaporée : rendement nul. Elle n'existe pas, ou elle a été déplacée pendant le dernier rangement
+      de la paillasse.
+    </p>
+    <p class="actions"><a class="btn principal" href="/">Revenir à l'accueil</a></p>
+    <ul class="liens">
+      <li><a href="/terminale/">Cours de Terminale</a></li>
+      <li><a href="/tp/">TP animés</a></li>
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .introuvable { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .introuvable .chapo { margin-inline: auto; }
+  .fiole { width: 120px; height: 120px; color: var(--encre); margin-bottom: 1.5rem; }
+  .b { animation: monte 2.4s ease-in infinite; opacity: 0; }
+  .b2 { animation-delay: .8s; }
+  .b3 { animation-delay: 1.6s; }
+  @keyframes monte { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-50px); } }
+  .actions { margin: 1.4rem 0 1rem; }
+  .liens { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem 1.5rem; list-style: none; padding: 0; margin: 0; }
+  .liens a { display: inline-flex; align-items: center; min-height: 48px; font-weight: 600; }
+</style>

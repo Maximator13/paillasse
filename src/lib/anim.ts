@@ -45,7 +45,8 @@ export function mix(c1: string, c2: string, p: number): string {
 
 /** Nombre au format français : fmt(3.14159, 2) -> "3,14". */
 export const fmt = (v: number, decimales = 2) =>
-  v.toLocaleString('fr-FR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+  // Une valeur qui s'arrondit à zéro est ramenée à 0 : sinon un résidu négatif s'affiche « -0,0 ».
+  (Math.abs(v) < 0.5 * 10 ** -decimales ? 0 : v).toLocaleString('fr-FR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
 
 /** Générateur pseudo-aléatoire déterministe (mulberry32). */
 export function rng(seed: number) {

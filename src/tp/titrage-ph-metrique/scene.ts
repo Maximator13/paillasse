@@ -11,8 +11,8 @@ const INCOLORE = '#8fc4ff', ROSE = '#ff5fb8';
 
 export default definirScene({
   etapes: [
-    { titre: 'Prélever la prise d\'essai', duree: 5, texte: 'À la pipette jaugée, on prélève <strong>V<sub>A</sub> = 20,0 mL</strong> de solution d\'acide éthanoïque de concentration inconnue, que l\'on verse dans un bécher avec un barreau aimanté.' },
-    { titre: 'Installer le montage', duree: 6, texte: 'La burette est remplie de soude de concentration connue <strong>C<sub>B</sub> = 0,10 mol/L</strong>, ajustée au zéro. La sonde du pH-mètre plonge dans la solution, l\'agitation démarre.' },
+    { titre: 'Prélever la prise d\'essai', duree: 5, texte: 'À la pipette jaugée, on prélève <strong>V<sub>A</sub> = 20,0 mL</strong> de solution d\'acide éthanoïque de concentration inconnue, que l\'on verse dans un bécher avec un barreau aimanté et quelques gouttes de phénolphtaléine.' },
+    { titre: 'Installer le montage', duree: 6, texte: 'La burette est remplie de soude de concentration connue <strong>C<sub>B</sub> = 0,100 mol/L</strong>, ajustée au zéro. La sonde du pH-mètre plonge dans la solution, l\'agitation démarre.' },
     { titre: 'Verser la soude, relever le pH', duree: 14, texte: 'On verse la soude millilitre par millilitre. Le pH monte lentement, puis <strong>bondit</strong> : c\'est le saut de pH. La phénolphtaléine vire au rose.' },
     { titre: 'Repérer l\'équivalence', duree: 7, texte: 'L\'équivalence correspond au maximum de la dérivée <strong>dpH/dV</strong>. On y lit le volume équivalent <strong>V<sub>E</sub></strong>.' },
     { titre: 'Calculer la concentration', duree: 5, texte: 'À l\'équivalence, les réactifs sont en proportions stœchiométriques : <strong>C<sub>A</sub>·V<sub>A</sub> = C<sub>B</sub>·V<sub>E</sub></strong>. Changez la concentration ou la force de l\'acide et observez la courbe.' },
@@ -46,7 +46,7 @@ export default definirScene({
     potence(montage, { x: 110, y: 440, h: 410, pinces: [{ y: 95, vers: 290 }, { y: 215, vers: 290 }] });
     const bur = burette(montage, { x: 290, yHaut: 42, h: 212 });
     etiquette(montage, { x: 322, y: 62, texte: 'Soude' });
-    etiquette(montage, { x: 322, y: 82, texte: 'CB = 0,10 mol/L', mono: true, taille: 13, couleur: C.discret });
+    etiquette(montage, { x: 322, y: 82, texte: 'CB = 0,100 mol/L', mono: true, taille: 13, couleur: C.discret });
     const gtt = gouttes(scene, { x: 290, y1: bur.bec.y, y2: 360 });
     const gSonde = el('g', {}, scene);
     sonde(gSonde, { de: { x: 540, y: 364 }, vers: { x: 328, y: agit.yPlateau - 12 }, longueur: 92 });
@@ -60,7 +60,7 @@ export default definirScene({
     ligne(170, 15, C.texte).textContent = 'CA·VA = CB·VE';
     const resultat = ligne(202, 19, C.jaune);
 
-    let cle = '', pts: [number, number][] = [], dMax = 1;
+    let cle = '', pts: [number, number][] = [], ptsD: [number, number][] = [];
 
     return ({ etape, t, T, p }) => {
       const tit: Titrage = { ca: p.ca, va: VA, cb: CB, pKa: p.pKa };
@@ -68,7 +68,9 @@ export default definirScene({
       if (cle !== `${p.ca}|${p.pKa}`) {
         cle = `${p.ca}|${p.pKa}`;
         pts = courbe(tit, V_MAX, 250);
-        dMax = Math.max(...pts.map(([v]) => derivee(v, tit)));
+        // Dérivée ramenée à l'échelle du graphique (maximum à 12), calculée une fois par réglage.
+        const d = pts.map(([x]) => derivee(x, tit)), dMax = Math.max(...d);
+        ptsD = pts.map(([x], i) => [x, (d[i] / dMax) * 12]);
       }
 
       // Étape 1 : la pipette descend, se vide, repart ; le barreau tombe.
@@ -79,7 +81,7 @@ export default definirScene({
       filet.style.opacity = vide > 0 && vide < 1 ? '1' : '0';
       show(etiqPrise, seg(a1, 0.7, 0.85));
       const chute = seg(a1, 0.86, 1, ease.bounceOut);
-      bar.el.style.opacity = a1 > 0.86 ? '1' : '0';
+      bar.el.style.opacity = String(seg(a1, 0.86, 0.9));
       bar.el.style.transform = `translateY(${lerp(-110, 0, chute)}px)`;
 
       // Étape 2 : le montage apparaît, la burette se remplit, la sonde plonge, l'agitation démarre.
@@ -114,7 +116,11 @@ export default definirScene({
         if (a3 > 0 && a3 < 1) graphique.repere('mesure', v, ph, { couleur: C.blanc, rayon: 4 });
         else graphique.effacer('mesure');
         const xd = V_MAX * seg(a4, 0.05, 0.6, ease.lin);
-        graphique.courbe('derivee', a4 > 0 ? pts.filter(([x]) => x <= xd).map(([x]) => [x, (derivee(x, tit) / dMax) * 12]) : [], { couleur: C.rose, epaisseur: 2, pointille: true });
+        graphique.courbe('derivee', a4 > 0 ? ptsD.filter(([x]) => x <= xd) : [], { couleur: C.rose, epaisseur: 2, pointille: true });
+        // Légende de la dérivée, posée sur son palier, un peu avant la demi-équivalence pour ne pas toucher le pic.
+        const xl = vE / 2 - 1.5;
+        if (a4 > 0 && xd >= xl) graphique.repere('leg', xl, ptsD[Math.round(xl * 10)][1], { couleur: C.rose, rayon: 2.5, label: 'dpH/dV' });
+        else graphique.effacer('leg');
         if (a4 > 0.62) {
           graphique.verticale('ve', vE, { couleur: C.jaune, label: `VE = ${fmt(vE, 1)} mL` });
           graphique.repere('eq', vE, pH(vE, tit), { couleur: C.jaune, label: `pH = ${fmt(pH(vE, tit), 1)}` });

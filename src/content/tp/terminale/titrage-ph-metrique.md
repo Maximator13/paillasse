@@ -16,7 +16,7 @@ materiel:
   - "Pipette jaugée de 20,0 mL et propipette"
   - "Bécher de 100 mL, agitateur magnétique"
   - "pH-mètre étalonné et sa sonde"
-  - "Soude à 0,10 mol/L, solution d'acide éthanoïque"
+  - "Soude à 0,100 mol/L, solution d'acide éthanoïque"
   - "Phénolphtaléine"
 ---
 
@@ -35,7 +35,7 @@ Le pH de la solution est mesuré après chaque ajout de soude. Autour de l'équi
 1. Prélever $V_A = 20{,}0\ \mathrm{mL}$ de solution d'acide à la pipette jaugée et les verser dans le bécher. Ajouter le barreau aimanté et quelques gouttes de phénolphtaléine.
 2. Rincer puis remplir la burette avec la soude, ajuster le zéro. Plonger la sonde du pH-mètre, en veillant à ce que le barreau ne la heurte pas. Lancer l'agitation.
 3. Verser la soude millilitre par millilitre en relevant le pH à chaque fois. Resserrer les ajouts (tous les 0,2 mL) dès que le pH varie plus vite.
-4. Tracer $\mathrm{pH} = f(V)$ puis la dérivée $\dfrac{\mathrm{dpH}}{\mathrm{d}V}$. Lire $V_E$ à l'abscisse du maximum de la dérivée.
+4. Tracer $\mathrm{pH} = f(V)$ puis la dérivée $\dfrac{\mathrm{dpH}}{\mathrm{d}V}$. Lire $V_E$ à l'abscisse du maximum de la dérivée (dans l'animation, elle est tracée en unité arbitraire sur l'axe du pH).
 5. Calculer $C_A$.
 
 ## Exploitation
@@ -46,7 +46,7 @@ $$
 C_A V_A = C_B V_E \qquad\Longrightarrow\qquad C_A = \frac{C_B\,V_E}{V_A}
 $$
 
-Avec $V_E = 20{,}0\ \mathrm{mL}$, $C_B = 0{,}10\ \mathrm{mol \cdot L^{-1}}$ et $V_A = 20{,}0\ \mathrm{mL}$, on trouve $C_A = 0{,}10\ \mathrm{mol \cdot L^{-1}}$.
+Avec $V_E = 20{,}0\ \mathrm{mL}$, $C_B = 0{,}100\ \mathrm{mol \cdot L^{-1}}$ et $V_A = 20{,}0\ \mathrm{mL}$, on trouve $C_A = 0{,}100\ \mathrm{mol \cdot L^{-1}}$.
 
 Deux lectures utiles sur la courbe :
 
@@ -64,7 +64,7 @@ Deux lectures utiles sur la courbe :
 
 1. Le pH varie très vite près de l'équivalence : des ajouts trop espacés feraient manquer le saut et dégraderaient la précision sur $V_E$.
 2. $V_E$ est proportionnel à $C_A$ : il diminue. Le pH initial augmente légèrement, car la solution est moins acide.
-3. Plus l'acide est faible, plus le saut est court : le maximum de la dérivée est moins marqué et $V_E$ est repéré avec moins de précision.
+3. Plus l'acide est faible, plus le saut de pH est réduit : le maximum de la dérivée est moins marqué et $V_E$ est repéré avec moins de précision.
 
 </details>
 

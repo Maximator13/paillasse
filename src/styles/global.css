@@ -129,3 +129,6 @@ a.carte:hover { transform: translateY(-4px); border-color: var(--t, var(--accent
 .prose details[open] summary { margin-bottom: .7rem; }
 .prose .katex-display { overflow-x: auto; overflow-y: hidden; padding-block: .3rem; }
 .prose hr { border: 0; border-top: 1.5px solid var(--ligne); margin: 2.5em 0; }
+
+/* KaTeX dessine les flèches de vecteurs et les accents extensibles en SVG : la règle générale sur les svg les écrasait à une largeur nulle. */
+.katex svg { max-width: none; }

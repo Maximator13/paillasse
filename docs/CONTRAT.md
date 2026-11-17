@@ -22,6 +22,7 @@ Modèle : `src/content/cours/terminale/titrages.md`. Schéma du frontmatter : `s
 - Structure du corps : encadré « L'essentiel » en citation (`>`), sections numérotées `## 1. ...` (3 à 6), `## Exercice type` avec correction dans `<details><summary>Voir la correction</summary>` (laisser une ligne vide après `<summary>` et avant `</details>`), `## À retenir`, `## Erreurs fréquentes`.
 - Longueur : 900 à 1500 mots. Dense, clair, niveau élève de Terminale. Définitions et lois dans des citations (`> **Définition.** ...`).
 - Formules : KaTeX, `$...$` en ligne et `$$...$$` en bloc (lignes vides autour des blocs). Unités en `\mathrm{}`, virgule décimale `{,}` (ex. `$0{,}10\ \mathrm{mol \cdot L^{-1}}$`). Espèces chimiques en `\mathrm{}` (ex. `$\mathrm{H_3O^+}$`).
+- Une formule en bloc dans une citation doit avoir ses `$` seuls sur leur ligne, chaque ligne préfixée par `>`, avec une ligne `>` vide avant et après. Écrite sur une seule ligne (`> $ ... $`), elle s'affiche en petit, comme une formule en ligne.
 - Pas de titre `# H1` (la page le génère), pas d'image externe, pas de HTML hors `<details>`.
 - Tableaux Markdown bienvenus pour comparer ou récapituler.
 

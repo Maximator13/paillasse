@@ -3,11 +3,15 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Lecteur from '../components/Lecteur.astro';
 import CarteTp from '../components/CarteTp.astro';
-import { CYCLES, SITE } from '../data/site';
+import { CYCLES, SITE, slugDe } from '../data/site';
 
 const tps = (await getCollection('tp')).sort((a, b) => a.data.ordre - b.data.ordre);
 const cours = await getCollection('cours');
-const aLaUne = tps.slice(0, 6);
+// Sélection de la une : un mélange de thèmes, complété par les premiers TP si l'un d'eux manque.
+const UNE = ['interferences-young', 'pile-daniell', 'satellite-kepler', 'effet-doppler', 'circuit-rc', 'synthese-ester'];
+const aLaUne = [...UNE.map((s) => tps.find((t) => slugDe(t.id) === s)).filter((t) => t !== undefined), ...tps]
+  .filter((t, i, a) => a.indexOf(t) === i)
+  .slice(0, 6);
 ---
 
 <Base titre={SITE.nom} description={SITE.description}>

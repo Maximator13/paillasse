@@ -9,11 +9,11 @@ motsCles: ["titrage", "équivalence", "pH-métrie", "conductimétrie", "dosage"]
 tp: ["titrage-ph-metrique", "titrage-conductimetrique"]
 ---
 
-> **L'essentiel.** Titrer, c'est déterminer une quantité de matière en la faisant réagir totalement avec une espèce de concentration connue. Tout repose sur un instant précis, l'**équivalence**, où les réactifs ont été introduits dans les proportions stœchiométriques.
+> **L'essentiel.** Titrer, c'est déterminer une quantité de matière en la faisant réagir totalement avec une espèce de concentration connue. Tout repose sur un instant précis, l'**équivalence**, où les réactifs ont été introduits dans les proportions stœchiométriques. On repère cette équivalence par le saut de pH (suivi pH-métrique), la rupture de pente de la conductivité (suivi conductimétrique) ou le virage d'un indicateur coloré.
 
 ## 1. Le principe d'un titrage
 
-Un **dosage** détermine la concentration d'une espèce en solution. Quand il met en jeu une réaction chimique, on parle de **titrage** : c'est une méthode destructive, car l'espèce dosée est consommée.
+Un **dosage** détermine la concentration d'une espèce en solution. Quand il met en jeu une réaction chimique, on parle de **titrage** : c'est une méthode destructive, car l'espèce dosée est consommée. Dans un **titrage direct**, l'espèce à doser réagit directement avec le réactif titrant versé à la burette, sans réaction intermédiaire.
 
 Deux solutions interviennent :
 
@@ -56,10 +56,10 @@ Quand la réaction support est **acido-basique**, le pH varie au cours du titrag
 
 La courbe présente un **saut de pH** : une variation brutale autour de l'équivalence. Deux méthodes permettent de lire $V_E$ :
 
-1. **Méthode de la dérivée.** On trace $\dfrac{\mathrm{dpH}}{\mathrm{d}V}$ en fonction de $V$ : son extremum a pour abscisse $V_E$.
+1. **Méthode de la dérivée.** On trace $\dfrac{\mathrm{dpH}}{\mathrm{d}V}$ en fonction de $V$ : son extremum (maximum si l'on verse une base, minimum si l'on verse un acide) a pour abscisse $V_E$.
 2. **Méthode des tangentes.** On trace deux tangentes parallèles de part et d'autre du saut, puis la parallèle équidistante : elle coupe la courbe au point d'équivalence.
 
-On peut aussi utiliser un **indicateur coloré** : sa zone de virage doit contenir le pH à l'équivalence. Pour le titrage d'un acide faible par la soude, le pH à l'équivalence est supérieur à 7 : la phénolphtaléine (virage entre 8,2 et 10) convient.
+On peut aussi utiliser un **indicateur coloré** : sa zone de virage doit être contenue dans le saut de pH, donc contenir le pH à l'équivalence. L'équivalence est alors repérée par le changement de teinte de la solution. Pour le titrage d'un acide faible par la soude, le pH à l'équivalence est supérieur à 7 : la phénolphtaléine (zone de virage de 8,2 à 10,0) convient, alors que l'hélianthine (3,1 à 4,4) virerait bien avant l'équivalence.
 
 ## 4. Titrage avec suivi conductimétrique
 
@@ -69,7 +69,9 @@ $$
 \sigma = \sum_i \lambda_i\,[X_i]
 $$
 
-où $\lambda_i$ est la conductivité molaire ionique de l'ion $X_i$. Avant et après l'équivalence, la nature des ions présents n'est pas la même : la courbe $\sigma = f(V)$ est formée de **deux portions de droite** de pentes différentes. Leur point d'intersection a pour abscisse $V_E$.
+où $\lambda_i$ est la conductivité molaire ionique de l'ion $X_i$, avec $\sigma$ en $\mathrm{S \cdot m^{-1}}$, $\lambda_i$ en $\mathrm{S \cdot m^2 \cdot mol^{-1}}$ et $[X_i]$ en $\mathrm{mol \cdot m^{-3}}$ (et non en $\mathrm{mol \cdot L^{-1}}$). Avant et après l'équivalence, les ions dont la quantité varie ne sont pas les mêmes : la courbe $\sigma = f(V)$ est formée de **deux portions de droite** de pentes différentes. Leur point d'intersection a pour abscisse $V_E$.
+
+Exemple : titrage de l'acide éthanoïque par la soude. Avant l'équivalence, chaque ion $\mathrm{HO^-}$ versé est consommé et remplacé par un ion $\mathrm{CH_3COO^-}$, tandis que des ions $\mathrm{Na^+}$ s'accumulent : $\sigma$ augmente lentement. Après l'équivalence, les ions $\mathrm{HO^-}$, de conductivité molaire ionique très élevée, s'accumulent avec les ions $\mathrm{Na^+}$ : $\sigma$ augmente beaucoup plus vite.
 
 Pour que les portions soient bien des droites, on ajoute un grand volume d'eau dans le bécher : la dilution due aux ajouts devient négligeable.
 
@@ -100,11 +102,13 @@ Le vinaigre a été dilué dix fois : $C_{\text{vinaigre}} = 10 \times C_A = 0{,
 
 - Un titrage repose sur une réaction **totale, rapide et unique**.
 - À l'équivalence, les réactifs sont dans les proportions stœchiométriques : $\dfrac{C_A V_A}{a} = \dfrac{C_B V_E}{b}$.
-- Suivi pH-métrique : $V_E$ est l'abscisse du **maximum de la dérivée**.
+- Suivi pH-métrique : $V_E$ est l'abscisse de l'**extremum de la dérivée** $\dfrac{\mathrm{dpH}}{\mathrm{d}V}$, ou se lit par la méthode des tangentes.
+- Indicateur coloré : sa zone de virage doit être contenue dans le saut de pH.
 - Suivi conductimétrique : $V_E$ est l'abscisse de la **rupture de pente**.
 
 ## Erreurs fréquentes
 
-- Confondre **équivalence** et **neutralité** : le pH à l'équivalence ne vaut 7 que pour un acide fort titré par une base forte.
+- Confondre **équivalence** et **neutralité** : le pH à l'équivalence ne vaut 7 (à 25 °C) que pour un titrage entre un acide fort et une base forte.
+- Laisser la concentration en $\mathrm{mol \cdot L^{-1}}$ dans la loi de Kohlrausch : elle doit être en $\mathrm{mol \cdot m^{-3}}$.
 - Oublier le **facteur de dilution** quand la solution a été diluée avant le titrage.
 - Écrire $C_A V_A = C_B V_E$ sans vérifier les nombres stœchiométriques de l'équation.

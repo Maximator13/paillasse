@@ -17,7 +17,7 @@ const slug = slugDe(tp.id);
 const chapitre = (await getCollection('cours')).find((c) => slugDe(c.id) === d.chapitre);
 ---
 
-<Base titre={`${d.titre} : TP animé de Terminale`} description={d.description} type="article">
+<Base titre={d.titre.length <= 40 ? `${d.titre} : TP animé` : d.titre} description={d.description} type="article">
   <article data-theme={d.theme}>
     <header class="conteneur tete">
       <ol class="fil">

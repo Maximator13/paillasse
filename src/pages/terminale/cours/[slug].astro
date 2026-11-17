@@ -19,7 +19,7 @@ const tps = (await getCollection('tp')).filter((t) => cours.data.tp.includes(slu
 const d = cours.data;
 ---
 
-<Base titre={`${d.titre} : cours de Terminale spécialité`} description={d.description} type="article">
+<Base titre={d.titre.length <= 34 ? `${d.titre} : cours de Terminale` : d.titre} description={d.description} type="article">
   <article class="section conteneur" data-theme={d.theme}>
     <ol class="fil">
       <li><a href="/">Accueil</a></li>

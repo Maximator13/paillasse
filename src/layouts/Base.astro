@@ -15,10 +15,21 @@ interface Props {
   noindex?: boolean;
 }
 const { titre, description, image = '/og.png', type = 'website', noindex = false } = Astro.props;
-const titreComplet = titre === SITE.nom ? `${SITE.nom} : ${SITE.slogan}` : `${titre} | ${SITE.nom}`;
+// Le nom du site n'est ajouté que si le titre reste sous 65 caractères : au-delà, les moteurs de recherche le tronquent.
+const avecNom = `${titre} | ${SITE.nom}`;
+const titreComplet = titre === SITE.nom ? `${SITE.nom} : ${SITE.slogan}` : avecNom.length <= 65 ? avecNom : titre;
 const canonique = new URL(Astro.url.pathname, Astro.site);
 const imageAbs = new URL(image, Astro.site);
 const ici = Astro.url.pathname;
+const gsc = import.meta.env.PUBLIC_GSC_VERIFICATION;
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.nom,
+  description: SITE.description,
+  url: new URL('/', Astro.site).href,
+  inLanguage: 'fr-FR',
+});
 const nav = [
   { href: '/terminale/', label: 'Terminale' },
   { href: '/tp/', label: 'TP animés' },
@@ -37,8 +48,9 @@ const nav = [
     <link rel="canonical" href={canonique} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    {gsc && <meta name="google-site-verification" content={gsc} />}
+    <script type="application/ld+json" set:html={jsonLd} />
     <meta name="theme-color" content="#0b1022" />
     <meta property="og:type" content={type} />
     <meta property="og:site_name" content={SITE.nom} />

@@ -1,0 +1,58 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const classes = [
+  {
+    nom: '5e',
+    chapitres: ['États et changements d\'état de l\'eau', 'Mélanges et corps purs', 'Circuits électriques simples', 'Lumière et propagation rectiligne'],
+    tp: ['Courbe de solidification de l\'eau', 'Décantation, filtration, distillation', 'Montage série et dérivation'],
+  },
+  {
+    nom: '4e',
+    chapitres: ['Atomes, molécules et transformations chimiques', 'Masse volumique', 'Vitesse et mouvements', 'Loi d\'Ohm, tension et intensité', 'Son : propagation et vitesse'],
+    tp: ['Combustion du carbone', 'Mesure d\'une masse volumique', 'Tracer U = f(I) pour une résistance'],
+  },
+  {
+    nom: '3e',
+    chapitres: ['Ions, pH et réactions acide-métal', 'Gravitation et poids', 'Énergie cinétique et sécurité routière', 'Puissance et énergie électriques', 'Signaux lumineux et sonores'],
+    tp: ['Action de l\'acide chlorhydrique sur le fer', 'Distance de freinage', 'Chute d\'un objet et énergie'],
+  },
+];
+---
+
+<Base titre="Physique-chimie au collège" description="Programme prévu pour le collège (5e, 4e, 3e) : chapitres et TP animés en préparation, de l'eau qui gèle aux circuits électriques.">
+  <section class="section conteneur">
+    <ol class="fil"><li><a href="/">Accueil</a></li><li aria-current="page">Collège</li></ol>
+    <p class="surtitre">Cycle 4 · À venir</p>
+    <h1>Le collège arrive bientôt.</h1>
+    <p class="chapo">
+      Les cours et TP animés du collège sont en préparation. Voici le programme prévu, classe par classe. En attendant,
+      tout le programme de Terminale est déjà disponible.
+    </p>
+    <p class="actions"><a class="btn principal" href="/terminale/">Découvrir la Terminale</a></p>
+
+    <div class="grille">
+      {classes.map((c) => (
+        <section class="carte">
+          <div class="carte-corps">
+            <span class="etat">À venir</span>
+            <h2>{c.nom}</h2>
+            <h3>Chapitres prévus</h3>
+            <ul>{c.chapitres.map((x) => <li>{x}</li>)}</ul>
+            <h3>TP animés envisagés</h3>
+            <ul>{c.tp.map((x) => <li>{x}</li>)}</ul>
+          </div>
+        </section>
+      ))}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .actions { margin: 1.6rem 0 2.5rem; }
+  .etat { font: 600 .72rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--doux); }
+  .carte h2 { font-size: 1.9rem; margin: 0; }
+  .carte h3 { font: 600 .8rem/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--doux); margin-top: .6rem; }
+  .carte ul { margin: 0; padding-left: 1.15rem; }
+  .carte li { margin-bottom: .25em; }
+</style>

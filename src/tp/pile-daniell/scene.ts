@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte } from '../../lib/anim';
 import { appareil, becher, etiquette, fleche, paillasse, type Recipient } from '../../lib/labkit';
 import { C, MONO, POLICE } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -57,21 +57,21 @@ const lame = (x: number, ys: number, dx: (i: number, c: number) => number = () =
 
 export default definirScene({
   etapes: [
-    { titre: 'Constituer les deux demi-piles', duree: 6, texte: 'Une lame de <strong>zinc</strong> plonge dans une solution de sulfate de zinc, une lame de <strong>cuivre</strong> dans une solution bleue de sulfate de cuivre. Chaque couple métal/ion forme une demi-pile.' },
-    { titre: 'Relier par un pont salin, mesurer la tension à vide', duree: 7, texte: 'Sans pont salin, le voltmètre affiche 0 V. Dès que le pont relie les deux solutions, il indique <strong>U = 1,10 V</strong> : le cuivre est la borne <strong>+</strong>, le zinc la borne <strong>−</strong>.' },
-    { titre: 'Brancher un conducteur ohmique', duree: 8, texte: 'Le circuit est fermé : les <strong>électrons</strong> quittent le zinc et rejoignent le cuivre par les fils, le courant <em>I</em> circule en sens inverse. Dans le pont salin, ce sont les <strong>ions</strong> qui portent le courant.' },
-    { titre: 'Observer les réactions aux électrodes', duree: 8, texte: 'À l\'<strong>anode</strong>, le zinc s\'oxyde : Zn → Zn<sup>2+</sup> + 2 e<sup>−</sup>. À la <strong>cathode</strong>, les ions cuivre sont réduits : Cu<sup>2+</sup> + 2 e<sup>−</sup> → Cu.' },
-    { titre: 'Laisser la pile débiter', duree: 12, texte: 'Les heures défilent en accéléré : la lame de zinc <strong>s\'amincit</strong>, celle de cuivre <strong>s\'épaissit</strong>, la solution bleue pâlit. La charge débitée vaut <strong>Q = I·Δt</strong>.' },
-    { titre: 'Faire le bilan de matière', duree: 7, texte: 'La pile a fait circuler une quantité d\'électrons <strong>n(e<sup>−</sup>) = Q/F</strong>, deux électrons par atome de zinc consommé et par atome de cuivre déposé. Changez la résistance ou la durée : la pile est <strong>usée</strong> quand les ions Cu<sup>2+</sup> sont épuisés.' },
+    { titre: L('Constituer les deux demi-piles', 'Set up the two half-cells'), duree: 6, texte: L('Une lame de <strong>zinc</strong> plonge dans une solution de sulfate de zinc, une lame de <strong>cuivre</strong> dans une solution bleue de sulfate de cuivre. Chaque couple métal/ion forme une demi-pile.', 'A <strong>zinc</strong> strip dips into a zinc sulfate solution, a <strong>copper</strong> strip into a blue copper sulfate solution. Each metal/ion couple forms a half-cell.') },
+    { titre: L('Relier par un pont salin, mesurer la tension à vide', 'Add a salt bridge, measure the open-circuit voltage'), duree: 7, texte: L('Sans pont salin, le voltmètre affiche 0 V. Dès que le pont relie les deux solutions, il indique <strong>U = 1,10 V</strong> : le cuivre est la borne <strong>+</strong>, le zinc la borne <strong>−</strong>.', 'Without a salt bridge, the voltmeter reads 0 V. As soon as the bridge connects the two solutions, it reads <strong>U = 1.10 V</strong>: the copper is the <strong>+</strong> terminal, the zinc the <strong>−</strong> terminal.') },
+    { titre: L('Brancher un conducteur ohmique', 'Connect a resistor'), duree: 8, texte: L('Le circuit est fermé : les <strong>électrons</strong> quittent le zinc et rejoignent le cuivre par les fils, le courant <em>I</em> circule en sens inverse. Dans le pont salin, ce sont les <strong>ions</strong> qui portent le courant.', 'The circuit is closed: the <strong>electrons</strong> leave the zinc and reach the copper through the wires, the current <em>I</em> flows the opposite way. In the salt bridge, it is the <strong>ions</strong> that carry the current.') },
+    { titre: L('Observer les réactions aux électrodes', 'Observe the electrode reactions'), duree: 8, texte: L('À l\'<strong>anode</strong>, le zinc s\'oxyde : Zn → Zn<sup>2+</sup> + 2 e<sup>−</sup>. À la <strong>cathode</strong>, les ions cuivre sont réduits : Cu<sup>2+</sup> + 2 e<sup>−</sup> → Cu.', 'At the <strong>anode</strong>, zinc is oxidised: Zn → Zn<sup>2+</sup> + 2 e<sup>−</sup>. At the <strong>cathode</strong>, copper ions are reduced: Cu<sup>2+</sup> + 2 e<sup>−</sup> → Cu.') },
+    { titre: L('Laisser la pile débiter', 'Let the cell deliver current'), duree: 12, texte: L('Les heures défilent en accéléré : la lame de zinc <strong>s\'amincit</strong>, celle de cuivre <strong>s\'épaissit</strong>, la solution bleue pâlit. La charge débitée vaut <strong>Q = I·Δt</strong>.', 'The hours go by speeded up: the zinc strip <strong>gets thinner</strong>, the copper strip <strong>gets thicker</strong>, the blue solution fades. The charge delivered is <strong>Q = I·Δt</strong>.') },
+    { titre: L('Faire le bilan de matière', 'Work out the amounts of substance'), duree: 7, texte: L('La pile a fait circuler une quantité d\'électrons <strong>n(e<sup>−</sup>) = Q/F</strong>, deux électrons par atome de zinc consommé et par atome de cuivre déposé. Changez la résistance ou la durée : la pile est <strong>usée</strong> quand les ions Cu<sup>2+</sup> sont épuisés.', 'The cell has driven an amount of electrons <strong>n(e<sup>−</sup>) = Q/F</strong> round the circuit, two electrons per zinc atom consumed and per copper atom deposited. Change the resistance or the duration: the cell is <strong>exhausted</strong> when the Cu<sup>2+</sup> ions are used up.') },
   ],
   parametres: [
-    { id: 'r', label: 'Résistance du circuit', min: 10, max: 100, pas: 5, valeur: 30, unite: 'Ω' },
-    { id: 'duree', label: 'Durée de fonctionnement', min: 2, max: 12, pas: 0.5, valeur: 6, unite: 'h', decimales: 1 },
+    { id: 'r', label: L('Résistance du circuit', 'Circuit resistance'), min: 10, max: 100, pas: 5, valeur: 30, unite: 'Ω' },
+    { id: 'duree', label: L('Durée de fonctionnement', 'Running time'), min: 2, max: 12, pas: 0.5, valeur: 6, unite: 'h', decimales: 1 },
   ],
   graphique: {
     x: { label: 't (h)', min: 0, max: 12, pas: 2 },
     y: { label: 'Δm (mg)', min: -M_REF, max: M_REF, pas: 200 },
-    titre: 'Variation de masse des lames',
+    titre: L('Variation de masse des lames', 'Change in mass of the strips'),
   },
   affiche: { etape: 4, t: 0.7 },
 
@@ -111,7 +111,7 @@ export default definirScene({
     el('path', { ...tube, stroke: mix(C.panneau, C.jaune, 0.3), 'stroke-width': 14 }, gPont);
     const gIonsPont = el('g', {}, gPont);
     const ionsPont = Array.from({ length: 10 }, (_, i) => el('circle', { r: 2.8, fill: i % 2 ? C.menthe : C.violet }, gIonsPont));
-    const etqPont = etiquette(scene, { x: 225, y: 222, texte: 'pont salin', ancre: 'middle', taille: 13, couleur: C.discret });
+    const etqPont = etiquette(scene, { x: 225, y: 222, texte: L('pont salin', 'salt bridge'), ancre: 'middle', taille: 13, couleur: C.discret });
     const etqNO3 = etiquette(scene, { x: 185, y: 242, texte: '← NO₃⁻', ancre: 'middle', taille: 13, couleur: C.menthe });
     const etqK = etiquette(scene, { x: 265, y: 242, texte: 'K⁺ →', ancre: 'middle', taille: 13, couleur: C.violet });
 
@@ -142,7 +142,7 @@ export default definirScene({
     etiquette(gE, { x: 165, y: 162, texte: 'e⁻', taille: 14, couleur: C.jaune });
     fleche(gI, { x1: 334, y1: 157, x2: 292, y2: 157, couleur: C.corail });
     const etqI = etiquette(gI, { x: 284, y: 162, texte: '', ancre: 'end', taille: 13, mono: true, couleur: C.corail });
-    const etqUsee = etiquette(scene, { x: xr, y: 196, texte: 'Pile usée : plus d\'ions Cu²⁺', ancre: 'middle', taille: 14, couleur: C.corail });
+    const etqUsee = etiquette(scene, { x: xr, y: 196, texte: L('Pile usée : plus d\'ions Cu²⁺', 'Cell exhausted: no Cu²⁺ left'), ancre: 'middle', taille: 14, couleur: C.corail });
 
     // Bornes (étape 2), noms des lames et variations de masse (étape 5).
     const borne = (x: number, signe: string, couleur: string) => {
@@ -160,8 +160,8 @@ export default definirScene({
     const etqDmCu = etiquette(scene, { x: 400, y: 277, texte: '', ancre: 'middle', taille: 13, mono: true, couleur: C.orange });
 
     // Colonne de droite : voltmètre, demi-équations, bilan, chronomètre.
-    const volt = appareil(scene, { x: X0, y: 24, w: W0, h: 66, titre: 'VOLTMÈTRE' });
-    const chrono = appareil(scene, { x: X0, y: 372, w: W0, h: 68, titre: 'CHRONO (ACCÉLÉRÉ)', couleur: C.jaune });
+    const volt = appareil(scene, { x: X0, y: 24, w: W0, h: 66, titre: L('VOLTMÈTRE', 'VOLTMETER') });
+    const chrono = appareil(scene, { x: X0, y: 372, w: W0, h: 68, titre: L('CHRONO (ACCÉLÉRÉ)', 'TIMER (SPEEDED UP)'), couleur: C.jaune });
     const carte = (y: number, h: number, bord: string) => {
       const g = el('g', {}, scene);
       el('rect', { x: X0, y, width: W0, height: h, rx: 12, fill: C.panneau, stroke: bord, 'stroke-width': 1.5 }, g);
@@ -170,9 +170,9 @@ export default definirScene({
     const ligne = (g: SVGGElement, y: number, contenu: string, couleur: string, taille = 13, police = MONO) =>
       texte(g, X0 + 14, y, contenu, { fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 });
     const cAnode = carte(98, 48, C.bleu), cCathode = carte(152, 48, C.corail), cBilan = carte(208, 156, C.jaune);
-    ligne(cAnode, 117, 'Anode (−) : oxydation', C.bleu, 13, POLICE);
+    ligne(cAnode, 117, L('Anode (−) : oxydation', 'Anode (−): oxidation'), C.bleu, 13, POLICE);
     ligne(cAnode, 137, 'Zn → Zn²⁺ + 2 e⁻', C.texte, 14);
-    ligne(cCathode, 171, 'Cathode (+) : réduction', C.corail, 13, POLICE);
+    ligne(cCathode, 171, L('Cathode (+) : réduction', 'Cathode (+): reduction'), C.corail, 13, POLICE);
     ligne(cCathode, 191, 'Cu²⁺ + 2 e⁻ → Cu', C.texte, 14);
     const bilan = [ligne(cBilan, 229, '', C.discret, 13, POLICE), ligne(cBilan, 251, '', C.texte), ligne(cBilan, 271, '', C.texte), ligne(cBilan, 295, '', ZINC, 15), ligne(cBilan, 316, '', C.orange, 15), ligne(cBilan, 338, '', C.discret, 13, POLICE)];
     el('rect', { x: X0 + 14, y: 345, width: W0 - 28, height: 9, rx: 4.5, fill: C.fond, stroke: C.metal, 'stroke-width': 1.2 }, cBilan);
@@ -289,12 +289,12 @@ export default definirScene({
       show(cBilan, seg(a6, 0.05, 0.3, ease.out), 16);
       bilan.forEach((n, k) => { n.style.opacity = String(seg(a6, 0.2 + 0.09 * k, 0.32 + 0.09 * k)); });
       [
-        `Bilan après ${fmt(ts / 3600, 1)} h`,
+        L(`Bilan après ${fmt(ts / 3600, 1)} h`, `Summary after ${fmt(ts / 3600, 1)} h`),
         `Q = ${usee ? 'Qmax' : 'I·Δt'} = ${fmt(q, 0)} C`,
         `n(e⁻) = ${fmt(quantiteElectrons(q) * 1000, 2)} mmol`,
-        `Zn : −${fmt(mZn, 0)} mg`,
-        `Cu : +${fmt(mCu, 0)} mg`,
-        usee ? `Pile usée en ${fmt(vie / 3600, 1)} h` : `Capacité restante : ${fmt(100 * reste, 0)} %`,
+        L(`Zn : −${fmt(mZn, 0)} mg`, `Zn: −${fmt(mZn, 0)} mg`),
+        L(`Cu : +${fmt(mCu, 0)} mg`, `Cu: +${fmt(mCu, 0)} mg`),
+        usee ? L(`Pile usée en ${fmt(vie / 3600, 1)} h`, `Cell exhausted in ${fmt(vie / 3600, 1)} h`) : L(`Capacité restante : ${fmt(100 * reste, 0)} %`, `Remaining capacity: ${fmt(100 * reste, 0)}%`),
       ].forEach((s, k) => { bilan[k].textContent = s; });
       set(jauge, { width: (W0 - 28) * niveau, fill: mix(C.corail, C.menthe, niveau) });
 
@@ -305,14 +305,14 @@ export default definirScene({
           graphique.courbe('zn', [[0, 0], [coude, -mZn], [h, -mZn]], { couleur: ZINC, epaisseur: 3 });
           graphique.courbe('cu', [[0, 0], [coude, mCu], [h, mCu]], { couleur: C.orange, epaisseur: 3 });
           graphique.horizontale('cap', cap, { couleur: C.discret });
-          graphique.horizontale('capTexte', cap, { couleur: C.discret, epaisseur: 0, label: 'Cu²⁺ épuisé' });
+          graphique.horizontale('capTexte', cap, { couleur: C.discret, epaisseur: 0, label: L('Cu²⁺ épuisé', 'Cu²⁺ used up') });
           graphique.opacite('cap', seg(a5, 0, 0.08));
           graphique.opacite('capTexte', seg(a5, 0, 0.08) * clamp((cap - mCu - 60) / 40)); // s'efface quand la courbe du cuivre l'atteint
-          graphique.repere('pz', h, -mZn, { couleur: ZINC, rayon: 4, label: !lisible ? undefined : fin ? `Zn : −${fmt(mZn, 0)} mg` : 'Zn' });
-          graphique.repere('pc', h, mCu, { couleur: C.orange, rayon: 4, label: !lisible ? undefined : fin ? `Cu : +${fmt(mCu, 0)} mg` : 'Cu' });
+          graphique.repere('pz', h, -mZn, { couleur: ZINC, rayon: 4, label: !lisible ? undefined : fin ? L(`Zn : −${fmt(mZn, 0)} mg`, `Zn: −${fmt(mZn, 0)} mg`) : 'Zn' });
+          graphique.repere('pc', h, mCu, { couleur: C.orange, rayon: 4, label: !lisible ? undefined : fin ? L(`Cu : +${fmt(mCu, 0)} mg`, `Cu: +${fmt(mCu, 0)} mg`) : 'Cu' });
           if (usee) {
             graphique.verticale('vie', vie / 3600, { couleur: C.corail });
-            graphique.repere('usee', vie / 3600, 0, { couleur: C.corail, rayon: 4, label: `pile usée à ${fmt(vie / 3600, 1)} h` });
+            graphique.repere('usee', vie / 3600, 0, { couleur: C.corail, rayon: 4, label: L(`pile usée à ${fmt(vie / 3600, 1)} h`, `exhausted at ${fmt(vie / 3600, 1)} h`) });
           } else {
             graphique.effacer('vie');
             graphique.effacer('usee');
@@ -321,11 +321,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Tension U', valeur: a2 > 0.1 ? `${fmt(u, 2)} V` : '...' },
-        { label: 'Intensité I', valeur: `${fmt(i * 1000, 1)} mA` },
+        { label: L('Tension U', 'Voltage U'), valeur: a2 > 0.1 ? `${fmt(u, 2)} V` : '...' },
+        { label: L('Intensité I', 'Current I'), valeur: `${fmt(i * 1000, 1)} mA` },
       ];
-      if (a5 > 0) mesures.push({ label: 'Charge débitée Q', valeur: `${fmt(q, 0)} C` });
-      if (a6 > 0) mesures.push({ label: 'Capacité de la pile', valeur: `${fmt(qMax, 0)} C` });
+      if (a5 > 0) mesures.push({ label: L('Charge débitée Q', 'Charge delivered Q'), valeur: `${fmt(q, 0)} C` });
+      if (a6 > 0) mesures.push({ label: L('Capacité de la pile', 'Cell capacity'), valeur: `${fmt(qMax, 0)} C` });
       return mesures;
     };
   },

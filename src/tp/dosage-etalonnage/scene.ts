@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, uid } from '../../lib/anim';
 import { appareil, becher, etiquette, gouttes, paillasse, tubeEssai } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -22,17 +22,17 @@ const tirage = (i: number, n: number) => {
 
 export default definirScene({
   etapes: [
-    { titre: 'Préparer la gamme étalon', duree: 7, texte: 'Par dilution d\'une solution mère de bleu patenté, on prépare cinq solutions filles de concentrations connues, de <strong>2,0 à 10,0 µmol/L</strong>. Plus la solution est concentrée, plus sa teinte est soutenue.' },
-    { titre: 'Régler le spectrophotomètre', duree: 6, texte: 'On choisit la longueur d\'onde du maximum d\'absorption, <strong>λ = 640 nm</strong>, puis on fait le <em>blanc</em> avec une cuve d\'eau distillée : l\'absorbance est réglée sur zéro.' },
-    { titre: 'Mesurer l\'absorbance des étalons', duree: 14, texte: 'Chaque solution passe dans la cuve. Elle absorbe une partie du faisceau : l\'intensité transmise <strong>I</strong> chute, l\'absorbance <strong>A</strong> augmente. Chaque mesure donne un point du graphique.' },
-    { titre: 'Tracer la droite d\'étalonnage', duree: 5, texte: 'Les points s\'alignent sur une droite passant par l\'origine : c\'est la loi de Beer-Lambert, <strong>A = k·C</strong> avec <strong>k = ε·l</strong>.' },
-    { titre: 'Mesurer la solution inconnue', duree: 8, texte: 'On mesure l\'absorbance de la solution X dans les mêmes conditions, puis on la <strong>reporte</strong> sur la droite : l\'abscisse du point donne sa concentration.' },
-    { titre: 'Conclure', duree: 5, texte: 'La concentration cherchée vaut <strong>C<sub>X</sub> = A<sub>X</sub> / k</strong>. Changez la longueur d\'onde ou l\'épaisseur de la cuve : la pente change, la concentration lue reste la même.' },
+    { titre: L('Préparer la gamme étalon', 'Prepare the standard solutions'), duree: 7, texte: L('Par dilution d\'une solution mère de bleu patenté, on prépare cinq solutions filles de concentrations connues, de <strong>2,0 à 10,0 µmol/L</strong>. Plus la solution est concentrée, plus sa teinte est soutenue.', 'By diluting a stock solution of patent blue, we prepare five standard solutions of known concentration, from <strong>2.0 to 10.0 µmol/L</strong>. The more concentrated the solution, the deeper its colour.') },
+    { titre: L('Régler le spectrophotomètre', 'Set up the spectrophotometer'), duree: 6, texte: L('On choisit la longueur d\'onde du maximum d\'absorption, <strong>λ = 640 nm</strong>, puis on fait le <em>blanc</em> avec une cuve d\'eau distillée : l\'absorbance est réglée sur zéro.', 'We select the wavelength of the absorption maximum, <strong>λ = 640 nm</strong>, then set the <em>blank</em> with a cuvette of distilled water: the absorbance is set to zero.') },
+    { titre: L('Mesurer l\'absorbance des étalons', 'Measure the absorbance of the standards'), duree: 14, texte: L('Chaque solution passe dans la cuve. Elle absorbe une partie du faisceau : l\'intensité transmise <strong>I</strong> chute, l\'absorbance <strong>A</strong> augmente. Chaque mesure donne un point du graphique.', 'Each solution is placed in the cuvette in turn. It absorbs part of the beam: the transmitted intensity <strong>I</strong> falls and the absorbance <strong>A</strong> rises. Each measurement gives one point on the graph.') },
+    { titre: L('Tracer la droite d\'étalonnage', 'Draw the calibration line'), duree: 5, texte: L('Les points s\'alignent sur une droite passant par l\'origine : c\'est la loi de Beer-Lambert, <strong>A = k·C</strong> avec <strong>k = ε·l</strong>.', 'The points lie on a straight line through the origin: this is the Beer-Lambert law, <strong>A = k·C</strong> with <strong>k = ε·l</strong>.') },
+    { titre: L('Mesurer la solution inconnue', 'Measure the unknown solution'), duree: 8, texte: L('On mesure l\'absorbance de la solution X dans les mêmes conditions, puis on la <strong>reporte</strong> sur la droite : l\'abscisse du point donne sa concentration.', 'We measure the absorbance of solution X under the same conditions, then <strong>mark it</strong> on the line: the horizontal coordinate of the point gives its concentration.') },
+    { titre: L('Conclure', 'Conclude'), duree: 5, texte: L('La concentration cherchée vaut <strong>C<sub>X</sub> = A<sub>X</sub> / k</strong>. Changez la longueur d\'onde ou l\'épaisseur de la cuve : la pente change, la concentration lue reste la même.', 'The unknown concentration is <strong>C<sub>X</sub> = A<sub>X</sub> / k</strong>. Change the wavelength or the path length of the cuvette: the gradient changes, but the concentration read off stays the same.') },
   ],
   parametres: [
-    { id: 'cx', label: 'Concentration de la solution X', min: 3, max: 9, pas: 0.2, valeur: 6.4, unite: 'µmol/L', decimales: 1 },
-    { id: 'l', label: 'Épaisseur de la cuve', min: 0.5, max: 1.5, pas: 0.25, valeur: 1, unite: 'cm', decimales: 2 },
-    { id: 'lambda', label: 'Longueur d\'onde', min: 600, max: 680, pas: 5, valeur: 640, unite: 'nm' },
+    { id: 'cx', label: L('Concentration de la solution X', 'Concentration of solution X'), min: 3, max: 9, pas: 0.2, valeur: 6.4, unite: 'µmol/L', decimales: 1 },
+    { id: 'l', label: L('Épaisseur de la cuve', 'Cuvette path length'), min: 0.5, max: 1.5, pas: 0.25, valeur: 1, unite: 'cm', decimales: 2 },
+    { id: 'lambda', label: L('Longueur d\'onde', 'Wavelength'), min: 600, max: 680, pas: 5, valeur: 640, unite: 'nm' },
   ],
   graphique: {
     x: { label: 'C (µmol/L)', min: 0, max: 12, pas: 2 },
@@ -48,7 +48,7 @@ export default definirScene({
     for (const x of [36, 300]) el('rect', { x: x - 3, y: 386, width: 6, height: 54, rx: 3, fill: C.metal }, scene);
     const tubes = XS.map((x) => tubeEssai(scene, { x, y: 432 }));
     const noms = XS.map((x, i) => etiquette(scene, { x, y: 312, texte: fmt(GAMME[i] * 1e6, 1), ancre: 'middle', mono: true, taille: 13 }));
-    const legende = etiquette(scene, { x: 30, y: 290, texte: 'Gamme étalon (C en µmol/L)', taille: 13, couleur: C.discret });
+    const legende = etiquette(scene, { x: 30, y: 290, texte: L('Gamme étalon (C en µmol/L)', 'Standards (C in µmol/L)'), taille: 13, couleur: C.discret });
     const inconnue = becher(scene, { x: X_INC, y: 432, w: 56, h: 70 });
     const nomX = etiquette(scene, { x: X_INC, y: 350, texte: 'Solution X', ancre: 'middle', taille: 13 });
 
@@ -72,7 +72,7 @@ export default definirScene({
     el('rect', { x: X_CAPTEUR, y: 136, width: 40, height: 48, rx: 6, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, spectro);
     el('rect', { x: X_CAPTEUR + 3, y: Y_FAISCEAU - 10, width: 6, height: 20, rx: 2, fill: C.verre, opacity: 0.8 }, spectro);
     el('path', { d: 'M540 136V102', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, spectro);
-    etiquette(spectro, { x: 540, y: 226, texte: 'Capteur', ancre: 'middle', taille: 13, couleur: C.discret });
+    etiquette(spectro, { x: 540, y: 226, texte: L('Capteur', 'Detector'), ancre: 'middle', taille: 13, couleur: C.discret });
     const afficheur = appareil(spectro, { x: 478, y: 30, w: 138, h: 72, titre: 'ABSORBANCE' });
     const cote = el('path', { fill: 'none', stroke: C.discret, 'stroke-width': 1.5, 'stroke-linecap': 'round' }, spectro);
     const nomL = etiquette(spectro, { x: X_CUVE, y: 108, texte: '', ancre: 'middle', mono: true, taille: 13, couleur: C.discret });
@@ -98,7 +98,7 @@ export default definirScene({
     const cadre = el('rect', { x: 410, y: 300, width: 214, height: 126, rx: 14, fill: C.panneau, stroke: C.cyan, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 426, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(324, 13, C.discret, POLICE).textContent = 'Loi de Beer-Lambert';
+    ligne(324, 13, C.discret, POLICE).textContent = L('Loi de Beer-Lambert', 'Beer-Lambert law');
     ligne(348, 15, C.texte).textContent = 'A = k·C, k = ε·l';
     const lignePente = ligne(372, 13.5, C.cyan);
     const resultat = ligne(406, 17, C.jaune);
@@ -187,7 +187,7 @@ export default definirScene({
       });
       nomI.style.opacity = String(0.35 + 0.65 * tr);
       nomI0.style.opacity = '1';
-      afficheur.affiche(allume < 1 ? '' : presence > 0.02 ? fmt(aCuve, 3) : '-,---');
+      afficheur.affiche(allume < 1 ? '' : presence > 0.02 ? fmt(aCuve, 3) : L('-,---', '-.---'));
 
       // Étapes 4 à 6 : loi, pente, résultat.
       show(encart, seg(a3, 0.5, 0.85, ease.backOut), 16);
@@ -229,11 +229,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Concentration dans la cuve', valeur: m < 0.85 ? '...' : a4 > 0 ? (a4 > 0.88 ? `${fmt(cLue * 1e6, 1)} µmol/L` : '?') : `${fmt(c * 1e6, 1)} µmol/L` },
-        { label: 'Absorbance A', valeur: presence > 0.02 ? fmt(aCuve, 3) : '...' },
-        { label: 'Lumière transmise I/I0', valeur: allume < 1 ? '...' : `${fmt(100 * tr, 0)} %` },
+        { label: L('Concentration dans la cuve', 'Concentration in the cuvette'), valeur: m < 0.85 ? '...' : a4 > 0 ? (a4 > 0.88 ? `${fmt(cLue * 1e6, 1)} µmol/L` : '?') : `${fmt(c * 1e6, 1)} µmol/L` },
+        { label: L('Absorbance A', 'Absorbance A'), valeur: presence > 0.02 ? fmt(aCuve, 3) : '...' },
+        { label: L('Lumière transmise I/I0', 'Transmitted light I/I0'), valeur: allume < 1 ? '...' : `${fmt(100 * tr, 0)} %` },
       ];
-      if (a3 > 0.6) mesures.push({ label: 'Pente k', valeur: `${fmt(k / 1e5, 2)} ×10⁵ L/mol` });
+      if (a3 > 0.6) mesures.push({ label: L('Pente k', 'Gradient k'), valeur: `${fmt(k / 1e5, 2)} ×10⁵ L/mol` });
       return mesures;
     };
   },

@@ -1,23 +1,27 @@
 ---
 import '../styles/lecteur.css';
+import { UI, type Lang } from '../i18n';
 
 interface Props {
   slug: string;
   titre: string;
   /** complet : lecteur de la page TP. demo : boucle automatique sans commandes. affiche : image fixe pour vignette. */
   mode?: 'complet' | 'demo' | 'affiche';
+  /** Langue de la page. Les textes écrits par le script (étapes, mesures) suivent l'attribut lang du document. */
+  lang?: Lang;
 }
-const { slug, titre, mode = 'complet' } = Astro.props;
+const { slug, titre, mode = 'complet', lang = 'fr' } = Astro.props;
+const u = UI[lang].lecteur;
 ---
 
 <div class="lecteur" data-lecteur data-slug={slug} data-mode={mode}>
   <div class="lecteur-ecran">
-    <svg class="lecteur-scene" data-scene role="img" aria-label={`Animation du TP : ${titre}`}></svg>
-    {mode !== 'affiche' && <svg class="lecteur-graph" data-graph role="img" aria-label={`Graphique du TP : ${titre}`}></svg>}
+    <svg class="lecteur-scene" data-scene role="img" aria-label={u.animation(titre)}></svg>
+    {mode !== 'affiche' && <svg class="lecteur-graph" data-graph role="img" aria-label={u.graphique(titre)}></svg>}
   </div>
   {mode === 'complet' && (
     <>
-      <dl class="lecteur-mesures" data-mesures aria-label="Mesures en direct"></dl>
+      <dl class="lecteur-mesures" data-mesures aria-label={u.mesures}></dl>
       <div class="lecteur-pied">
         <div>
           <div class="lecteur-etape" aria-live="polite">
@@ -25,26 +29,26 @@ const { slug, titre, mode = 'complet' } = Astro.props;
             <h3 data-titre></h3>
             <p data-texte></p>
           </div>
-          <div class="lecteur-barre" data-barre role="slider" tabindex="0" aria-label="Progression du TP" aria-valuemin="1" aria-valuemax="1"></div>
+          <div class="lecteur-barre" data-barre role="slider" tabindex="0" aria-label={u.progression} aria-valuemin="1" aria-valuemax="1"></div>
           <div class="lecteur-commandes">
-            <button type="button" data-prec aria-label="Étape précédente">
+            <button type="button" data-prec aria-label={u.precedente}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.5v14H6zM19 5v14L9.5 12z"></path></svg>
             </button>
-            <button type="button" data-jouer aria-label="Lecture">
+            <button type="button" data-jouer aria-label={u.lecture}>
               <svg class="ico-lecture" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4.5v15l12-7.5z"></path></svg>
               <svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z"></path></svg>
             </button>
-            <button type="button" data-suiv aria-label="Étape suivante">
+            <button type="button" data-suiv aria-label={u.suivante}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5H18v14h-2.5zM5 5l9.5 7L5 19z"></path></svg>
             </button>
-            <button type="button" data-rejouer aria-label="Recommencer le TP">
+            <button type="button" data-rejouer aria-label={u.recommencer}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1.5L6.5 6 12 10.5V7a5.5 5.5 0 1 1-5.5 5.5h-2A7.5 7.5 0 1 0 12 5z"></path></svg>
             </button>
-            <label class="lecteur-auto"><input type="checkbox" data-auto /> Enchaîner les étapes</label>
+            <label class="lecteur-auto"><input type="checkbox" data-auto /> {u.enchainer}</label>
           </div>
         </div>
         <div class="lecteur-params" data-bloc-params>
-          <h4>À vous de jouer</h4>
+          <h4>{u.aVous}</h4>
           <div data-params></div>
         </div>
       </div>

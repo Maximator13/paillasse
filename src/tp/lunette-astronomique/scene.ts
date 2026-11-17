@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, rng, seg, set, show } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, rng, seg, set, show } from '../../lib/anim';
 import { etiquette, fleche, paillasse } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -93,15 +93,15 @@ function medaillon(parent: Element, cx: number, cy: number, couleur: string, gra
 
 export default definirScene({
   etapes: [
-    { titre: 'L\'objectif forme l\'image intermédiaire', duree: 9, texte: 'La lumière d\'un astre très éloigné arrive en <strong>faisceau parallèle</strong>, incliné d\'un angle θ sur l\'axe. Le rayon passant par O<sub>1</sub> n\'est pas dévié : tous les rayons se croisent en B<sub>1</sub>, dans le plan focal image de l\'objectif.' },
-    { titre: 'Régler l\'oculaire : la lunette afocale', duree: 10, texte: 'On retire l\'écran, puis on approche l\'oculaire jusqu\'à ce que son foyer objet F<sub>2</sub> coïncide avec F\'<sub>1</sub>. Le faisceau émergent devient parallèle : la lunette est <strong>afocale</strong>, l\'œil observe sans accommoder.' },
-    { titre: 'Repérer les angles θ et θ\'', duree: 10, texte: 'Le rayon qui irait de B<sub>1</sub> vers O<sub>2</sub> ne serait pas dévié : il donne la direction du faisceau émergent. Dans les deux triangles, <strong>tan θ = A<sub>1</sub>B<sub>1</sub>/f\'<sub>1</sub></strong> et <strong>tan θ\' = A<sub>1</sub>B<sub>1</sub>/f\'<sub>2</sub></strong>.' },
-    { titre: 'Mesurer le grossissement', duree: 12, texte: 'On change la direction de l\'astre et on relève θ\' pour chaque θ. Les points s\'alignent sur une droite passant par l\'origine : sa pente est le <strong>grossissement G = θ\'/θ = f\'<sub>1</sub>/f\'<sub>2</sub></strong>.' },
-    { titre: 'Ce que voit l\'œil', duree: 9, texte: 'À travers la lunette, l\'astre paraît <strong>G fois plus grand</strong> et <strong>renversé</strong>. Changez les distances focales : pour grossir davantage, il faut un objectif de grande focale et un oculaire de courte focale.' },
+    { titre: L('L\'objectif forme l\'image intermédiaire', 'The objective forms the intermediate image'), duree: 9, texte: L('La lumière d\'un astre très éloigné arrive en <strong>faisceau parallèle</strong>, incliné d\'un angle θ sur l\'axe. Le rayon passant par O<sub>1</sub> n\'est pas dévié : tous les rayons se croisent en B<sub>1</sub>, dans le plan focal image de l\'objectif.', 'Light from a very distant object arrives as a <strong>parallel beam</strong>, inclined at an angle θ to the axis. The ray through O<sub>1</sub> is not deviated: all the rays cross at B<sub>1</sub>, in the image focal plane of the objective.') },
+    { titre: L('Régler l\'oculaire : la lunette afocale', 'Adjusting the eyepiece: the afocal telescope'), duree: 10, texte: L('On retire l\'écran, puis on approche l\'oculaire jusqu\'à ce que son foyer objet F<sub>2</sub> coïncide avec F\'<sub>1</sub>. Le faisceau émergent devient parallèle : la lunette est <strong>afocale</strong>, l\'œil observe sans accommoder.', 'The screen is removed, then the eyepiece is moved closer until its object focal point F<sub>2</sub> coincides with F\'<sub>1</sub>. The emergent beam becomes parallel: the telescope is <strong>afocal</strong>, and the eye observes without accommodating.') },
+    { titre: L('Repérer les angles θ et θ\'', 'Identifying the angles θ and θ\''), duree: 10, texte: L('Le rayon qui irait de B<sub>1</sub> vers O<sub>2</sub> ne serait pas dévié : il donne la direction du faisceau émergent. Dans les deux triangles, <strong>tan θ = A<sub>1</sub>B<sub>1</sub>/f\'<sub>1</sub></strong> et <strong>tan θ\' = A<sub>1</sub>B<sub>1</sub>/f\'<sub>2</sub></strong>.', 'The ray that would travel from B<sub>1</sub> to O<sub>2</sub> would not be deviated: it gives the direction of the emergent beam. In the two triangles, <strong>tan θ = A<sub>1</sub>B<sub>1</sub>/f\'<sub>1</sub></strong> and <strong>tan θ\' = A<sub>1</sub>B<sub>1</sub>/f\'<sub>2</sub></strong>.') },
+    { titre: L('Mesurer le grossissement', 'Measuring the magnification'), duree: 12, texte: L('On change la direction de l\'astre et on relève θ\' pour chaque θ. Les points s\'alignent sur une droite passant par l\'origine : sa pente est le <strong>grossissement G = θ\'/θ = f\'<sub>1</sub>/f\'<sub>2</sub></strong>.', 'The direction of the object is changed and θ\' is recorded for each θ. The points lie on a straight line through the origin: its gradient is the <strong>magnification G = θ\'/θ = f\'<sub>1</sub>/f\'<sub>2</sub></strong>.') },
+    { titre: L('Ce que voit l\'œil', 'What the eye sees'), duree: 9, texte: L('À travers la lunette, l\'astre paraît <strong>G fois plus grand</strong> et <strong>renversé</strong>. Changez les distances focales : pour grossir davantage, il faut un objectif de grande focale et un oculaire de courte focale.', 'Through the telescope, the object appears <strong>G times larger</strong> and <strong>inverted</strong>. Change the focal lengths: for greater magnification, you need an objective with a long focal length and an eyepiece with a short focal length.') },
   ],
   parametres: [
-    { id: 'f1', label: 'Distance focale de l\'objectif f\'1', min: 20, max: 50, pas: 5, valeur: 40, unite: 'cm' },
-    { id: 'f2', label: 'Distance focale de l\'oculaire f\'2', min: 5, max: 12, pas: 0.5, valeur: 8, unite: 'cm', decimales: 1 },
+    { id: 'f1', label: L('Distance focale de l\'objectif f\'1', 'Focal length of the objective f\'1'), min: 20, max: 50, pas: 5, valeur: 40, unite: 'cm' },
+    { id: 'f2', label: L('Distance focale de l\'oculaire f\'2', 'Focal length of the eyepiece f\'2'), min: 5, max: 12, pas: 0.5, valeur: 8, unite: 'cm', decimales: 1 },
   ],
   graphique: {
     x: { label: 'θ (°)', min: 0, max: THETA, pas: 0.2, decimales: 1 },
@@ -117,7 +117,7 @@ export default definirScene({
     el('rect', { x: 28, y: RAIL, width: 584, height: 10, rx: 3, fill: C.metal }, banc);
     for (let cm = -15; cm <= 85; cm += 5) el('line', { x1: X(cm), x2: X(cm), y1: RAIL + (cm % 10 ? 5 : 2), y2: RAIL + 10, stroke: C.fond, 'stroke-width': 1.2 }, banc);
     el('line', { x1: X0, x2: 624, y1: YA, y2: YA, stroke: C.discret, 'stroke-width': 1.2, 'stroke-dasharray': '10 5 2 5', opacity: 0.7 }, scene);
-    etiquette(scene, { x: X0, y: 464, texte: 'Schéma dilaté 10 fois dans le sens vertical', taille: 13, couleur: C.discret });
+    etiquette(scene, { x: X0, y: 464, texte: L('Schéma dilaté 10 fois dans le sens vertical', 'Diagram stretched 10 times vertically'), taille: 13, couleur: C.discret });
 
     // Triangles O1A1B1 et O2A1B1 (sous les rayons).
     const tri1 = el('polygon', { fill: C.cyan, 'fill-opacity': 0 }, scene);
@@ -127,12 +127,12 @@ export default definirScene({
     const ecran = el('g', {}, scene);
     support(ecran, 82);
     el('rect', { x: -2.5, y: -76, width: 5, height: 158, rx: 2, fill: C.verre, opacity: 0.55 }, ecran);
-    etiquette(ecran, { x: 0, y: -86, texte: 'Écran', ancre: 'middle', taille: 13, couleur: C.discret });
-    const objectif = lentille(scene, R1 * SY, C.cyan, 'Objectif L1');
-    const oculaire = lentille(scene, R2 * SY, C.rose, 'Oculaire L2');
+    etiquette(ecran, { x: 0, y: -86, texte: L('Écran', 'Screen'), ancre: 'middle', taille: 13, couleur: C.discret });
+    const objectif = lentille(scene, R1 * SY, C.cyan, L('Objectif L1', 'Objective L1'));
+    const oculaire = lentille(scene, R2 * SY, C.rose, L('Oculaire L2', 'Eyepiece L2'));
     etiquette(objectif, { x: -9, y: 18, texte: 'O1', ancre: 'end', taille: 13, couleur: C.cyan, mono: true });
     etiquette(oculaire, { x: -8, y: -27, texte: 'O2', ancre: 'end', taille: 13, couleur: C.rose, mono: true });
-    const astre = etiquette(scene, { x: X0, y: 190, texte: 'Astre à l\'infini', taille: 13, couleur: C.jaune });
+    const astre = etiquette(scene, { x: X0, y: 190, texte: L('Astre à l\'infini', 'Object at infinity'), taille: 13, couleur: C.jaune });
 
     // Rayons : halo, trait, grains de lumière qui filent dans le sens de propagation.
     const rayons = [H, 0, -H].map((h) => {
@@ -177,7 +177,7 @@ export default definirScene({
     el('path', { d: 'M9 -12Q-3 0 9 12', fill: C.fond, stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round' }, oeil);
     el('ellipse', { cx: 11, rx: 3.2, ry: 8.5, fill: C.bleu }, oeil);
     el('ellipse', { cx: 9.6, rx: 1.6, ry: 4.4, fill: C.fond }, oeil);
-    etiquette(oeil, { x: 31, y: 43, texte: 'Œil', ancre: 'middle', taille: 13, couleur: C.discret });
+    etiquette(oeil, { x: 31, y: 43, texte: L('Œil', 'Eye'), ancre: 'middle', taille: 13, couleur: C.discret });
 
     // Encart des relations (étapes 3 et 4).
     const encart = el('g', {}, scene);
@@ -193,7 +193,7 @@ export default definirScene({
 
     // Médaillons (étape 5).
     const nu = medaillon(scene, 474, 100, C.metal, 7), vu = medaillon(scene, 574, 100, C.jaune, 11);
-    nu.legende.textContent = 'À l\'œil nu';
+    nu.legende.textContent = L('À l\'œil nu', 'Naked eye');
     nu.astre.setAttribute('transform', 'rotate(-20) scale(0.44)');
 
     return ({ etape, t, T, p }) => {
@@ -287,19 +287,19 @@ export default definirScene({
       show(vu.g, seg(a4, 0.1, 0.28, ease.backOut), 14);
       const zoom = seg(a4, 0.34, 0.8);
       vu.astre.setAttribute('transform', `rotate(${(-20 + 180 * zoom).toFixed(1)}) scale(${(0.44 * G ** zoom).toFixed(3)})`);
-      vu.legende.textContent = `Lunette : ×${fmt(G ** zoom, 1)}`;
+      vu.legende.textContent = L(`Lunette : ×${fmt(G ** zoom, 1)}`, `Telescope: ×${fmt(G ** zoom, 1)}`);
 
       if (graphique) {
         const trace = THETA * seg(a3, 0.2, 0.86), fin = a3 >= 0.86;
         graphique.courbe('nu', a3 > 0.2 ? [[0, 0], [trace, trace]] : [], { couleur: C.discret, epaisseur: 2, pointille: true });
         graphique.courbe('lunette', a3 > 0.2 ? caracteristique(l, trace, 24) : [], { couleur: C.jaune, epaisseur: 3 });
         if (a2 > 0.8) {
-          graphique.repere('pt', thDeg, thP, { couleur: fin ? C.jaune : C.blanc, rayon: fin ? 5 : 4, label: fin ? `pente G = ${fmt(G, 1)}` : a3 > 0 ? undefined : `θ' = ${fmt(thP, 2)}°` });
+          graphique.repere('pt', thDeg, thP, { couleur: fin ? C.jaune : C.blanc, rayon: fin ? 5 : 4, label: fin ? L(`pente G = ${fmt(G, 1)}`, `gradient G = ${fmt(G, 1)}`) : a3 > 0 ? undefined : `θ' = ${fmt(thP, 2)}°` });
           graphique.opacite('pt', seg(a2, 0.8, 0.92));
         } else graphique.effacer('pt');
         if (fin) {
           // Aux faibles grossissements, les deux droites sont trop proches pour loger l'étiquette sans chevauchement.
-          graphique.repere('oeil', THETA, THETA, { couleur: C.discret, rayon: 3, label: G >= 2.4 ? 'œil nu' : undefined });
+          graphique.repere('oeil', THETA, THETA, { couleur: C.discret, rayon: 3, label: G >= 2.4 ? L('œil nu', 'naked eye') : undefined });
           graphique.opacite('oeil', seg(a3, 0.86, 0.96));
         } else graphique.effacer('oeil');
       }
@@ -308,7 +308,7 @@ export default definirScene({
       if (a2 > 0.6) mesures.push({ label: 'Angle θ\'', valeur: `${fmt(thP, 2)}°` });
       else mesures.push({ label: 'Image A1B1', valeur: a0 > 0.66 ? `${fmt((YA - yB1) / SY * -10, 1)} mm` : '...' });
       if (a1 > 0.06) mesures.push({ label: 'Distance O1O2', valeur: `${fmt(e, 1)} cm` });
-      if (a3 >= 0.86) mesures.push({ label: 'Grossissement G', valeur: fmt(G, 1) });
+      if (a3 >= 0.86) mesures.push({ label: L('Grossissement G', 'Magnification G'), valeur: fmt(G, 1) });
       return mesures;
     };
   },

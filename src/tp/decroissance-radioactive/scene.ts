@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show } from '../../lib/anim';
 import { appareil, etiquette, paillasse } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -12,20 +12,20 @@ const VOL = 0.04, ECLAIR = 0.03; // durées (en fraction d'étape) du vol d'une 
 
 export default definirScene({
   etapes: [
-    { titre: 'Préparer l\'échantillon', duree: 5, texte: 'Une enceinte contient <strong>N<sub>0</sub></strong> noyaux de <strong>radon 220</strong>, tous identiques et tous instables. Un compteur est placé face à l\'échantillon.' },
-    { titre: 'Une désintégration, vue de près', duree: 7, texte: 'Le noyau de radon expulse une <strong>particule α</strong> (un noyau d\'hélium 4) et devient un noyau de polonium 216. Pour un noyau donné, l\'instant de la désintégration est <em>imprévisible</em>.' },
-    { titre: 'Lancer le comptage', duree: 14, texte: 'Chaque désintégration envoie une particule vers le compteur. Les noyaux s\'éteignent au hasard, mais leur nombre <strong>N(t)</strong> décroît de façon très régulière.' },
-    { titre: 'Comparer à la loi de décroissance', duree: 7, texte: 'Les mesures fluctuent autour de <strong>N(t) = N<sub>0</sub>·e<sup>−λt</sup></strong>. La <strong>demi-vie t<sub>1/2</sub></strong> est la durée au bout de laquelle il reste la moitié des noyaux.' },
-    { titre: 'Demi-vie et activité', duree: 6, texte: 'On en déduit <strong>λ = ln 2 / t<sub>1/2</sub></strong> et l\'activité <strong>A = λ·N</strong>, en becquerels. Changez le nombre de noyaux, la demi-vie ou le tirage : le hasard change, la loi reste.' },
+    { titre: L('Préparer l\'échantillon', 'Prepare the sample'), duree: 5, texte: L('Une enceinte contient <strong>N<sub>0</sub></strong> noyaux de <strong>radon 220</strong>, tous identiques et tous instables. Un compteur est placé face à l\'échantillon.', 'A chamber contains <strong>N<sub>0</sub></strong> nuclei of <strong>radon-220</strong>, all identical and all unstable. A counter is placed facing the sample.') },
+    { titre: L('Une désintégration, vue de près', 'A single decay, seen close up'), duree: 7, texte: L('Le noyau de radon expulse une <strong>particule α</strong> (un noyau d\'hélium 4) et devient un noyau de polonium 216. Pour un noyau donné, l\'instant de la désintégration est <em>imprévisible</em>.', 'The radon nucleus ejects an <strong>α particle</strong> (a helium-4 nucleus) and becomes a polonium-216 nucleus. For a given nucleus, the instant of decay is <em>unpredictable</em>.') },
+    { titre: L('Lancer le comptage', 'Start the count'), duree: 14, texte: L('Chaque désintégration envoie une particule vers le compteur. Les noyaux s\'éteignent au hasard, mais leur nombre <strong>N(t)</strong> décroît de façon très régulière.', 'Each decay sends a particle towards the counter. The nuclei go out at random, but their number <strong>N(t)</strong> decreases very regularly.') },
+    { titre: L('Comparer à la loi de décroissance', 'Compare with the decay law'), duree: 7, texte: L('Les mesures fluctuent autour de <strong>N(t) = N<sub>0</sub>·e<sup>−λt</sup></strong>. La <strong>demi-vie t<sub>1/2</sub></strong> est la durée au bout de laquelle il reste la moitié des noyaux.', 'The measurements fluctuate around <strong>N(t) = N<sub>0</sub>·e<sup>−λt</sup></strong>. The <strong>half-life t<sub>1/2</sub></strong> is the time after which half of the nuclei remain.') },
+    { titre: L('Demi-vie et activité', 'Half-life and activity'), duree: 6, texte: L('On en déduit <strong>λ = ln 2 / t<sub>1/2</sub></strong> et l\'activité <strong>A = λ·N</strong>, en becquerels. Changez le nombre de noyaux, la demi-vie ou le tirage : le hasard change, la loi reste.', 'From this we deduce <strong>λ = ln 2 / t<sub>1/2</sub></strong> and the activity <strong>A = λ·N</strong>, in becquerels. Change the number of nuclei, the half-life or the draw: chance changes, the law remains.') },
   ],
   parametres: [
-    { id: 'n0', label: 'Nombre de noyaux N0', min: 64, max: N_MAX, pas: 16, valeur: 160 },
-    { id: 't12', label: 'Demi-vie', min: 30, max: 120, pas: 1, valeur: 56, unite: 's' },
-    { id: 'tirage', label: 'Tirage au sort n°', min: 1, max: 8, pas: 1, valeur: 1 },
+    { id: 'n0', label: L('Nombre de noyaux N0', 'Number of nuclei N0'), min: 64, max: N_MAX, pas: 16, valeur: 160 },
+    { id: 't12', label: L('Demi-vie', 'Half-life'), min: 30, max: 120, pas: 1, valeur: 56, unite: 's' },
+    { id: 'tirage', label: L('Tirage au sort n°', 'Random draw no.'), min: 1, max: 8, pas: 1, valeur: 1 },
   ],
   graphique: {
     x: { label: 't (s)', min: 0, max: T_MAX, pas: 50 },
-    y: { label: 'N restants', min: 0, max: 220, pas: 40 },
+    y: { label: L('N restants', 'N remaining'), min: 0, max: 220, pas: 40 },
   },
   affiche: { etape: 2, t: 0.42 },
 
@@ -39,7 +39,7 @@ export default definirScene({
     el('rect', { x: 46, y: 428, width: 16, height: 12, fill: C.metal }, enceinte);
     el('rect', { x: 294, y: 428, width: 16, height: 12, fill: C.metal }, enceinte);
     el('rect', { x: 24, y: 176, width: 308, height: 252, rx: 14, fill: 'rgba(223,230,255,.05)', stroke: C.verre, 'stroke-width': TRAIT }, enceinte);
-    etiquette(enceinte, { x: 28, y: 166, texte: 'Radon 220' });
+    etiquette(enceinte, { x: 28, y: 166, texte: L('Radon 220', 'Radon-220') });
     const etiqN = etiquette(scene, { x: 332, y: 166, texte: '', ancre: 'end', mono: true, taille: 14, couleur: C.cyan });
     const gNoyaux = el('g', {}, scene);
     const noyaux = Array.from({ length: N_MAX }, () => el('circle', { r: 0 }, gNoyaux));
@@ -53,8 +53,8 @@ export default definirScene({
     el('line', { x1: 392, x2: 462, y1: 300, y2: 300, stroke: C.metal, 'stroke-width': 2 }, compteur);
     const lueur = el('circle', { cx: FENETRE.x, cy: FENETRE.y, r: 18, fill: C.jaune, opacity: 0 }, compteur);
     el('rect', { x: 374, y: 282, width: 7, height: 36, rx: 3, fill: C.violet }, compteur);
-    etiquette(compteur, { x: 425, y: 272, texte: 'Compteur', ancre: 'middle', taille: 14 });
-    const boitier = appareil(compteur, { x: 476, y: 364, w: 140, h: 76, titre: 'DÉSINTÉGRATIONS', couleur: C.jaune });
+    etiquette(compteur, { x: 425, y: 272, texte: L('Compteur', 'Counter'), ancre: 'middle', taille: 14 });
+    const boitier = appareil(compteur, { x: 476, y: 364, w: 140, h: 76, titre: L('DÉSINTÉGRATIONS', 'DECAYS'), couleur: C.jaune });
     el('circle', { cx: 584, cy: 300, r: 24, fill: C.panneau, stroke: C.verre, 'stroke-width': 2 }, compteur);
     for (let k = 0; k < 12; k++) {
       const a = (k * Math.PI) / 6;
@@ -69,7 +69,7 @@ export default definirScene({
     el('circle', { cx: 386, cy: 191, r: 6, fill: C.cyan }, legende);
     el('circle', { cx: 386, cy: 213, r: 4, fill: C.grille, stroke: C.metal, 'stroke-width': 1.2 }, legende);
     el('line', { x1: 381, x2: 389, y1: 235, y2: 235, stroke: C.jaune, 'stroke-width': 4, 'stroke-linecap': 'round' }, legende);
-    ['noyau radioactif', 'noyau désintégré', 'particule α'].forEach((s, k) => etiquette(legende, { x: 402, y: 196 + 22 * k, texte: s, taille: 13, couleur: C.discret }));
+    [L('noyau radioactif', 'radioactive nucleus'), L('noyau désintégré', 'decayed nucleus'), L('particule α', 'α particle')].forEach((s, k) => etiquette(legende, { x: 402, y: 196 + 22 * k, texte: s, taille: 13, couleur: C.discret }));
 
     // Particules en vol (au-dessus de tout le reste).
     const gPart = el('g', {}, scene);
@@ -78,7 +78,7 @@ export default definirScene({
     // Gros plan sur une désintégration (étape 2).
     const zoom = el('g', {}, scene);
     el('rect', { x: 24, y: 20, width: 308, height: 128, rx: 14, fill: C.panneau, stroke: C.grille, 'stroke-width': 1.5 }, zoom);
-    mono(zoom, 40, 42, 13, C.discret, POLICE).textContent = 'Désintégration α';
+    mono(zoom, 40, 42, 13, C.discret, POLICE).textContent = L('Désintégration α', 'α decay');
     const trainee = el('line', { x1: 124, y1: 86, x2: 124, y2: 86, stroke: C.jaune, 'stroke-width': 2, 'stroke-dasharray': '2 6', 'stroke-linecap': 'round', opacity: 0.7 }, zoom);
     const pere = el('g', {}, zoom);
     const halo = el('circle', { cx: 92, cy: 86, r: 30, fill: 'none', stroke: C.cyan, 'stroke-width': 2 }, pere);
@@ -93,12 +93,12 @@ export default definirScene({
       el('circle', { cx: 104 + (dx as number), cy: 86 + (dy as number), r: 5, fill: c, stroke: C.fond, 'stroke-width': 1 }, alpha));
     const etiqRn = etiquette(zoom, { x: 92, y: 138, texte: 'Rn 220', ancre: 'middle', mono: true, taille: 13, couleur: C.cyan });
     const etiqPo = etiquette(zoom, { x: 86, y: 138, texte: 'Po 216', ancre: 'middle', mono: true, taille: 13, couleur: C.discret });
-    const etiqHe = etiquette(zoom, { x: 236, y: 138, texte: 'He 4 (particule α)', ancre: 'middle', mono: true, taille: 13, couleur: C.jaune });
+    const etiqHe = etiquette(zoom, { x: 236, y: 138, texte: L('He 4 (particule α)', 'He 4 (α particle)'), ancre: 'middle', mono: true, taille: 13, couleur: C.jaune });
 
     // Encart de résultat (étape 5).
     const encart = el('g', {}, scene);
     el('rect', { x: 372, y: 24, width: 252, height: 132, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
-    mono(encart, 388, 48, 13, C.discret, POLICE).textContent = 'Exploitation';
+    mono(encart, 388, 48, 13, C.discret, POLICE).textContent = L('Exploitation', 'Analysis');
     const lDemi = mono(encart, 388, 74, 17, C.jaune);
     const lMes = mono(encart, 388, 98, 13, C.cyan);
     const lLambda = mono(encart, 388, 120, 13, C.texte);
@@ -130,7 +130,7 @@ export default definirScene({
       compteur.style.transform = `translateX(${lerp(120, 0, seg(a1, 0.5, 0.9, ease.out))}px)`;
       show(legende, seg(a1, 0.8, 0.98));
       show(etiqN, seg(a1, 0.72, 0.9));
-      etiqN.textContent = a3 > 0 ? `N = ${restants} / ${n0}` : `N0 = ${n0} noyaux`;
+      etiqN.textContent = a3 > 0 ? `N = ${restants} / ${n0}` : L(`N0 = ${n0} noyaux`, `N0 = ${n0} nuclei`);
 
       // Étape 3 : chaque noyau s'éteint à son instant, avec un éclair, et lance une particule vers le compteur.
       let pulse = 0;
@@ -184,7 +184,7 @@ export default definirScene({
       const tMesuree = tries[n0 / 2 - 1];
       show(encart, seg(a5, 0.05, 0.35, ease.backOut), 16);
       lDemi.textContent = `t1/2 = ${fmt(p.t12, 0)} s`;
-      lMes.textContent = `lue sur ce tirage : ${fmt(tMesuree, 0)} s`;
+      lMes.textContent = L(`lue sur ce tirage : ${fmt(tMesuree, 0)} s`, `read on this draw: ${fmt(tMesuree, 0)} s`);
       lLambda.textContent = `λ = ln 2 / t1/2 = ${fmt(lambda, 4)} s⁻¹`;
       lA0.textContent = `A0 = λ·N0 = ${fmt(activite(n0, lambda), 2)} Bq`;
 
@@ -207,11 +207,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Temps', valeur: `${fmt(ts, 0)} s` },
-        { label: 'Noyaux restants', valeur: `${restants}` },
-        { label: 'Activité A = λ·N', valeur: `${fmt(activite(restants, lambda), 2)} Bq` },
+        { label: L('Temps', 'Time'), valeur: `${fmt(ts, 0)} s` },
+        { label: L('Noyaux restants', 'Remaining nuclei'), valeur: `${restants}` },
+        { label: L('Activité A = λ·N', 'Activity A = λ·N'), valeur: `${fmt(activite(restants, lambda), 2)} Bq` },
       ];
-      if (a4 > 0.62) mesures.push({ label: 'Demi-vie', valeur: `${fmt(p.t12, 0)} s` });
+      if (a4 > 0.62) mesures.push({ label: L('Demi-vie', 'Half-life'), valeur: `${fmt(p.t12, 0)} s` });
       return mesures;
     };
   },

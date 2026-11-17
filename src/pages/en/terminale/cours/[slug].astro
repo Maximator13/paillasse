@@ -1,0 +1,10 @@
+---
+import type { InferGetStaticPropsType } from 'astro';
+import Vue from '../../../../components/vues/Cours.astro';
+import { cheminsCours } from '../../../../i18n/contenu';
+
+export const getStaticPaths = () => cheminsCours('en');
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+---
+
+<Vue lang="en" {...Astro.props} />

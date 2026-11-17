@@ -1,4 +1,4 @@
-import { avancement, ease, el, fmt, lerp, mix, rng, seg, set, show, trace, uid } from '../../lib/anim';
+import { avancement, ease, el, fmt, L, lerp, mix, rng, seg, set, show, trace, uid } from '../../lib/anim';
 import { appareil, becher, etiquette, fleche, paillasse } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -61,20 +61,20 @@ function electrons(parent: Element, fil: SVGPathElement, n: number) {
 
 export default definirScene({
   etapes: [
-    { titre: 'Préparer l\'électrolyseur', duree: 6, texte: 'La cuve est remplie d\'<strong>eau acidifiée</strong> (les ions rendent la solution conductrice). Deux tubes gradués, pleins de solution, sont retournés sur les électrodes.' },
-    { titre: 'Brancher le circuit', duree: 6, texte: 'Le générateur de tension continue est relié en série à un <strong>ampèremètre</strong> et à l\'électrolyseur. L\'électrode reliée à la borne (−) est la <strong>cathode</strong>, l\'autre est l\'<strong>anode</strong>.' },
-    { titre: 'Imposer le courant', duree: 6, texte: 'Le générateur <strong>force</strong> les électrons à circuler : ils arrivent à la cathode, où H<sup>+</sup> est réduit en H<sub>2</sub>, et quittent l\'anode, où l\'eau est oxydée en O<sub>2</sub>. Des bulles apparaissent.' },
-    { titre: 'Recueillir les gaz', duree: 12, texte: 'On déclenche le chronomètre. Les gaz chassent la solution des tubes : le volume de <strong>dihydrogène</strong> est toujours le <strong>double</strong> de celui de dioxygène.' },
-    { titre: 'Exploiter les mesures', duree: 7, texte: 'On ouvre le circuit. La charge <strong>Q = I·Δt</strong> donne la quantité d\'électrons <strong>n(e<sup>−</sup>) = Q/F</strong>, donc les volumes de gaz. Changez l\'intensité ou la durée et observez les tubes et les droites.' },
+    { titre: L('Préparer l\'électrolyseur', 'Set up the electrolysis cell'), duree: 6, texte: L('La cuve est remplie d\'<strong>eau acidifiée</strong> (les ions rendent la solution conductrice). Deux tubes gradués, pleins de solution, sont retournés sur les électrodes.', 'The tank is filled with <strong>acidified water</strong> (the ions make the solution conduct). Two graduated tubes, full of solution, are inverted over the electrodes.') },
+    { titre: L('Brancher le circuit', 'Connect the circuit'), duree: 6, texte: L('Le générateur de tension continue est relié en série à un <strong>ampèremètre</strong> et à l\'électrolyseur. L\'électrode reliée à la borne (−) est la <strong>cathode</strong>, l\'autre est l\'<strong>anode</strong>.', 'The DC power supply is connected in series with an <strong>ammeter</strong> and the electrolysis cell. The electrode connected to the (−) terminal is the <strong>cathode</strong>, the other is the <strong>anode</strong>.') },
+    { titre: L('Imposer le courant', 'Drive the current'), duree: 6, texte: L('Le générateur <strong>force</strong> les électrons à circuler : ils arrivent à la cathode, où H<sup>+</sup> est réduit en H<sub>2</sub>, et quittent l\'anode, où l\'eau est oxydée en O<sub>2</sub>. Des bulles apparaissent.', 'The power supply <strong>forces</strong> the electrons to flow: they arrive at the cathode, where H<sup>+</sup> is reduced to H<sub>2</sub>, and leave the anode, where water is oxidised to O<sub>2</sub>. Bubbles appear.') },
+    { titre: L('Recueillir les gaz', 'Collect the gases'), duree: 12, texte: L('On déclenche le chronomètre. Les gaz chassent la solution des tubes : le volume de <strong>dihydrogène</strong> est toujours le <strong>double</strong> de celui de dioxygène.', 'The stopwatch is started. The gases push the solution out of the tubes: the volume of <strong>hydrogen</strong> is always <strong>twice</strong> that of oxygen.') },
+    { titre: L('Exploiter les mesures', 'Analyse the measurements'), duree: 7, texte: L('On ouvre le circuit. La charge <strong>Q = I·Δt</strong> donne la quantité d\'électrons <strong>n(e<sup>−</sup>) = Q/F</strong>, donc les volumes de gaz. Changez l\'intensité ou la durée et observez les tubes et les droites.', 'The circuit is opened. The charge <strong>Q = I·Δt</strong> gives the amount of electrons <strong>n(e<sup>−</sup>) = Q/F</strong>, and hence the volumes of gas. Change the current or the duration and watch the tubes and the lines.') },
   ],
   parametres: [
-    { id: 'i', label: 'Intensité du courant', min: 0.3, max: 0.8, pas: 0.05, valeur: 0.5, unite: 'A', decimales: 2 },
-    { id: 'dt', label: 'Durée de l\'électrolyse', min: 180, max: 480, pas: 30, valeur: 300, unite: 's', decimales: 0 },
+    { id: 'i', label: L('Intensité du courant', 'Current'), min: 0.3, max: 0.8, pas: 0.05, valeur: 0.5, unite: 'A', decimales: 2 },
+    { id: 'dt', label: L('Durée de l\'électrolyse', 'Duration of the electrolysis'), min: 180, max: 480, pas: 30, valeur: 300, unite: 's', decimales: 0 },
   ],
   graphique: {
     x: { label: 't (s)', min: 0, max: 480, pas: 120 },
     y: { label: 'V (mL)', min: 0, max: 50, pas: 10 },
-    titre: 'Volume de gaz recueilli',
+    titre: L('Volume de gaz recueilli', 'Volume of gas collected'),
   },
   affiche: { etape: 3, t: 0.8 },
 
@@ -108,8 +108,8 @@ export default definirScene({
 
     // Appareils.
     const gAppareils = el('g', {}, scene);
-    const amp = appareil(gAppareils, { x: 470, y: 250, w: 140, h: 74, titre: 'AMPÈREMÈTRE', couleur: C.jaune });
-    const gen = appareil(gAppareils, { x: 470, y: 364, w: 140, h: 76, titre: 'GÉNÉRATEUR' });
+    const amp = appareil(gAppareils, { x: 470, y: 250, w: 140, h: 74, titre: L('AMPÈREMÈTRE', 'AMMETER'), couleur: C.jaune });
+    const gen = appareil(gAppareils, { x: 470, y: 364, w: 140, h: 76, titre: L('GÉNÉRATEUR', 'POWER SUPPLY') });
 
     // Annotations.
     const gPoles = el('g', {}, scene);
@@ -130,7 +130,7 @@ export default definirScene({
     el('rect', { x: 400, y: 88, width: 224, height: 126, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 414, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(112, 13, C.discret, POLICE).textContent = 'Bilan de l\'électrolyse';
+    ligne(112, 13, C.discret, POLICE).textContent = L('Bilan de l\'électrolyse', 'Electrolysis summary');
     const ligneQ = ligne(138, 13, C.texte), ligneN = ligne(162, 13, C.texte);
     ligne(194, 15, C.jaune).textContent = 'V(H2) = 2 × V(O2)';
 
@@ -192,8 +192,8 @@ export default definirScene({
         graphique.courbe('h2', a4 > 0 ? [[0, 0], [duree, vH2]] : [], { couleur: C.cyan, epaisseur: 3 });
         graphique.courbe('o2', a4 > 0 ? [[0, 0], [duree, vO2]] : [], { couleur: C.corail, epaisseur: 3 });
         if (a4 > 0) {
-          graphique.repere('ph2', duree, vH2, { couleur: C.cyan, label: fin ? `H2 : ${fmt(vH2, 1)} mL` : 'H2' });
-          graphique.repere('po2', duree, vO2, { couleur: C.corail, label: fin ? `O2 : ${fmt(vO2, 1)} mL` : 'O2' });
+          graphique.repere('ph2', duree, vH2, { couleur: C.cyan, label: fin ? L(`H2 : ${fmt(vH2, 1)} mL`, `H2: ${fmt(vH2, 1)} mL`) : 'H2' });
+          graphique.repere('po2', duree, vO2, { couleur: C.corail, label: fin ? L(`O2 : ${fmt(vO2, 1)} mL`, `O2: ${fmt(vO2, 1)} mL`) : 'O2' });
         } else {
           graphique.effacer('ph2');
           graphique.effacer('po2');
@@ -212,8 +212,8 @@ export default definirScene({
             { label: 'V(O2)', valeur: `${fmt(vO2, 1)} mL` },
           ]
         : [
-            { label: 'Intensité', valeur: `${fmt(iCourant, 2)} A` },
-            { label: 'Durée', valeur: `${fmt(duree, 0)} s` },
+            { label: L('Intensité', 'Current'), valeur: `${fmt(iCourant, 2)} A` },
+            { label: L('Durée', 'Duration'), valeur: `${fmt(duree, 0)} s` },
             { label: 'V(H2)', valeur: `${fmt(vH2, 1)} mL` },
             { label: 'V(O2)', valeur: `${fmt(vO2, 1)} mL` },
           ];

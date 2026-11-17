@@ -1,63 +1,10 @@
 ---
-import { getCollection, render } from 'astro:content';
-import 'katex/dist/katex.min.css';
-import Base from '../../../layouts/Base.astro';
-import Lecteur from '../../../components/Lecteur.astro';
-import { THEMES, slugDe } from '../../../data/site';
+import type { InferGetStaticPropsType } from 'astro';
+import Vue from '../../../components/vues/Tp.astro';
+import { cheminsTp } from '../../../i18n/contenu';
 
-export async function getStaticPaths() {
-  const tps = await getCollection('tp', (t) => t.data.niveau === 'terminale');
-  return tps.map((tp) => ({ params: { slug: slugDe(tp.id) }, props: { tp } }));
-}
-
-const { tp } = Astro.props;
-const { Content } = await render(tp);
-const d = tp.data;
-const slug = slugDe(tp.id);
-const chapitre = (await getCollection('cours')).find((c) => slugDe(c.id) === d.chapitre);
+export const getStaticPaths = () => cheminsTp('fr');
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 ---
 
-<Base titre={d.titre.length <= 40 ? `${d.titre} : TP animé` : d.titre} description={d.description} type="article">
-  <article data-theme={d.theme}>
-    <header class="conteneur tete">
-      <ol class="fil">
-        <li><a href="/">Accueil</a></li>
-        <li><a href="/terminale/">Terminale</a></li>
-        <li><a href="/tp/">TP animés</a></li>
-      </ol>
-      <p class="surtitre"><span class="pastille" data-theme={d.theme}>{THEMES[d.theme].court}</span> TP de {d.matiere} · {d.duree} en classe</p>
-      <h1>{d.titre}</h1>
-      <p class="chapo">{d.description}</p>
-    </header>
-
-    <div class="conteneur"><Lecteur slug={slug} titre={d.titre} /></div>
-
-    <div class="conteneur corps">
-      <aside class="fiche">
-        <h2>Objectifs</h2>
-        <ul>{d.objectifs.map((o) => <li>{o}</li>)}</ul>
-        <h2>Matériel</h2>
-        <ul>{d.materiel.map((m) => <li>{m}</li>)}</ul>
-        {chapitre && (
-          <p class="lien-cours"><a class="btn" href={`/terminale/cours/${d.chapitre}/`}>Revoir le cours : {chapitre.data.titre}</a></p>
-        )}
-      </aside>
-      <div class="prose"><Content /></div>
-    </div>
-  </article>
-</Base>
-
-<style>
-  .tete { padding-block: clamp(2rem, 5vw, 3.5rem) 1.5rem; }
-  h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
-  .surtitre { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; }
-  .corps { display: grid; gap: 2.5rem; padding-block: 3rem; grid-template-columns: minmax(0, 1fr); }
-  @media (min-width: 980px) { .corps { grid-template-columns: 320px minmax(0, 1fr); gap: 4rem; } .fiche { position: sticky; top: 90px; align-self: start; } }
-  .fiche { background: var(--surface); border: 1.5px solid var(--ligne); border-radius: var(--rayon); padding: 1.4rem; }
-  .fiche h2 { font: 600 .8rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--t); margin: 0 0 .8rem; }
-  .fiche ul { margin: 0 0 1.6rem; padding-left: 1.1rem; font-size: .97rem; }
-  .fiche li { margin-bottom: .35em; }
-  .lien-cours { margin: 0; }
-  .lien-cours .btn { border-radius: 14px; line-height: 1.3; font-size: .95rem; }
-  .prose :global(h2:first-child) { margin-top: 0; }
-</style>
+<Vue lang="fr" {...Astro.props} />

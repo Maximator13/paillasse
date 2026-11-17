@@ -1,5 +1,5 @@
 // Lecteur de TP : étapes guidées, lecture/pause, barre de progression, curseurs de paramètres.
-import { clamp, fmt } from './anim';
+import { L, clamp, fmt } from './anim';
 import { creerGraphique } from './graphique';
 import type { Mesure, Scene } from './scene';
 
@@ -9,7 +9,7 @@ export const slugsScenes = () => Object.keys(chargeurs).map((k) => k.split('/')[
 
 export async function chargerScene(slug: string): Promise<Scene> {
   const f = chargeurs[`../tp/${slug}/scene.ts`];
-  if (!f) throw new Error(`Scène introuvable : ${slug}`);
+  if (!f) throw new Error(L(`Scène introuvable : ${slug}`, `Scene not found: ${slug}`));
   return (await f()).default;
 }
 
@@ -84,11 +84,12 @@ async function initLecteur(root: HTMLElement) {
     if (etape !== etapeAffichee) {
       etapeAffichee = etape;
       const e = scene.etapes[etape];
-      if (elNum) elNum.textContent = `Étape ${etape + 1} sur ${n}`;
+      const position = L(`Étape ${etape + 1} sur ${n}`, `Step ${etape + 1} of ${n}`);
+      if (elNum) elNum.textContent = position;
       if (elTitre) elTitre.textContent = e.titre;
       if (elTexte) elTexte.innerHTML = e.texte;
       elBarre?.setAttribute('aria-valuenow', String(etape + 1));
-      elBarre?.setAttribute('aria-valuetext', `Étape ${etape + 1} sur ${n} : ${e.titre}`);
+      elBarre?.setAttribute('aria-valuetext', `${position}${L(' : ', ': ')}${e.titre}`);
     }
     segments.forEach((s, i) => {
       (s.firstChild as HTMLElement).style.width = `${(i < etape ? 1 : i > etape ? 0 : t) * 100}%`;
@@ -96,7 +97,7 @@ async function initLecteur(root: HTMLElement) {
     root.classList.toggle('en-lecture', joue);
     const fini = t >= 1 && !joue;
     bSuiv?.classList.toggle('appel', fini && etape < n - 1);
-    if (bJouer) bJouer.setAttribute('aria-label', joue ? 'Pause' : fini && etape === n - 1 ? 'Rejouer depuis le début' : 'Lecture');
+    if (bJouer) bJouer.setAttribute('aria-label', joue ? 'Pause' : fini && etape === n - 1 ? L('Rejouer depuis le début', 'Replay from the start') : L('Lecture', 'Play'));
     if (elMesures && mesures) {
       while (elMesures.children.length > mesures.length) elMesures.lastChild!.remove();
       mesures.forEach((m, i) => {

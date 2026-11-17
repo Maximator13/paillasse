@@ -6,7 +6,6 @@ Site statique Astro 7 de physique-chimie : fiches de cours en Markdown et TP ani
 
 - Langue : français, orthographe et typographie soignées (espaces insécables avant `: ; ? !` non requises, mais accents obligatoires).
 - **Jamais de tiret cadratin** (caractère U+2014) ni de demi-cadratin en incise : utiliser virgule, deux-points ou parenthèses.
-- Aucune mention d'IA, d'assistant ou d'outil de génération, nulle part (contenu, code, commentaires, commits).
 - Ne pas faire de commit git, ne pas installer de dépendance, ne pas modifier les fichiers hors de son périmètre (en particulier `src/lib/`, `src/layouts/`, `src/components/`, `src/styles/`, `astro.config.mjs`, `src/content.config.ts`, `package.json`).
 - Si le socle semble insuffisant ou bogué : ne pas le modifier, contourner localement dans son propre fichier et le signaler dans le rapport final.
 - Contenu conforme au programme officiel de spécialité physique-chimie de Terminale générale (BO spécial n°8 du 25 juillet 2019). Exactitude scientifique prioritaire : unités SI, chiffres significatifs cohérents, notations du lycée français.
@@ -63,7 +62,7 @@ Règles de `dessiner({ etape, t, T, p })` :
 
 1. **Fonction pure de l'image.** Le lecteur saute librement d'une étape à l'autre et en arrière : aucun état accumulé entre deux appels, aucune dépendance à l'ordre. Tout se calcule depuis `etape`, `t` (0 à 1 dans l'étape), `T` (horloge d'ambiance en secondes, pour les boucles : agitation, bulles, gouttes) et `p` (valeurs des curseurs).
 2. Utiliser `avancement(img, i)` (0 avant l'étape i, t pendant, 1 après) puis `seg(a, debut, fin, ease.xxx)` pour séquencer les mouvements à l'intérieur d'une étape. Ce qui a été fait à une étape reste visible aux suivantes.
-3. Renvoyer les **mesures** en direct `[{ label, valeur }]` (2 à 4), formatées avec `fmt()` (virgule décimale) et unités.
+3. Renvoyer les **mesures** en direct `[{ label, valeur }]` (2 à 4), formatées avec `fmt()` (virgule décimale en français, point en anglais) et unités.
 4. Pas de `setTimeout`, `requestAnimationFrame`, `Math.random()` (utiliser `rng(graine)`), ni d'écouteur d'événement : le lecteur pilote tout.
 5. **Aucun id SVG en dur** : une scène est montée plusieurs fois par page. Utiliser `uid()` pour tout `clipPath`, `gradient`, `filter`.
 6. Dernière étape = exploitation : résultat mis en évidence (encart, repère sur le graphique) et invitation à jouer avec les curseurs.
@@ -92,12 +91,26 @@ Qualité visuelle attendue (c'est une vitrine de motion design) :
 
 Note : donner les chemins au script **sans barre oblique initiale** (Git Bash la réécrit).
 
+## Version anglaise d'un contenu
+
+Le site est bilingue : français à la racine, anglais sous `/en/` avec les mêmes slugs. Une page anglaise n'est générée que si sa fiche anglaise existe ; sinon les listes anglaises affichent la fiche française et pointent vers la page française.
+
+- Chapitre : copier `src/content/cours/terminale/<slug>.md` vers `src/content/en/cours/terminale/<slug>.md` (même nom de fichier, mêmes `niveau`, `theme`, `ordre`, `tp`) et traduire `titre`, `description`, `duree`, `motsCles` et le corps.
+- TP : même principe vers `src/content/en/tp/terminale/<slug>.md` (mêmes `matiere`, `chapitre`, `ordre`) ; traduire `titre`, `description`, `objectifs`, `materiel` et le corps.
+- Scène : il n'y a qu'un seul `scene.ts` par TP. Tout texte affiché (titres et textes d'étapes, libellés de curseurs, axes, mesures, étiquettes) s'écrit `L('texte français', 'English text')` (import depuis `src/lib/anim.ts`). `L()` et `fmt()` suivent l'attribut `lang` de la page : `fmt()` écrit la virgule décimale en français et le point en anglais, ne jamais formater un nombre à la main.
+- Anglais britannique (colour, metre, analyse), point décimal (dans le LaTeX : `20.0`, pas `20{,}0`), unités SI inchangées, « Terminale » non traduit.
+- Titres de sections : Principe = Principle, Protocole = Method, Exploitation = Analysis, Questions = Questions, Sécurité = Safety, « Voir les réponses » = « Show answers » ; Exercice type = Worked example, À retenir = Key points, Erreurs fréquentes = Common mistakes, « Voir la correction » = « Show the solution ».
+- Textes d'interface (navigation, boutons, libellés du lecteur) : dictionnaire `UI` de `src/i18n/index.ts`, une entrée par langue. Liens internes : toujours `lien(lang, '/chemin/')`, jamais de `href="/..."` en dur.
+- Vérification : planche anglaise avec `node scripts/capture.mjs "dev/planche/<slug>/?lang=en" .captures/<slug>-planche-en.png`, page avec `node scripts/capture.mjs en/terminale/tp/<slug>/ .captures/<slug>-en.png`. Aucun texte français ne doit rester sur la page.
+
 ## Fichiers de référence
 
 | Fichier | Rôle |
 |---|---|
 | `src/lib/scene.ts` | Types `Scene`, `Etape`, `Parametre`, `Image`, `Mesure` |
-| `src/lib/anim.ts` | `clamp`, `lerp`, `remap`, `ease`, `seg`, `avancement`, `mix`, `fmt`, `rng`, `uid`, `el`, `set`, `texte`, `show`, `trace` |
+| `src/lib/anim.ts` | `clamp`, `lerp`, `remap`, `ease`, `seg`, `avancement`, `mix`, `L`, `fmt`, `rng`, `uid`, `el`, `set`, `texte`, `show`, `trace` |
+| `src/i18n/index.ts` | `Lang`, `UI` (textes d'interface), `lien`, `actif` |
+| `src/i18n/contenu.ts` | `lesCours`, `lesTp`, liens et chemins des fiches par langue |
 | `src/lib/labkit.ts` | Matériel de laboratoire en SVG |
 | `src/lib/graphique.ts` | Graphique partagé |
 | `src/lib/palette.ts` | Couleurs et polices des scènes |

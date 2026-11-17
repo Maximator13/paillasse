@@ -1,0 +1,120 @@
+---
+import Base from '../../layouts/Base.astro';
+import { LEGAL, SITE } from '../../data/site';
+import { UI, lien, type Lang } from '../../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const u = UI[lang];
+
+const T = {
+  fr: {
+    titre: "Conditions générales d'utilisation",
+    description: `Règles d'accès et d'usage de ${SITE.nom} : site éducatif gratuit, réutilisation en classe, limites des simulations et droit applicable.`,
+    fil: 'CGU',
+    surtitre: "Conditions d'usage",
+    chapo: `En naviguant sur ${SITE.nom}, vous acceptez les conditions ci-dessous. Elles sont courtes, parce que le site est simple : gratuit, sans compte, sans publicité.`,
+  },
+  en: {
+    titre: 'Terms of use',
+    description: `Rules for accessing and using ${SITE.nom}: a free educational website, reuse in the classroom, limits of the simulations and governing law.`,
+    fil: 'Terms of use',
+    surtitre: 'Conditions of use',
+    chapo: `By browsing ${SITE.nom}, you accept the terms below. They are short, because the site is simple: free, with no account and no advertising.`,
+  },
+}[lang];
+---
+
+<Base lang={lang} titre={T.titre} description={T.description}>
+  <article class="section conteneur">
+    <ol class="fil"><li><a href={lien(lang, '/')}>{u.accueil}</a></li><li aria-current="page">{T.fil}</li></ol>
+    <p class="surtitre">{T.surtitre}</p>
+    <h1>{T.titre}</h1>
+    <p class="chapo">{T.chapo}</p>
+
+    {lang === 'fr' ? (
+      <div class="prose">
+        <h2>1. Objet</h2>
+        <p>{SITE.nom} met à disposition des fiches de cours et des travaux pratiques animés de physique-chimie, conformes aux programmes officiels de l'Éducation nationale, à destination des élèves, des étudiants et des enseignants.</p>
+
+        <h2>2. Accès au service</h2>
+        <p>L'accès est libre et gratuit, sans inscription. Seuls restent à votre charge l'équipement et la connexion à Internet. L'éditeur peut suspendre le site pour maintenance ou faire évoluer ses contenus sans préavis.</p>
+
+        <h2>3. Usage des contenus</h2>
+        <ul>
+          <li>Vous pouvez consulter, imprimer et projeter les contenus pour un usage personnel ou pédagogique non commercial, y compris en classe, en citant la source ({SITE.nom}).</li>
+          <li>Toute reproduction à des fins commerciales, ou toute rediffusion des contenus sur un autre site sans autorisation écrite de l'éditeur, est interdite.</li>
+          <li>Les extractions automatisées massives (aspiration du site) sont interdites.</li>
+        </ul>
+
+        <h2>4. Limites des simulations</h2>
+        <p>
+          Les TP animés reposent sur des modèles physiques réels, mais simplifiés. Les valeurs affichées illustrent un
+          phénomène et peuvent différer de mesures expérimentales. Une simulation ne remplace pas une manipulation encadrée :
+          en laboratoire, suivez toujours les consignes de sécurité de votre établissement et de votre enseignant.
+        </p>
+
+        <h2>5. Responsabilité</h2>
+        <p>L'éditeur apporte le plus grand soin aux contenus mais ne garantit pas l'absence d'erreur. Sa responsabilité ne saurait être engagée pour un dommage résultant de l'utilisation du site ou de son indisponibilité. Les erreurs peuvent être signalées à {LEGAL.editeur.courriel}.</p>
+
+        <h2>6. Données personnelles</h2>
+        <p>Voir la <a href={lien('fr', '/confidentialite/')}>politique de confidentialité</a>.</p>
+
+        <h2>7. Modification des conditions</h2>
+        <p>Les présentes conditions peuvent être modifiées à tout moment ; la version en ligne fait foi.</p>
+
+        <h2>8. Droit applicable</h2>
+        <p>Les présentes conditions sont soumises au droit français. À défaut de résolution amiable, tout litige relève des juridictions françaises compétentes.</p>
+
+        <p class="maj">{u.miseAJour} : {LEGAL.miseAJour.fr}.</p>
+      </div>
+    ) : (
+      <div class="prose">
+        <p>
+          This English text is a translation provided for information. In the event of any discrepancy, the
+          <a href={lien('fr', '/cgu/')} hreflang="fr">French version</a> prevails.
+        </p>
+
+        <h2>1. Purpose</h2>
+        <p>{SITE.nom} provides physics and chemistry lesson notes and animated practicals, in line with the official syllabuses of the French Ministry of Education, for pupils, students and teachers.</p>
+
+        <h2>2. Access to the service</h2>
+        <p>Access is open and free of charge, with no registration. Only the equipment and the Internet connection remain at your expense. The publisher may suspend the site for maintenance or change its content without notice.</p>
+
+        <h2>3. Use of the content</h2>
+        <ul>
+          <li>You may view, print and project the content for personal or non-commercial educational use, including in the classroom, provided that you cite the source ({SITE.nom}).</li>
+          <li>Any reproduction for commercial purposes, or any redistribution of the content on another site without the publisher's written permission, is prohibited.</li>
+          <li>Large-scale automated extraction (scraping of the site) is prohibited.</li>
+        </ul>
+
+        <h2>4. Limits of the simulations</h2>
+        <p>
+          The animated practicals are based on real, but simplified, physical models. The values displayed illustrate a
+          phenomenon and may differ from experimental measurements. A simulation does not replace supervised practical
+          work: in the laboratory, always follow the safety instructions of your school and your teacher.
+        </p>
+
+        <h2>5. Liability</h2>
+        <p>The publisher takes the greatest care over the content but does not guarantee that it is free of errors. The publisher cannot be held liable for any damage resulting from the use of the site or from its unavailability. Errors can be reported to {LEGAL.editeur.courriel}.</p>
+
+        <h2>6. Personal data</h2>
+        <p>See the <a href={lien('en', '/confidentialite/')}>privacy policy</a>.</p>
+
+        <h2>7. Changes to the terms</h2>
+        <p>These terms may be changed at any time; the version published online is the authoritative one.</p>
+
+        <h2>8. Governing law</h2>
+        <p>These terms are governed by French law. Failing an amicable settlement, any dispute falls within the jurisdiction of the competent French courts.</p>
+
+        <p class="maj">{u.miseAJour}: {LEGAL.miseAJour.en}.</p>
+      </div>
+    )}
+  </article>
+</Base>
+
+<style>
+  .maj { margin-top: 2.5rem; color: var(--doux); font-size: .92rem; }
+</style>

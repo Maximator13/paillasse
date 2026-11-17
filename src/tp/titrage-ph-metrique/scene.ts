@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, seg, show } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, mix, seg, show } from '../../lib/anim';
 import { agitateur, appareil, barreau, becher, burette, etiquette, gouttes, paillasse, potence, sonde } from '../../lib/labkit';
 import { C, MONO, POLICE } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -11,18 +11,18 @@ const INCOLORE = '#8fc4ff', ROSE = '#ff5fb8';
 
 export default definirScene({
   etapes: [
-    { titre: 'Prélever la prise d\'essai', duree: 5, texte: 'À la pipette jaugée, on prélève <strong>V<sub>A</sub> = 20,0 mL</strong> de solution d\'acide éthanoïque de concentration inconnue, que l\'on verse dans un bécher avec un barreau aimanté et quelques gouttes de phénolphtaléine.' },
-    { titre: 'Installer le montage', duree: 6, texte: 'La burette est remplie de soude de concentration connue <strong>C<sub>B</sub> = 0,100 mol/L</strong>, ajustée au zéro. La sonde du pH-mètre plonge dans la solution, l\'agitation démarre.' },
-    { titre: 'Verser la soude, relever le pH', duree: 14, texte: 'On verse la soude millilitre par millilitre. Le pH monte lentement, puis <strong>bondit</strong> : c\'est le saut de pH. La phénolphtaléine vire au rose.' },
-    { titre: 'Repérer l\'équivalence', duree: 7, texte: 'L\'équivalence correspond au maximum de la dérivée <strong>dpH/dV</strong>. On y lit le volume équivalent <strong>V<sub>E</sub></strong>.' },
-    { titre: 'Calculer la concentration', duree: 5, texte: 'À l\'équivalence, les réactifs sont en proportions stœchiométriques : <strong>C<sub>A</sub>·V<sub>A</sub> = C<sub>B</sub>·V<sub>E</sub></strong>. Changez la concentration ou la force de l\'acide et observez la courbe.' },
+    { titre: L('Prélever la prise d\'essai', 'Take the sample'), duree: 5, texte: L('À la pipette jaugée, on prélève <strong>V<sub>A</sub> = 20,0 mL</strong> de solution d\'acide éthanoïque de concentration inconnue, que l\'on verse dans un bécher avec un barreau aimanté et quelques gouttes de phénolphtaléine.', 'With a volumetric pipette, we take <strong>V<sub>A</sub> = 20.0 mL</strong> of ethanoic acid solution of unknown concentration and pour it into a beaker with a stirrer bar and a few drops of phenolphthalein.') },
+    { titre: L('Installer le montage', 'Set up the apparatus'), duree: 6, texte: L('La burette est remplie de soude de concentration connue <strong>C<sub>B</sub> = 0,100 mol/L</strong>, ajustée au zéro. La sonde du pH-mètre plonge dans la solution, l\'agitation démarre.', 'The burette is filled with sodium hydroxide solution of known concentration <strong>C<sub>B</sub> = 0.100 mol/L</strong> and adjusted to zero. The pH meter probe is immersed in the solution and the stirring starts.') },
+    { titre: L('Verser la soude, relever le pH', 'Add sodium hydroxide, record the pH'), duree: 14, texte: L('On verse la soude millilitre par millilitre. Le pH monte lentement, puis <strong>bondit</strong> : c\'est le saut de pH. La phénolphtaléine vire au rose.', 'The sodium hydroxide solution is added one millilitre at a time. The pH rises slowly, then <strong>jumps</strong>: this is the pH jump. The phenolphthalein turns pink.') },
+    { titre: L('Repérer l\'équivalence', 'Locate the equivalence point'), duree: 7, texte: L('L\'équivalence correspond au maximum de la dérivée <strong>dpH/dV</strong>. On y lit le volume équivalent <strong>V<sub>E</sub></strong>.', 'The equivalence point corresponds to the maximum of the derivative <strong>dpH/dV</strong>. The equivalence volume <strong>V<sub>E</sub></strong> is read there.') },
+    { titre: L('Calculer la concentration', 'Calculate the concentration'), duree: 5, texte: L('À l\'équivalence, les réactifs sont en proportions stœchiométriques : <strong>C<sub>A</sub>·V<sub>A</sub> = C<sub>B</sub>·V<sub>E</sub></strong>. Changez la concentration ou la force de l\'acide et observez la courbe.', 'At the equivalence point, the reactants are in stoichiometric proportions: <strong>C<sub>A</sub>·V<sub>A</sub> = C<sub>B</sub>·V<sub>E</sub></strong>. Change the concentration or the strength of the acid and watch the curve.') },
   ],
   parametres: [
-    { id: 'ca', label: 'Concentration de l\'acide', min: 0.04, max: 0.11, pas: 0.005, valeur: 0.1, unite: 'mol/L', decimales: 3 },
-    { id: 'pKa', label: 'pKa de l\'acide', min: 3, max: 6.5, pas: 0.1, valeur: 4.8 },
+    { id: 'ca', label: L('Concentration de l\'acide', 'Concentration of the acid'), min: 0.04, max: 0.11, pas: 0.005, valeur: 0.1, unite: 'mol/L', decimales: 3 },
+    { id: 'pKa', label: L('pKa de l\'acide', 'pKa of the acid'), min: 3, max: 6.5, pas: 0.1, valeur: 4.8 },
   ],
   graphique: {
-    x: { label: 'V versé (mL)', min: 0, max: V_MAX, pas: 5 },
+    x: { label: L('V versé (mL)', 'V added (mL)'), min: 0, max: V_MAX, pas: 5 },
     y: { label: 'pH', min: 0, max: 14, pas: 2 },
   },
   affiche: { etape: 2, t: 0.86 },
@@ -32,21 +32,21 @@ export default definirScene({
     const agit = agitateur(scene, { x: 290, y: 440, w: 160 });
     const bec = becher(scene, { x: 290, y: agit.yPlateau, w: 130, h: 118 });
     const bar = barreau(scene, { x: 290, y: agit.yPlateau - 2 });
-    const phm = appareil(scene, { x: 470, y: 364, w: 140, h: 76, titre: 'pH-MÈTRE' });
+    const phm = appareil(scene, { x: 470, y: 364, w: 140, h: 76, titre: L('pH-MÈTRE', 'pH METER') });
 
     // Pipette jaugée (étape 1).
     const pip = el('g', {}, scene);
     el('path', { d: 'M287 60V150M293 60V150M287 210V292L290 302L293 292V210', fill: 'none', stroke: C.verre, 'stroke-width': 2, 'stroke-linecap': 'round' }, pip);
     const ventre = el('ellipse', { cx: 290, cy: 180, rx: 13, ry: 32, fill: INCOLORE, 'fill-opacity': 0.8, stroke: C.verre, 'stroke-width': 2 }, pip);
     const filet = el('line', { x1: 290, x2: 290, y1: 302, y2: 380, stroke: INCOLORE, 'stroke-width': 3, 'stroke-linecap': 'round' }, scene);
-    const etiqPrise = etiquette(scene, { x: 216, y: 320, texte: 'VA = 20,0 mL', ancre: 'end', mono: true, taille: 13, couleur: C.cyan });
+    const etiqPrise = etiquette(scene, { x: 216, y: 320, texte: L('VA = 20,0 mL', 'VA = 20.0 mL'), ancre: 'end', mono: true, taille: 13, couleur: C.cyan });
 
     // Montage de titrage (étape 2).
     const montage = el('g', {}, scene);
     potence(montage, { x: 110, y: 440, h: 410, pinces: [{ y: 95, vers: 290 }, { y: 215, vers: 290 }] });
     const bur = burette(montage, { x: 290, yHaut: 42, h: 212 });
-    etiquette(montage, { x: 322, y: 62, texte: 'Soude' });
-    etiquette(montage, { x: 322, y: 82, texte: 'CB = 0,100 mol/L', mono: true, taille: 13, couleur: C.discret });
+    etiquette(montage, { x: 322, y: 62, texte: L('Soude', 'Sodium hydroxide') });
+    etiquette(montage, { x: 322, y: 82, texte: L('CB = 0,100 mol/L', 'CB = 0.100 mol/L'), mono: true, taille: 13, couleur: C.discret });
     const gtt = gouttes(scene, { x: 290, y1: bur.bec.y, y2: 360 });
     const gSonde = el('g', {}, scene);
     sonde(gSonde, { de: { x: 540, y: 364 }, vers: { x: 328, y: agit.yPlateau - 12 }, longueur: 92 });
@@ -56,7 +56,7 @@ export default definirScene({
     el('rect', { x: 408, y: 118, width: 216, height: 104, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 424, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(144, 13, C.discret, POLICE).textContent = 'À l\'équivalence';
+    ligne(144, 13, C.discret, POLICE).textContent = L('À l\'équivalence', 'At the equivalence point');
     ligne(170, 15, C.texte).textContent = 'CA·VA = CB·VE';
     const resultat = ligne(202, 19, C.jaune);
 
@@ -133,10 +133,10 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Volume versé', valeur: `${fmt(v, 1)} mL` },
+        { label: L('Volume versé', 'Volume added'), valeur: `${fmt(v, 1)} mL` },
         { label: 'pH', valeur: a2 > 0.85 ? fmt(ph, 2) : '...' },
       ];
-      if (a4 > 0.62) mesures.push({ label: 'Volume équivalent', valeur: `${fmt(vE, 1)} mL` });
+      if (a4 > 0.62) mesures.push({ label: L('Volume équivalent', 'Equivalence volume'), valeur: `${fmt(vE, 1)} mL` });
       return mesures;
     };
   },

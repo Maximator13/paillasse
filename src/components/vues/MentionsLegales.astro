@@ -1,0 +1,137 @@
+---
+import Base from '../../layouts/Base.astro';
+import { LEGAL, SITE } from '../../data/site';
+import { UI, lien, type Lang } from '../../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const u = UI[lang];
+const { editeur, hebergeur } = LEGAL;
+
+const T = {
+  fr: {
+    titre: 'Mentions légales',
+    description: `Éditeur, directeur de la publication, hébergeur et propriété intellectuelle du site ${SITE.nom}, conformément à la loi pour la confiance dans l'économie numérique.`,
+    surtitre: 'Informations légales',
+    chapo: "Informations prévues par l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN).",
+  },
+  en: {
+    titre: 'Legal notice',
+    description: `Publisher, publication director, host and intellectual property of the ${SITE.nom} website, in accordance with the French law on confidence in the digital economy.`,
+    surtitre: 'Legal information',
+    chapo: 'Information required by Article 6 of French Law No. 2004-575 of 21 June 2004 on confidence in the digital economy (LCEN).',
+  },
+}[lang];
+---
+
+<Base lang={lang} titre={T.titre} description={T.description}>
+  <article class="section conteneur">
+    <ol class="fil"><li><a href={lien(lang, '/')}>{u.accueil}</a></li><li aria-current="page">{T.titre}</li></ol>
+    <p class="surtitre">{T.surtitre}</p>
+    <h1>{T.titre}</h1>
+    <p class="chapo">{T.chapo}</p>
+
+    {lang === 'fr' ? (
+      <div class="prose">
+        <h2>Éditeur du site</h2>
+        <ul>
+          <li>Nom ou raison sociale : {editeur.nom}</li>
+          <li>Statut : {editeur.statut}</li>
+          <li>Adresse : {editeur.adresse}</li>
+          <li>Courriel : {editeur.courriel}</li>
+          <li>Téléphone : {editeur.telephone}</li>
+        </ul>
+
+        <h2>Directeur de la publication</h2>
+        <p>{LEGAL.directeurPublication}</p>
+
+        <h2>Hébergeur</h2>
+        <ul>
+          <li>Nom : {hebergeur.nom}</li>
+          <li>Adresse : {hebergeur.adresse}</li>
+          <li>Téléphone : {hebergeur.telephone}</li>
+        </ul>
+
+        <h2>Propriété intellectuelle</h2>
+        <p>
+          Les textes, schémas, animations, codes et éléments graphiques de {SITE.nom} sont protégés par le Code de la
+          propriété intellectuelle. Les conditions de réutilisation (notamment en classe) sont précisées dans les
+          <a href={lien('fr', '/cgu/')}>conditions générales d'utilisation</a>. Les polices de caractères employées sont distribuées sous
+          licence libre (SIL Open Font License).
+        </p>
+
+        <h2>Responsabilité</h2>
+        <p>
+          {SITE.nom} est un site éducatif gratuit. L'éditeur s'efforce d'assurer l'exactitude des contenus, conformes au
+          programme officiel, mais ne peut garantir l'absence d'erreur. Les TP animés sont des simulations : ils ne
+          remplacent ni une séance encadrée en laboratoire ni les consignes de sécurité de l'établissement. Pour signaler
+          une erreur, écrivez à {editeur.courriel}.
+        </p>
+
+        <h2>Liens externes</h2>
+        <p>L'éditeur n'exerce aucun contrôle sur les sites tiers éventuellement cités et décline toute responsabilité quant à leur contenu.</p>
+
+        <h2>Données personnelles</h2>
+        <p>Le traitement des données et la mesure d'audience sont décrits dans la <a href={lien('fr', '/confidentialite/')}>politique de confidentialité</a>.</p>
+
+        <p class="maj">{u.miseAJour} : {LEGAL.miseAJour.fr}.</p>
+      </div>
+    ) : (
+      <div class="prose">
+        <p>
+          This English text is a translation provided for information. In the event of any discrepancy, the
+          <a href={lien('fr', '/mentions-legales/')} hreflang="fr">French version</a> prevails.
+        </p>
+
+        <h2>Site publisher</h2>
+        <ul>
+          <li>Name or company name: {editeur.nom}</li>
+          <li>Status: {editeur.statut}</li>
+          <li>Address: {editeur.adresse}</li>
+          <li>Email: {editeur.courriel}</li>
+          <li>Telephone: {editeur.telephone}</li>
+        </ul>
+
+        <h2>Publication director</h2>
+        <p>{LEGAL.directeurPublication}</p>
+
+        <h2>Host</h2>
+        <ul>
+          <li>Name: {hebergeur.nom}</li>
+          <li>Address: {hebergeur.adresse}</li>
+          <li>Telephone: {hebergeur.telephone}</li>
+        </ul>
+
+        <h2>Intellectual property</h2>
+        <p>
+          The texts, diagrams, animations, code and graphic elements of {SITE.nom} are protected by the French
+          Intellectual Property Code. The conditions for reuse (in particular in the classroom) are set out in the
+          <a href={lien('en', '/cgu/')}>terms of use</a>. The typefaces used are distributed under a free licence
+          (SIL Open Font License).
+        </p>
+
+        <h2>Liability</h2>
+        <p>
+          {SITE.nom} is a free educational website. The publisher endeavours to ensure the accuracy of the content,
+          which follows the official syllabus, but cannot guarantee that it is free of errors. The animated practicals
+          are simulations: they replace neither a supervised laboratory session nor your school's safety instructions.
+          To report an error, write to {editeur.courriel}.
+        </p>
+
+        <h2>External links</h2>
+        <p>The publisher has no control over any third-party sites that may be cited and accepts no responsibility for their content.</p>
+
+        <h2>Personal data</h2>
+        <p>Data processing and audience measurement are described in the <a href={lien('en', '/confidentialite/')}>privacy policy</a>.</p>
+
+        <p class="maj">{u.miseAJour}: {LEGAL.miseAJour.en}.</p>
+      </div>
+    )}
+  </article>
+</Base>
+
+<style>
+  .maj { margin-top: 2.5rem; color: var(--doux); font-size: .92rem; }
+</style>

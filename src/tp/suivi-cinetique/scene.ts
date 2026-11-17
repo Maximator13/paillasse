@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, remap, rng, seg, set, show, texte, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, remap, rng, seg, set, show, texte, uid } from '../../lib/anim';
 import { appareil, etiquette, paillasse, thermometre, tubeEssai } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -42,17 +42,17 @@ function trajet(a: number, xs: number) {
 
 export default definirScene({
   etapes: [
-    { titre: 'Préparer la cuve', duree: 6, texte: 'À la pipette, on introduit dans la cuve du spectrophotomètre une solution de <strong>bleu de méthylène</strong>, maintenue à la température choisie. L\'appareil est réglé sur <strong>665 nm</strong>, longueur d\'onde que ce colorant absorbe le plus.' },
-    { titre: 'Déclencher la réaction', duree: 6, texte: 'On ajoute l\'<strong>acide ascorbique</strong> (vitamine C), en large excès et acidifié, puis on déclenche le chronomètre. Il transforme peu à peu l\'ion bleu BM<sup>+</sup> en une espèce incolore : la transformation est <strong>lente</strong>.' },
-    { titre: 'Suivre l\'absorbance', duree: 14, texte: 'La solution se décolore et laisse passer de plus en plus de lumière. D\'après la loi de Beer-Lambert, l\'absorbance <strong>A</strong> est proportionnelle à [BM<sup>+</sup>] : la courbe suit en direct la disparition du colorant.' },
-    { titre: 'Lire le temps de demi-réaction', duree: 8, texte: 'Le temps de demi-réaction <strong>t<sub>1/2</sub></strong> est la durée au bout de laquelle l\'avancement atteint la moitié de sa valeur finale : ici, A est divisée par 2. Elle l\'est encore à chaque nouveau t<sub>1/2</sub>.' },
-    { titre: 'Vérifier l\'ordre 1', duree: 7, texte: 'Pour une loi de vitesse d\'ordre 1, [BM<sup>+</sup>] = [BM<sup>+</sup>]<sub>0</sub>·e<sup>−kt</sup> : les points <strong>ln A = f(t)</strong> sont alignés. La pente de la droite vaut <strong>−k</strong>, et t<sub>1/2</sub> = ln 2 / k.' },
-    { titre: 'Agir sur les facteurs cinétiques', duree: 6, texte: 'Chauffez ou ajoutez du <strong>catalyseur</strong> (ions H<sub>3</sub>O<sup>+</sup>, non consommés) : k augmente et t<sub>1/2</sub> chute (en pointillés, la courbe de départ). Changez la concentration du colorant : la courbe part de plus haut, mais <strong>t<sub>1/2</sub> ne bouge pas</strong>, signature de l\'ordre 1.' },
+    { titre: L('Préparer la cuve', 'Prepare the cuvette'), duree: 6, texte: L('À la pipette, on introduit dans la cuve du spectrophotomètre une solution de <strong>bleu de méthylène</strong>, maintenue à la température choisie. L\'appareil est réglé sur <strong>665 nm</strong>, longueur d\'onde que ce colorant absorbe le plus.', 'Using a pipette, a solution of <strong>methylene blue</strong>, kept at the chosen temperature, is put into the cuvette of the spectrophotometer. The instrument is set to <strong>665 nm</strong>, the wavelength this dye absorbs most strongly.') },
+    { titre: L('Déclencher la réaction', 'Start the reaction'), duree: 6, texte: L('On ajoute l\'<strong>acide ascorbique</strong> (vitamine C), en large excès et acidifié, puis on déclenche le chronomètre. Il transforme peu à peu l\'ion bleu BM<sup>+</sup> en une espèce incolore : la transformation est <strong>lente</strong>.', 'The <strong>ascorbic acid</strong> (vitamin C), acidified and in large excess, is added and the stopwatch is started. It gradually converts the blue BM<sup>+</sup> ion into a colourless species: the transformation is <strong>slow</strong>.') },
+    { titre: L('Suivre l\'absorbance', 'Follow the absorbance'), duree: 14, texte: L('La solution se décolore et laisse passer de plus en plus de lumière. D\'après la loi de Beer-Lambert, l\'absorbance <strong>A</strong> est proportionnelle à [BM<sup>+</sup>] : la courbe suit en direct la disparition du colorant.', 'The solution loses its colour and lets more and more light through. According to the Beer-Lambert law, the absorbance <strong>A</strong> is proportional to [BM<sup>+</sup>]: the curve follows the disappearance of the dye in real time.') },
+    { titre: L('Lire le temps de demi-réaction', 'Read off the half-life'), duree: 8, texte: L('Le temps de demi-réaction <strong>t<sub>1/2</sub></strong> est la durée au bout de laquelle l\'avancement atteint la moitié de sa valeur finale : ici, A est divisée par 2. Elle l\'est encore à chaque nouveau t<sub>1/2</sub>.', 'The half-life <strong>t<sub>1/2</sub></strong> is the time taken for the extent of reaction to reach half its final value: here, A is halved. It is halved again after every further t<sub>1/2</sub>.') },
+    { titre: L('Vérifier l\'ordre 1', 'Check for first order'), duree: 7, texte: L('Pour une loi de vitesse d\'ordre 1, [BM<sup>+</sup>] = [BM<sup>+</sup>]<sub>0</sub>·e<sup>−kt</sup> : les points <strong>ln A = f(t)</strong> sont alignés. La pente de la droite vaut <strong>−k</strong>, et t<sub>1/2</sub> = ln 2 / k.', 'For a first-order rate law, [BM<sup>+</sup>] = [BM<sup>+</sup>]<sub>0</sub>·e<sup>−kt</sup>: the points <strong>ln A = f(t)</strong> lie on a straight line. The gradient of the line is <strong>−k</strong>, and t<sub>1/2</sub> = ln 2 / k.') },
+    { titre: L('Agir sur les facteurs cinétiques', 'Change the kinetic factors'), duree: 6, texte: L('Chauffez ou ajoutez du <strong>catalyseur</strong> (ions H<sub>3</sub>O<sup>+</sup>, non consommés) : k augmente et t<sub>1/2</sub> chute (en pointillés, la courbe de départ). Changez la concentration du colorant : la courbe part de plus haut, mais <strong>t<sub>1/2</sub> ne bouge pas</strong>, signature de l\'ordre 1.', 'Heat the mixture or add some <strong>catalyst</strong> (H<sub>3</sub>O<sup>+</sup> ions, not used up): k increases and t<sub>1/2</sub> drops (dotted line: the initial curve). Change the concentration of the dye: the curve starts higher, but <strong>t<sub>1/2</sub> does not change</strong>, the signature of first order.') },
   ],
   parametres: [
-    { id: 'theta', label: 'Température', min: 15, max: 40, pas: 1, valeur: THETA_REF, unite: '°C' },
-    { id: 'c0', label: 'Concentration initiale du colorant', min: 5, max: 20, pas: 1, valeur: 10, unite: 'µmol/L' },
-    { id: 'cat', label: 'Catalyseur : ions H3O+ ajoutés', min: 0, max: 0.1, pas: 0.01, valeur: CAT_REF, unite: 'mol/L', decimales: 2 },
+    { id: 'theta', label: L('Température', 'Temperature'), min: 15, max: 40, pas: 1, valeur: THETA_REF, unite: '°C' },
+    { id: 'c0', label: L('Concentration initiale du colorant', 'Initial concentration of the dye'), min: 5, max: 20, pas: 1, valeur: 10, unite: 'µmol/L' },
+    { id: 'cat', label: L('Catalyseur : ions H3O+ ajoutés', 'Catalyst: H3O+ ions added'), min: 0, max: 0.1, pas: 0.01, valeur: CAT_REF, unite: 'mol/L', decimales: 2 },
   ],
   graphique: { x: { label: 't (s)', min: 0, max: T_MAX, pas: 60 }, y: AXE_A },
   affiche: { etape: 2, t: 0.3 },
@@ -67,7 +67,7 @@ export default definirScene({
     const tubeBM = tubeEssai(scene, { x: 64, y: 432, h: 116 });
     const tubeVitC = tubeEssai(scene, { x: 132, y: 432, h: 116 });
     const thermo = thermometre(scene, { x: 184, y: 432, h: 124 });
-    etiquette(scene, { x: 64, y: 462, texte: 'Colorant', ancre: 'middle', taille: 13, couleur: C.bleu });
+    etiquette(scene, { x: 64, y: 462, texte: L('Colorant', 'Dye'), ancre: 'middle', taille: 13, couleur: C.bleu });
     etiquette(scene, { x: 132, y: 462, texte: 'Vit. C', ancre: 'middle', taille: 13, couleur: C.cyan });
     const etiqTheta = etiquette(scene, { x: 184, y: 462, texte: '', ancre: 'middle', taille: 13, mono: true, couleur: C.corail });
 
@@ -84,7 +84,7 @@ export default definirScene({
     el('rect', { x: 408, y: 376, width: 12, height: 32, rx: 3, fill: C.metal }, spec);
     el('path', { d: 'M420 392H462', stroke: C.metal, 'stroke-width': 2 }, spec);
     const aff = appareil(spec, { x: 462, y: 338, w: 150, h: 76, titre: 'ABSORBANCE' });
-    etiquette(scene, { x: 430, y: 462, texte: 'Spectrophotomètre', ancre: 'middle', taille: 13, couleur: C.discret });
+    etiquette(scene, { x: 430, y: 462, texte: L('Spectrophotomètre', 'Spectrophotometer'), ancre: 'middle', taille: 13, couleur: C.discret });
     const liqCuve = el('rect', { x: XC - 14, width: 28, rx: 3 }, spec);
     const idF = uid('faisceau');
     const degrade = el('linearGradient', { id: idF, gradientUnits: 'userSpaceOnUse', x1: XC - 15, x2: XC + 15, y1: 0, y2: 0 }, el('defs', {}, spec));
@@ -120,9 +120,9 @@ export default definirScene({
     el('circle', { cx: 422, cy: 39.5, r: 5.5, fill: C.bleu }, loupe);
     const compteur = texte(loupe, 434, 44, '', { ...legende, fill: C.texte });
     el('circle', { cx: 422, cy: 221.5, r: 5, fill: 'none', stroke: C.discret, 'stroke-width': 1.3 }, loupe);
-    texte(loupe, 434, 226, 'incolore', { ...legende, fill: C.discret });
+    texte(loupe, 434, 226, L('incolore', 'colourless'), { ...legende, fill: C.discret });
     el('circle', { cx: 506, cy: 221.5, r: 2.6, fill: C.cyan }, loupe);
-    texte(loupe, 514, 226, 'H3O+ catalyseur', { ...legende, fill: C.discret });
+    texte(loupe, 514, 226, L('H3O+ catalyseur', 'H3O+ catalyst'), { ...legende, fill: C.discret });
     const idZ = uid('zone');
     el('rect', { x: ZONE.x, y: ZONE.y, width: ZONE.w, height: ZONE.h, rx: 8 }, el('clipPath', { id: idZ }, loupe));
     const gP = el('g', { 'clip-path': `url(#${idZ})` }, loupe);
@@ -145,7 +145,7 @@ export default definirScene({
     // Bilan (étapes 4 à 6) : cuves témoins à 0, t1/2, 2 t1/2, 3 t1/2, puis loi d'ordre 1.
     const bilan = el('g', {}, scene);
     const cadre = el('rect', { x: 150, y: 24, width: 242, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, bilan);
-    texte(bilan, 166, 47, 'A divisée par 2 à chaque t1/2', { ...legende, fill: C.discret });
+    texte(bilan, 166, 47, L('A divisée par 2 à chaque t1/2', 'A halves at every t1/2'), { ...legende, fill: C.discret });
     const mono = { 'font-family': MONO, 'font-size': 13, 'font-weight': 600 };
     const minis = [0, 1, 2, 3].map((n) => {
       const x = 184 + 58 * n, g = el('g', {}, bilan);
@@ -236,7 +236,7 @@ export default definirScene({
         set(m.halo, { ...pos, r: 6 + 13 * q, opacity: i < nCV && q > 0 && q < 1 ? 1 - q : 0 });
       });
       hos.forEach((m, i) => set(m.n, { ...position(m, T, agitation, 3), opacity: i < nHO ? 0.8 : 0 }));
-      compteur.textContent = `Ions BM+ : ${colores} / ${nCV}`;
+      compteur.textContent = L(`Ions BM+ : ${colores} / ${nCV}`, `BM+ ions: ${colores} / ${nCV}`);
 
       // Étapes 4 à 6 : bilan.
       show(bilan, seg(a4, 0, 0.12), 12);
@@ -254,7 +254,7 @@ export default definirScene({
       lK.style.opacity = String(seg(a5, 0.78, 0.9));
       lT.textContent = `t1/2 = ln 2 / k = ${fmt(Math.LN2 / kMes, 0)} s`;
       lT.style.opacity = String(seg(a5, 0.86, 1));
-      lRef.textContent = `k = ${fmt(k / kRef, 2)} × k de départ`;
+      lRef.textContent = L(`k = ${fmt(k / kRef, 2)} × k de départ`, `k = ${fmt(k / kRef, 2)} × initial k`);
       lRef.style.opacity = String(seg(a6, 0.15, 0.4));
 
       if (graphique) {
@@ -271,7 +271,7 @@ export default definirScene({
           graphique.courbe('droite', xf > 0 ? [[0, droite.ordonnee], [xf, droite.ordonnee + droite.pente * xf]] : [], { couleur: C.jaune, epaisseur: 2.5 });
           if (a5 > 0.78) {
             const xm = lnPts[lnPts.length >> 1][0];
-            graphique.repere('pente', xm, droite.ordonnee + droite.pente * xm, { couleur: C.jaune, rayon: 4, label: `pente = −${fmt(kMes, 4)} s⁻¹` });
+            graphique.repere('pente', xm, droite.ordonnee + droite.pente * xm, { couleur: C.jaune, rayon: 4, label: L(`pente = −${fmt(kMes, 4)} s⁻¹`, `gradient = −${fmt(kMes, 4)} s⁻¹`) });
             graphique.opacite('pente', seg(a5, 0.78, 0.9));
           } else graphique.effacer('pente');
         } else {
@@ -287,7 +287,7 @@ export default definirScene({
           const texteA = `A0/2 = ${fmt(a0 / 2, 2)}`, texteT = `t1/2 = ${fmt(t12, 0)} s`;
           if (a4 > 0.25) {
             graphique.horizontale('demi', a0 / 2, { couleur: C.jaune, label: lent ? undefined : texteA });
-            graphique.verticale('t12', t12, { couleur: C.jaune, label: court ? undefined : lent ? `A = A0/2 à ${texteT}` : texteT });
+            graphique.verticale('t12', t12, { couleur: C.jaune, label: court ? undefined : lent ? L(`A = A0/2 à ${texteT}`, `A = A0/2 at ${texteT}`) : texteT });
             graphique.opacite('demi', seg(a4, 0.25, 0.33));
             graphique.opacite('t12', seg(a4, 0.29, 0.37));
           } else {
@@ -305,11 +305,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Temps écoulé', valeur: `${fmt(tExp, 0)} s` },
+        { label: L('Temps écoulé', 'Elapsed time'), valeur: `${fmt(tExp, 0)} s` },
         { label: 'Absorbance A', valeur: lance ? fmt(A, 3) : '...' },
       ];
-      if (a4 > 0.37) mesures.push({ label: 'Demi-réaction t1/2', valeur: `${fmt(t12, 0)} s` });
-      if (a5 > 0.78) mesures.push({ label: 'Constante k', valeur: `${fmt(kMes * 1000, 1)} × 10⁻³ s⁻¹` });
+      if (a4 > 0.37) mesures.push({ label: L('Demi-réaction t1/2', 'Half-life t1/2'), valeur: `${fmt(t12, 0)} s` });
+      if (a5 > 0.78) mesures.push({ label: L('Constante k', 'Rate constant k'), valeur: `${fmt(kMes * 1000, 1)} × 10⁻³ s⁻¹` });
       return mesures;
     };
   },

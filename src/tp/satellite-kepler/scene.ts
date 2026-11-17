@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, rng, seg, set, show, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, rng, seg, set, show, uid } from '../../lib/anim';
 import { etiquette, fleche } from '../../lib/labkit';
 import { C, MONO, POLICE } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -17,7 +17,7 @@ const SATS = [
   { nom: 'ISS', r: 6.78e6, couleur: C.rose, phase: 0.6 },
   { nom: 'GPS', r: 26.56e6, couleur: C.orange, phase: 2.4 },
   { nom: 'Galileo', r: 29.6e6, couleur: C.violet, phase: 4.1 },
-  { nom: 'Météosat', r: 42.164e6, couleur: C.jaune, phase: 5.3 },
+  { nom: L('Météosat', 'Meteosat'), r: 42.164e6, couleur: C.jaune, phase: 5.3 },
 ];
 
 const EXP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
@@ -29,16 +29,16 @@ const sci = (v: number, d = 2) => {
 
 export default definirScene({
   etapes: [
-    { titre: 'Mettre le satellite en orbite', duree: 7, texte: 'Le satellite est lancé jusqu\'à son orbite circulaire de rayon <strong>r</strong>. Il n\'est soumis qu\'à la <strong>force de gravitation</strong>, dirigée vers le centre de la Terre, alors que sa vitesse est <strong>tangente</strong> à la trajectoire.' },
-    { titre: 'Chronométrer un tour', duree: 10, texte: 'Le mouvement est <strong>circulaire uniforme</strong> : la force, centripète, change la direction de la vitesse sans changer sa valeur. On mesure la <strong>période T</strong> et on place le point (r³ ; T²) sur le graphique.' },
-    { titre: 'Loi des aires sur une ellipse', duree: 12, texte: 'L\'orbite devient elliptique, la Terre en occupe un <strong>foyer</strong>. Le satellite est le plus rapide au périgée et le plus lent à l\'apogée : le rayon Terre-satellite balaie des <strong>aires égales en des durées égales</strong>.' },
-    { titre: 'Comparer plusieurs satellites', duree: 12, texte: 'Quatre satellites réels rejoignent la scène. Plus l\'orbite est haute, plus la vitesse est faible et la période longue. Chaque satellite donne un point <strong>(r³ ; T²)</strong>.' },
-    { titre: 'Peser la Terre', duree: 8, texte: 'Les points sont alignés : <strong>T² = k·r³</strong> avec k = 4π²/(G·M). La pente donne la <strong>masse de l\'astre</strong>. Changez l\'altitude, l\'excentricité ou la masse et observez la droite.' },
+    { titre: L('Mettre le satellite en orbite', 'Put the satellite into orbit'), duree: 7, texte: L('Le satellite est lancé jusqu\'à son orbite circulaire de rayon <strong>r</strong>. Il n\'est soumis qu\'à la <strong>force de gravitation</strong>, dirigée vers le centre de la Terre, alors que sa vitesse est <strong>tangente</strong> à la trajectoire.', 'The satellite is launched up to its circular orbit of radius <strong>r</strong>. It is subject only to the <strong>gravitational force</strong>, directed towards the centre of the Earth, while its velocity is <strong>tangent</strong> to the path.') },
+    { titre: L('Chronométrer un tour', 'Time one revolution'), duree: 10, texte: L('Le mouvement est <strong>circulaire uniforme</strong> : la force, centripète, change la direction de la vitesse sans changer sa valeur. On mesure la <strong>période T</strong> et on place le point (r³ ; T²) sur le graphique.', 'The motion is <strong>uniform circular motion</strong>: the centripetal force changes the direction of the velocity without changing its value. We measure the <strong>period T</strong> and plot the point (r³, T²) on the graph.') },
+    { titre: L('Loi des aires sur une ellipse', 'Law of equal areas on an ellipse'), duree: 12, texte: L('L\'orbite devient elliptique, la Terre en occupe un <strong>foyer</strong>. Le satellite est le plus rapide au périgée et le plus lent à l\'apogée : le rayon Terre-satellite balaie des <strong>aires égales en des durées égales</strong>.', 'The orbit becomes elliptical, with the Earth at one <strong>focus</strong>. The satellite is fastest at perigee and slowest at apogee: the Earth-satellite radius sweeps out <strong>equal areas in equal times</strong>.') },
+    { titre: L('Comparer plusieurs satellites', 'Compare several satellites'), duree: 12, texte: L('Quatre satellites réels rejoignent la scène. Plus l\'orbite est haute, plus la vitesse est faible et la période longue. Chaque satellite donne un point <strong>(r³ ; T²)</strong>.', 'Four real satellites join the scene. The higher the orbit, the lower the speed and the longer the period. Each satellite gives one point <strong>(r³, T²)</strong>.') },
+    { titre: L('Peser la Terre', 'Weigh the Earth'), duree: 8, texte: L('Les points sont alignés : <strong>T² = k·r³</strong> avec k = 4π²/(G·M). La pente donne la <strong>masse de l\'astre</strong>. Changez l\'altitude, l\'excentricité ou la masse et observez la droite.', 'The points lie on a straight line: <strong>T² = k·r³</strong> with k = 4π²/(G·M). The gradient gives the <strong>mass of the central body</strong>. Change the altitude, the eccentricity or the mass and watch the line.') },
   ],
   parametres: [
-    { id: 'h', label: 'Altitude du satellite', min: 3000, max: 36000, pas: 500, valeur: 30000, unite: 'km', decimales: 0 },
-    { id: 'e', label: 'Excentricité de l\'ellipse', min: 0.1, max: 0.6, pas: 0.05, valeur: 0.5, decimales: 2 },
-    { id: 'm', label: 'Masse de l\'astre', min: 0.5, max: 2, pas: 0.1, valeur: 1, unite: '× Terre', decimales: 1 },
+    { id: 'h', label: L('Altitude du satellite', 'Satellite altitude'), min: 3000, max: 36000, pas: 500, valeur: 30000, unite: 'km', decimales: 0 },
+    { id: 'e', label: L('Excentricité de l\'ellipse', 'Eccentricity of the ellipse'), min: 0.1, max: 0.6, pas: 0.05, valeur: 0.5, decimales: 2 },
+    { id: 'm', label: L('Masse de l\'astre', 'Mass of the body'), min: 0.5, max: 2, pas: 0.1, valeur: 1, unite: L('× Terre', '× Earth'), decimales: 1 },
   ],
   graphique: {
     x: { label: 'r³ (10²² m³)', min: 0, max: 8, pas: 2 },
@@ -95,9 +95,9 @@ export default definirScene({
     // Colonne de légende, à droite.
     const legF = el('g', {}, scene), legV = el('g', {}, scene);
     fleche(legF, { x1: COL, y1: 30, x2: COL + 24, y2: 30, couleur: C.corail });
-    etiquette(legF, { x: COL + 34, y: 35, texte: 'Force de gravitation', taille: 13 });
+    etiquette(legF, { x: COL + 34, y: 35, texte: L('Force de gravitation', 'Gravitational force'), taille: 13 });
     fleche(legV, { x1: COL, y1: 54, x2: COL + 24, y2: 54, couleur: C.menthe });
-    etiquette(legV, { x: COL + 34, y: 59, texte: 'Vitesse (tangente)', taille: 13 });
+    etiquette(legV, { x: COL + 34, y: 59, texte: L('Vitesse (tangente)', 'Velocity (tangent)'), taille: 13 });
 
     const chrono = el('g', {}, scene);
     el('circle', { cx: COL + 6, cy: 91, r: 5, fill: C.cyan }, chrono);
@@ -106,8 +106,8 @@ export default definirScene({
     const legAires = el('g', {}, scene);
     el('rect', { x: COL, y: 121, width: 12, height: 12, rx: 3, fill: C.rose }, legAires);
     el('rect', { x: COL + 16, y: 121, width: 12, height: 12, rx: 3, fill: C.jaune }, legAires);
-    etiquette(legAires, { x: COL + 36, y: 132, texte: 'Aires égales', taille: 14 });
-    etiquette(legAires, { x: COL, y: 154, texte: 'balayées en Δt = T/10', taille: 13, couleur: C.discret });
+    etiquette(legAires, { x: COL + 36, y: 132, texte: L('Aires égales', 'Equal areas'), taille: 14 });
+    etiquette(legAires, { x: COL, y: 154, texte: L('balayées en Δt = T/10', 'swept in Δt = T/10'), taille: 13, couleur: C.discret });
 
     const lignes = refs.map((s, i) => {
       const g = el('g', {}, scene), y = 128 + 22 * i;
@@ -120,9 +120,9 @@ export default definirScene({
     el('rect', { x: COL - 4, y: 232, width: 184, height: 122, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: COL + 10, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(256, 13, C.discret, POLICE).textContent = 'Pente k (s²/m³)';
+    ligne(256, 13, C.discret, POLICE).textContent = L('Pente k (s²/m³)', 'Gradient k (s²/m³)');
     const txtK = ligne(278, 15, C.texte);
-    ligne(308, 13, C.discret, POLICE).textContent = 'Masse de l\'astre';
+    ligne(308, 13, C.discret, POLICE).textContent = L('Masse de l\'astre', 'Mass of the body');
     const txtM = ligne(334, 17, C.jaune);
 
     const X = (x: number) => CX + x * K, Y = (y: number) => CY - y * K;
@@ -226,16 +226,16 @@ export default definirScene({
           graphique.nuage(`sat${i}`, entree[i] > 0 ? [[donnees[i][0] / 1e22, donnees[i][1] / 1e9]] : [], { couleur: s.couleur, rayon: 5 });
           graphique.opacite(`sat${i}`, entree[i]);
         });
-        if (a2 > 0) graphique.repere('moi', a ** 3 / 1e22, (tour ? Tp : a2 * Tp) ** 2 / 1e9, { couleur: C.cyan, label: tour ? 'votre satellite' : undefined });
+        if (a2 > 0) graphique.repere('moi', a ** 3 / 1e22, (tour ? Tp : a2 * Tp) ** 2 / 1e9, { couleur: C.cyan, label: tour ? L('votre satellite', 'your satellite') : undefined });
         else graphique.effacer('moi');
       }
 
       const mesures = [
-        { label: 'Distance au centre r', valeur: `${fmt(d / 1e3, 0)} km` },
-        { label: 'Vitesse v', valeur: a1 > 0.6 ? `${fmt(v / 1000, 2)} km/s` : '...' },
-        { label: 'Période T', valeur: tour ? `${fmt(Tp / 3600, 2)} h` : '...' },
+        { label: L('Distance au centre r', 'Distance from centre r'), valeur: `${fmt(d / 1e3, 0)} km` },
+        { label: L('Vitesse v', 'Speed v'), valeur: a1 > 0.6 ? `${fmt(v / 1000, 2)} km/s` : '...' },
+        { label: L('Période T', 'Period T'), valeur: tour ? `${fmt(Tp / 3600, 2)} h` : '...' },
       ];
-      if (a5 > 0.5) mesures.push({ label: 'Masse de l\'astre', valeur: `${sci(masse)} kg` });
+      if (a5 > 0.5) mesures.push({ label: L('Masse de l\'astre', 'Mass of the body'), valeur: `${sci(masse)} kg` });
       return mesures;
     };
   },

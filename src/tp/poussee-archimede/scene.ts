@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, mix, seg, set, show, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, mix, seg, set, show, uid } from '../../lib/anim';
 import { eprouvette, etiquette, fleche, paillasse, potence } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -16,19 +16,19 @@ const ZX = 503, ZT = 92, ZH = 120, ZL = 84;
 
 export default definirScene({
   etapes: [
-    { titre: 'Peser le solide dans l\'air', duree: 5, texte: 'Le cylindre est suspendu au dynamomètre : le ressort s\'allonge et indique son <strong>poids P</strong>. L\'éprouvette contient 150 mL de liquide.' },
-    { titre: 'Immerger progressivement', duree: 12, texte: 'On descend la noix de serrage. À mesure que le solide s\'enfonce, le <strong>niveau monte</strong> et la valeur lue au dynamomètre <strong>diminue</strong> : le liquide pousse le solide vers le haut.' },
-    { titre: 'Lire le volume déplacé', duree: 6, texte: 'La montée du niveau donne le <strong>volume de liquide déplacé</strong>, égal au volume immergé <strong>V</strong> du solide.' },
-    { titre: 'Comprendre : les forces pressantes', duree: 9, texte: 'La pression augmente avec la profondeur. Les forces latérales se compensent, mais le liquide pousse <strong>plus fort sous le solide que dessus</strong> : la résultante est verticale, vers le haut.' },
-    { titre: 'Vérifier la loi : PA = ρ·V·g', duree: 6, texte: 'La poussée mesurée <strong>P − F</strong> est égale au poids du liquide déplacé <strong>ρ·V·g</strong>. Changez les masses volumiques : un solide moins dense que le liquide flotte.' },
+    { titre: L('Peser le solide dans l\'air', 'Weigh the solid in air'), duree: 5, texte: L('Le cylindre est suspendu au dynamomètre : le ressort s\'allonge et indique son <strong>poids P</strong>. L\'éprouvette contient 150 mL de liquide.', 'The cylinder hangs from the newton meter: the spring stretches and shows its <strong>weight P</strong>. The measuring cylinder contains 150 mL of liquid.') },
+    { titre: L('Immerger progressivement', 'Immerse gradually'), duree: 12, texte: L('On descend la noix de serrage. À mesure que le solide s\'enfonce, le <strong>niveau monte</strong> et la valeur lue au dynamomètre <strong>diminue</strong> : le liquide pousse le solide vers le haut.', 'The bosshead is lowered. As the solid goes deeper, the <strong>level rises</strong> and the reading on the newton meter <strong>decreases</strong>: the liquid pushes the solid upwards.') },
+    { titre: L('Lire le volume déplacé', 'Read the displaced volume'), duree: 6, texte: L('La montée du niveau donne le <strong>volume de liquide déplacé</strong>, égal au volume immergé <strong>V</strong> du solide.', 'The rise in the level gives the <strong>volume of liquid displaced</strong>, equal to the immersed volume <strong>V</strong> of the solid.') },
+    { titre: L('Comprendre : les forces pressantes', 'Understand: the pressure forces'), duree: 9, texte: L('La pression augmente avec la profondeur. Les forces latérales se compensent, mais le liquide pousse <strong>plus fort sous le solide que dessus</strong> : la résultante est verticale, vers le haut.', 'Pressure increases with depth. The sideways forces cancel out, but the liquid pushes <strong>harder underneath the solid than on top</strong>: the resultant is vertical, upwards.') },
+    { titre: L('Vérifier la loi : PA = ρ·V·g', 'Check the law: PA = ρ·V·g'), duree: 6, texte: L('La poussée mesurée <strong>P − F</strong> est égale au poids du liquide déplacé <strong>ρ·V·g</strong>. Changez les masses volumiques : un solide moins dense que le liquide flotte.', 'The measured upthrust <strong>P − F</strong> is equal to the weight of the liquid displaced <strong>ρ·V·g</strong>. Change the densities: a solid less dense than the liquid floats.') },
   ],
   parametres: [
-    { id: 'rhoS', label: 'Masse volumique du solide', min: 0.5, max: 5, pas: 0.1, valeur: 2.7, unite: 'g/cm³', decimales: 1 },
-    { id: 'rhoF', label: 'Masse volumique du liquide', min: 0.8, max: 1.3, pas: 0.05, valeur: 1, unite: 'g/cm³', decimales: 2 },
+    { id: 'rhoS', label: L('Masse volumique du solide', 'Density of the solid'), min: 0.5, max: 5, pas: 0.1, valeur: 2.7, unite: 'g/cm³', decimales: 1 },
+    { id: 'rhoF', label: L('Masse volumique du liquide', 'Density of the liquid'), min: 0.8, max: 1.3, pas: 0.05, valeur: 1, unite: 'g/cm³', decimales: 2 },
   ],
   graphique: {
-    x: { label: 'V immergé (cm³)', min: 0, max: 40, pas: 10 },
-    y: { label: 'Force (N)', min: 0, max: 2.5, pas: 0.5 },
+    x: { label: L('V immergé (cm³)', 'Immersed V (cm³)'), min: 0, max: 40, pas: 10 },
+    y: { label: L('Force (N)', 'Force (N)'), min: 0, max: 2.5, pas: 0.5 },
   },
   affiche: { etape: 3, t: 0.95 },
 
@@ -81,7 +81,7 @@ export default definirScene({
     const zEau = el('rect', { x: 382, width: 242, fill: `url(#${idGrad})`, 'clip-path': `url(#${idClip})` }, zoom);
     const zSurf = el('line', { x1: 383, x2: 623, stroke: C.blanc, 'stroke-width': 2, opacity: 0.4 }, zoom);
     const zCyl = el('rect', { x: ZX - ZL / 2, y: ZT, width: ZL, height: ZH, rx: 7, stroke: C.verre, 'stroke-width': TRAIT }, zoom);
-    etiquette(zoom, { x: 396, y: 47, texte: 'Forces pressantes', taille: 13, couleur: C.discret });
+    etiquette(zoom, { x: 396, y: 47, texte: L('Forces pressantes', 'Pressure forces'), taille: 13, couleur: C.discret });
     const gCotes = el('g', {}, zoom);
     const fl = (parent: Element) => fleche(parent, { x1: 0, y1: 0, x2: 0, y2: 0, couleur: C.violet, epaisseur: 2.5 });
     const cotes = [0, 1, 2, 3, 4].map(() => [fl(gCotes), fl(gCotes)]);
@@ -154,7 +154,7 @@ export default definirScene({
       set(bande, { y: ySurf, height: montee, opacity: 0.32 * k2 * (1 - 0.6 * seg(a2, 0.7, 1)) });
       accolade.setAttribute('d', `M323 ${ySurf}H319V${Y_SURF0}H323`);
       accolade.style.opacity = String(k2);
-      lecDV.textContent = `déplacé : ${fmt(dV, 0)} mL = V`;
+      lecDV.textContent = L(`déplacé : ${fmt(dV, 0)} mL = V`, `displaced: ${fmt(dV, 0)} mL = V`);
       show(lecDV, seg(a2, 0.3, 0.55));
 
       // Zoom sur les forces pressantes : flèches proportionnelles à la profondeur.
@@ -189,7 +189,7 @@ export default definirScene({
 
       // Encart final.
       show(encart, seg(a4, 0.05, 0.35, ease.backOut), 16);
-      titreEncart.textContent = coule ? 'Poussée d\'Archimède' : 'Le solide flotte : PA = P';
+      titreEncart.textContent = coule ? L('Poussée d\'Archimède', 'Archimedes\' upthrust') : L('Le solide flotte : PA = P', 'The solid floats: PA = P');
       mesuree.textContent = `P - F = ${fmt(P - F)} N`;
       calculee.textContent = `ρ·V·g = ${fmt(PA)} N`;
 
@@ -215,11 +215,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Dynamomètre F', valeur: a0 > 0.4 ? `${fmt(F)} N` : '...' },
-        { label: 'Volume immergé', valeur: `${fmt(dV, 1)} cm³` },
-        { label: 'Poussée P - F', valeur: a0 > 0.85 ? `${fmt(P - F)} N` : '...' },
+        { label: L('Dynamomètre F', 'Newton meter F'), valeur: a0 > 0.4 ? `${fmt(F)} N` : '...' },
+        { label: L('Volume immergé', 'Immersed volume'), valeur: `${fmt(dV, 1)} cm³` },
+        { label: L('Poussée P - F', 'Upthrust P - F'), valeur: a0 > 0.85 ? `${fmt(P - F)} N` : '...' },
       ];
-      if (a3 > 0.62) mesures.push({ label: 'Écart de pression', valeur: `${fmt(dp, 0)} Pa` });
+      if (a3 > 0.62) mesures.push({ label: L('Écart de pression', 'Pressure difference'), valeur: `${fmt(dp, 0)} Pa` });
       return mesures;
     };
   },

@@ -1,0 +1,156 @@
+---
+import Base from '../../layouts/Base.astro';
+import { LEGAL, SITE } from '../../data/site';
+import { UI, lien, type Lang } from '../../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const u = UI[lang];
+
+const T = {
+  fr: {
+    titre: 'Politique de confidentialité',
+    description: `Quelles données ${SITE.nom} traite (presque aucune), mesure d'audience soumise à votre accord, durée de conservation et exercice de vos droits RGPD.`,
+    fil: 'Confidentialité',
+    surtitre: 'RGPD',
+    chapo: `${SITE.nom} ne demande ni compte, ni inscription, ni formulaire : vous pouvez consulter tous les cours et TP sans fournir la moindre information personnelle.`,
+  },
+  en: {
+    titre: 'Privacy policy',
+    description: `What data ${SITE.nom} processes (almost none), audience measurement subject to your consent, retention periods and how to exercise your GDPR rights.`,
+    fil: 'Privacy',
+    surtitre: 'GDPR',
+    chapo: `${SITE.nom} asks for no account, no registration and no form: you can read every lesson and practical without providing any personal information.`,
+  },
+}[lang];
+---
+
+<Base lang={lang} titre={T.titre} description={T.description}>
+  <article class="section conteneur">
+    <ol class="fil"><li><a href={lien(lang, '/')}>{u.accueil}</a></li><li aria-current="page">{T.fil}</li></ol>
+    <p class="surtitre">{T.surtitre}</p>
+    <h1>{T.titre}</h1>
+    <p class="chapo">{T.chapo}</p>
+
+    {lang === 'fr' ? (
+      <div class="prose">
+        <h2>1. Responsable du traitement</h2>
+        <p>{LEGAL.editeur.nom}, {LEGAL.editeur.adresse}. Contact : {LEGAL.editeur.courriel}.</p>
+
+        <h2>2. Données traitées</h2>
+        <table>
+          <thead><tr><th>Traitement</th><th>Données</th><th>Base légale</th><th>Conservation</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Hébergement et sécurité du site</td>
+              <td>Adresse IP, date, page demandée, navigateur (journaux techniques de l'hébergeur)</td>
+              <td>Intérêt légitime (art. 6.1.f RGPD)</td>
+              <td>Durée fixée par l'hébergeur, au plus 12 mois</td>
+            </tr>
+            <tr>
+              <td>Mesure d'audience (Plausible)</td>
+              <td>Page vue, page d'origine, type d'appareil, pays ; aucune donnée permettant de vous identifier, aucun cookie</td>
+              <td>Consentement (art. 6.1.a RGPD)</td>
+              <td>Statistiques agrégées uniquement</td>
+            </tr>
+            <tr>
+              <td>Mémorisation de votre choix</td>
+              <td>« accepté » ou « refusé », stocké dans votre navigateur (localStorage)</td>
+              <td>Nécessaire au respect de votre choix</td>
+              <td>Jusqu'à ce que vous effaciez les données du site</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>3. Mesure d'audience et consentement</h2>
+        <p>
+          Aucun script de mesure ne se charge tant que vous n'avez pas cliqué sur « Accepter ». Plausible Analytics
+          (Plausible Insights OÜ, Estonie, serveurs dans l'Union européenne) ne dépose pas de cookie et ne suit pas les
+          visiteurs d'un site à l'autre. Vous pouvez changer d'avis à tout moment :
+        </p>
+        <p><button type="button" class="btn" data-cookies-ouvrir>Modifier mon choix</button></p>
+        <p>Aucune donnée n'est vendue, cédée ni utilisée à des fins publicitaires. Le site ne contient aucun bouton de réseau social ni contenu tiers intégré.</p>
+
+        <h2>4. Destinataires et transferts</h2>
+        <p>Les seuls destinataires sont l'hébergeur ({LEGAL.hebergeur.nom}) et, si vous l'acceptez, Plausible. Aucun transfert hors de l'Union européenne n'est réalisé par l'éditeur ; les conditions propres à l'hébergeur s'appliquent à ses journaux techniques.</p>
+
+        <h2>5. Mineurs</h2>
+        <p>Le site s'adresse notamment à des élèves mineurs. Il ne collecte aucune donnée d'identification et ne propose aucune fonction de contact ou de publication.</p>
+
+        <h2>6. Vos droits</h2>
+        <p>
+          Vous disposez des droits d'accès, de rectification, d'effacement, d'opposition et de limitation (articles 15 à 21
+          du RGPD). Pour les exercer, écrivez à {LEGAL.editeur.courriel}. Vous pouvez aussi introduire une réclamation
+          auprès de la CNIL (<a href="https://www.cnil.fr/fr/plaintes" rel="noopener">cnil.fr/fr/plaintes</a>).
+        </p>
+
+        <p class="maj">{u.miseAJour} : {LEGAL.miseAJour.fr}.</p>
+      </div>
+    ) : (
+      <div class="prose">
+        <p>
+          This English text is a translation provided for information. In the event of any discrepancy, the
+          <a href={lien('fr', '/confidentialite/')} hreflang="fr">French version</a> prevails.
+        </p>
+
+        <h2>1. Data controller</h2>
+        <p>{LEGAL.editeur.nom}, {LEGAL.editeur.adresse}. Contact: {LEGAL.editeur.courriel}.</p>
+
+        <h2>2. Data processed</h2>
+        <table>
+          <thead><tr><th>Processing</th><th>Data</th><th>Legal basis</th><th>Retention</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Hosting and security of the site</td>
+              <td>IP address, date, page requested, browser (the host's technical logs)</td>
+              <td>Legitimate interest (Art. 6(1)(f) GDPR)</td>
+              <td>Period set by the host, 12 months at most</td>
+            </tr>
+            <tr>
+              <td>Audience measurement (Plausible)</td>
+              <td>Page viewed, referring page, device type, country; no data that could identify you, no cookie</td>
+              <td>Consent (Art. 6(1)(a) GDPR)</td>
+              <td>Aggregated statistics only</td>
+            </tr>
+            <tr>
+              <td>Remembering your choice</td>
+              <td>"accepted" or "declined", stored in your browser (localStorage)</td>
+              <td>Necessary to honour your choice</td>
+              <td>Until you clear the site's data</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>3. Audience measurement and consent</h2>
+        <p>
+          No measurement script is loaded until you have clicked "Accept". Plausible Analytics (Plausible Insights OÜ,
+          Estonia, servers in the European Union) sets no cookie and does not track visitors from one site to another.
+          You can change your mind at any time:
+        </p>
+        <p><button type="button" class="btn" data-cookies-ouvrir>Change my choice</button></p>
+        <p>No data is sold, passed on or used for advertising purposes. The site contains no social network button and no embedded third-party content.</p>
+
+        <h2>4. Recipients and transfers</h2>
+        <p>The only recipients are the host ({LEGAL.hebergeur.nom}) and, if you accept, Plausible. The publisher carries out no transfer outside the European Union; the host's own conditions apply to its technical logs.</p>
+
+        <h2>5. Minors</h2>
+        <p>The site is aimed in particular at pupils who are minors. It collects no identifying data and offers no contact or publishing feature.</p>
+
+        <h2>6. Your rights</h2>
+        <p>
+          You have the rights of access, rectification, erasure, objection and restriction (Articles 15 to 21 of the
+          GDPR). To exercise them, write to {LEGAL.editeur.courriel}. You may also lodge a complaint with the CNIL, the
+          French data protection authority (<a href="https://www.cnil.fr/fr/plaintes" rel="noopener" hreflang="fr">cnil.fr/fr/plaintes</a>).
+        </p>
+
+        <p class="maj">{u.miseAJour}: {LEGAL.miseAJour.en}.</p>
+      </div>
+    )}
+  </article>
+</Base>
+
+<style>
+  .maj { margin-top: 2.5rem; color: var(--doux); font-size: .92rem; }
+</style>

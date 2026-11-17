@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, texte, trace } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, texte, trace } from '../../lib/anim';
 import { etiquette, fleche } from '../../lib/labkit';
 import { C, MONO, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -18,16 +18,16 @@ const TRAJET_2 = 'M500 222V110H250L205 128V370H500V258'; // K en 2 : boucle de d
 
 export default definirScene({
   etapes: [
-    { titre: 'Réaliser le montage', duree: 6, texte: 'Un générateur de tension <strong>E</strong>, un conducteur ohmique <strong>R</strong> et un condensateur <strong>C</strong> sont montés en série. L\'inverseur <strong>K</strong> choisit entre la charge (position 1) et la décharge (position 2).' },
-    { titre: 'Charger le condensateur', duree: 10, texte: 'K bascule en position 1. Les électrons quittent l\'armature du haut et s\'accumulent sur celle du bas : <strong>u<sub>C</sub></strong> monte vers E pendant que l\'intensité <strong>i</strong> s\'éteint.' },
-    { titre: 'Décharger dans la résistance', duree: 10, texte: 'K bascule en position 2 : le générateur est hors circuit. Les électrons repartent en sens inverse, <strong>i change de signe</strong> et u<sub>C</sub> décroît vers zéro.' },
-    { titre: 'Mesurer le temps caractéristique', duree: 7, texte: 'La tangente à l\'origine coupe l\'asymptote u<sub>C</sub> = E à la date <strong>τ</strong>. À cet instant, le condensateur est chargé à <strong>63 %</strong>.' },
-    { titre: 'Vérifier τ = R·C', duree: 5, texte: 'La valeur lue est égale au produit <strong>R·C</strong>. Modifiez R, C ou E : lesquels changent la durée de la charge ?' },
+    { titre: L('Réaliser le montage', 'Build the circuit'), duree: 6, texte: L('Un générateur de tension <strong>E</strong>, un conducteur ohmique <strong>R</strong> et un condensateur <strong>C</strong> sont montés en série. L\'inverseur <strong>K</strong> choisit entre la charge (position 1) et la décharge (position 2).', 'A voltage supply <strong>E</strong>, a resistor <strong>R</strong> and a capacitor <strong>C</strong> are connected in series. The two-way switch <strong>K</strong> selects charging (position 1) or discharging (position 2).') },
+    { titre: L('Charger le condensateur', 'Charge the capacitor'), duree: 10, texte: L('K bascule en position 1. Les électrons quittent l\'armature du haut et s\'accumulent sur celle du bas : <strong>u<sub>C</sub></strong> monte vers E pendant que l\'intensité <strong>i</strong> s\'éteint.', 'K moves to position 1. Electrons leave the top plate and build up on the bottom one: <strong>u<sub>C</sub></strong> rises towards E while the current <strong>i</strong> dies away.') },
+    { titre: L('Décharger dans la résistance', 'Discharge through the resistor'), duree: 10, texte: L('K bascule en position 2 : le générateur est hors circuit. Les électrons repartent en sens inverse, <strong>i change de signe</strong> et u<sub>C</sub> décroît vers zéro.', 'K moves to position 2: the supply is out of the circuit. The electrons flow back the other way, <strong>i changes sign</strong> and u<sub>C</sub> decays towards zero.') },
+    { titre: L('Mesurer le temps caractéristique', 'Measure the time constant'), duree: 7, texte: L('La tangente à l\'origine coupe l\'asymptote u<sub>C</sub> = E à la date <strong>τ</strong>. À cet instant, le condensateur est chargé à <strong>63 %</strong>.', 'The tangent at the origin meets the asymptote u<sub>C</sub> = E at time <strong>τ</strong>. At that instant, the capacitor is <strong>63%</strong> charged.') },
+    { titre: L('Vérifier τ = R·C', 'Check τ = R·C'), duree: 5, texte: L('La valeur lue est égale au produit <strong>R·C</strong>. Modifiez R, C ou E : lesquels changent la durée de la charge ?', 'The value read is equal to the product <strong>R·C</strong>. Change R, C or E: which ones alter how long charging takes?') },
   ],
   parametres: [
-    { id: 'r', label: 'Résistance R', min: 1, max: 4, pas: 0.5, valeur: 2, unite: 'kΩ', decimales: 1 },
-    { id: 'c', label: 'Capacité C', min: 200, max: 1000, pas: 100, valeur: 500, unite: 'µF', decimales: 0 },
-    { id: 'e', label: 'Tension E', min: 2, max: 6, pas: 0.5, valeur: 5, unite: 'V', decimales: 1 },
+    { id: 'r', label: L('Résistance R', 'Resistance R'), min: 1, max: 4, pas: 0.5, valeur: 2, unite: 'kΩ', decimales: 1 },
+    { id: 'c', label: L('Capacité C', 'Capacitance C'), min: 200, max: 1000, pas: 100, valeur: 500, unite: 'µF', decimales: 0 },
+    { id: 'e', label: L('Tension E', 'Voltage E'), min: 2, max: 6, pas: 0.5, valeur: 5, unite: 'V', decimales: 1 },
   ],
   graphique: {
     x: { label: 't (s)', min: 0, max: T_MAX, pas: 1 },
@@ -104,7 +104,7 @@ export default definirScene({
     const porteurs1 = jeu(TRAJET_1), porteurs2 = jeu(TRAJET_2);
     const legende = el('g', {}, scene);
     el('circle', { cx: 240, cy: 340, r: 3.6, fill: C.bleu }, legende);
-    etiquette(legende, { x: 252, y: 345, texte: 'électrons', taille: 13, couleur: C.bleu });
+    etiquette(legende, { x: 252, y: 345, texte: L('électrons', 'electrons'), taille: 13, couleur: C.bleu });
 
     const titre = etiquette(scene, { x: 320, y: 46, texte: '', ancre: 'middle', taille: 17 });
 
@@ -146,7 +146,7 @@ export default definirScene({
       const enTransit = a1 < 0.06 || (a2 > 0 && a2 < 0.06); // levier entre deux plots : circuit ouvert, aucun courant
       const { uC, q } = e, i = enTransit ? 0 : e.i;
       const iTexte = fmt(Math.abs(i) < 5e-6 ? 0 : i * 1e3, 2); // pas de « -0,00 »
-      titre.textContent = a1 <= 0 ? 'Circuit RC série' : a2 <= 0 ? 'Charge : K en position 1' : 'Décharge : K en position 2';
+      titre.textContent = a1 <= 0 ? L('Circuit RC série', 'Series RC circuit') : a2 <= 0 ? L('Charge : K en position 1', 'Charging: K in position 1') : L('Décharge : K en position 2', 'Discharging: K in position 2');
       titre.setAttribute('fill', a1 <= 0 ? C.texte : a2 <= 0 ? C.corail : C.bleu);
 
       // Porteurs : leur déplacement est proportionnel à la charge transférée, donc leur débit suit i(t).
@@ -176,7 +176,7 @@ export default definirScene({
       // Étapes 4 et 5 : exploitation.
       const u63 = k.e * (1 - Math.exp(-1));
       show(encart, seg(a3, 0.55, 0.8, ease.backOut), 16);
-      ligne63.textContent = `À t = τ : uC = 0,63·E = ${fmt(u63, 2)} V`;
+      ligne63.textContent = L(`À t = τ : uC = 0,63·E = ${fmt(u63, 2)} V`, `At t = τ: uC = 0.63·E = ${fmt(u63, 2)} V`);
       ligneTau.textContent = `τ = R·C = ${fmt(p.r, 1)} kΩ × ${fmt(p.c, 0)} µF = ${fmt(tc, 2)} s`;
       ligneTau.style.opacity = String(seg(a4, 0.05, 0.4));
 
@@ -195,7 +195,7 @@ export default definirScene({
         if (a3 > 0.4) {
           graphique.verticale('tau', tc, { couleur: C.jaune, label: tc < 1 ? 'τ' : `τ = ${fmt(tc, 2)} s` }); // étiquette courte près de l'axe vertical
           graphique.opacite('tau', seg(a3, 0.4, 0.6));
-          graphique.repere('p63', tc, u63, { couleur: C.jaune, label: tc < 3.4 ? '0,63·E' : undefined }); // sinon l'étiquette chevauche le repère de bascule
+          graphique.repere('p63', tc, u63, { couleur: C.jaune, label: tc < 3.4 ? L('0,63·E', '0.63·E') : undefined }); // sinon l'étiquette chevauche le repère de bascule
           graphique.opacite('p63', seg(a3, 0.6, 0.8));
         } else {
           graphique.effacer('tau');
@@ -204,10 +204,10 @@ export default definirScene({
       }
 
       return [
-        { label: 'Date t', valeur: `${fmt(t, 2)} s` },
-        { label: 'Tension uC', valeur: `${fmt(uC, 2)} V` },
-        { label: 'Intensité i', valeur: `${iTexte} mA` },
-        a3 > 0.4 ? { label: 'Temps caractéristique τ', valeur: `${fmt(tc, 2)} s` } : { label: 'Charge q', valeur: `${fmt(q * 1e3, 2)} mC` },
+        { label: L('Date t', 'Time t'), valeur: `${fmt(t, 2)} s` },
+        { label: L('Tension uC', 'Voltage uC'), valeur: `${fmt(uC, 2)} V` },
+        { label: L('Intensité i', 'Current i'), valeur: `${iTexte} mA` },
+        a3 > 0.4 ? { label: L('Temps caractéristique τ', 'Time constant τ'), valeur: `${fmt(tc, 2)} s` } : { label: 'Charge q', valeur: `${fmt(q * 1e3, 2)} mC` },
       ];
     };
   },

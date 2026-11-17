@@ -1,23 +1,26 @@
 ---
-import type { CollectionEntry } from 'astro:content';
 import Lecteur from './Lecteur.astro';
 import { THEMES, slugDe } from '../data/site';
+import { UI, type Lang } from '../i18n';
+import { langDe, lienTp, type Tp } from '../i18n/contenu';
 
 interface Props {
-  tp: CollectionEntry<'tp'>;
+  tp: Tp;
+  /** Langue de la page. La fiche elle-même peut être en français si sa traduction manque. */
+  lang?: Lang;
 }
-const { tp } = Astro.props;
+const { tp, lang = 'fr' } = Astro.props;
 const slug = slugDe(tp.id);
 ---
 
-<a class="carte" href={`/${tp.data.niveau}/tp/${slug}/`} data-theme={tp.data.theme}>
-  <div class="vignette" aria-hidden="true"><Lecteur slug={slug} titre={tp.data.titre} mode="affiche" /></div>
+<a class="carte" href={lienTp(tp)} data-theme={tp.data.theme} lang={langDe(tp) !== lang ? langDe(tp) : undefined}>
+  <div class="vignette" aria-hidden="true"><Lecteur slug={slug} titre={tp.data.titre} mode="affiche" lang={lang} /></div>
   <div class="carte-corps">
     <h3>{tp.data.titre}</h3>
     <p>{tp.data.description}</p>
-    <div class="meta">
-      <span class="pastille" data-theme={tp.data.theme}>{THEMES[tp.data.theme].court}</span>
-      <span>TP animé · {tp.data.duree}</span>
+    <div class="meta" lang={lang}>
+      <span class="pastille" data-theme={tp.data.theme}>{THEMES[tp.data.theme][lang].court}</span>
+      <span>{UI[lang].tpAnime} · {tp.data.duree}</span>
     </div>
   </div>
 </a>

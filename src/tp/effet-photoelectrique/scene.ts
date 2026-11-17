@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, trace } from '../../lib/anim';
+import { EN, L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, trace } from '../../lib/anim';
 import { appareil, etiquette, paillasse } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -24,7 +24,11 @@ function teinte(nu: number) {
   return mix(ca, cb, (nu - a) / (b - a));
 }
 const domaine = (nu: number) =>
-  nu < 4.8 ? 'rouge' : nu < 5.1 ? 'orange' : nu < 5.3 ? 'jaune' : nu < 6.1 ? 'vert' : nu < 6.7 ? 'bleu' : nu < 7.9 ? 'violet' : 'ultraviolet';
+  nu < 4.8 ? L('rouge', 'red') : nu < 5.1 ? 'orange' : nu < 5.3 ? L('jaune', 'yellow') : nu < 6.1 ? L('vert', 'green') : nu < 6.7 ? L('bleu', 'blue') : nu < 7.9 ? 'violet' : 'ultraviolet';
+
+/** Nom du métal dans la langue de la page (le modèle le donne en français). */
+const METAUX_EN: Record<string, string> = { césium: 'caesium', magnésium: 'magnesium' };
+const nomMetal = (m: string | null) => (m && EN ? METAUX_EN[m] ?? m : m);
 
 /** Abscisse de la face éclairée de la cathode (plaque incurvée) à l'ordonnée y. */
 const xCathode = (y: number) => {
@@ -34,16 +38,16 @@ const xCathode = (y: number) => {
 
 export default definirScene({
   etapes: [
-    { titre: 'Monter la cellule photoélectrique', duree: 6, texte: 'Dans une ampoule vidée de son air, une <strong>cathode</strong> métallique fait face à une <strong>anode</strong>. Un microampèremètre ferme le circuit : il mesure le courant dû aux électrons arrachés au métal.' },
-    { titre: 'Éclairer en lumière rouge', duree: 8, texte: 'Les photons rouges frappent la cathode, mais <strong>aucun électron</strong> ne sort. On pousse l\'intensité au maximum : toujours rien. La fréquence est sous le <strong>seuil</strong>.' },
-    { titre: 'Augmenter la fréquence', duree: 12, texte: 'On balaie le spectre vers le violet puis l\'ultraviolet. Dès que <strong>ν &gt; ν<sub>0</sub></strong>, les électrons jaillissent, et ils sont de plus en plus <strong>rapides</strong> : chaque fréquence donne un point E<sub>c max</sub>.' },
-    { titre: 'Faire varier l\'intensité', duree: 8, texte: 'À fréquence fixée, plus de lumière signifie plus de photons, donc <strong>plus d\'électrons</strong> et un courant plus fort. Leur énergie cinétique, elle, <strong>ne change pas</strong>.' },
-    { titre: 'Tracer la droite, mesurer h', duree: 7, texte: 'Les points s\'alignent : <strong>E<sub>c max</sub> = h·ν - W</strong>. La pente donne la constante de Planck, l\'ordonnée à l\'origine le travail d\'extraction. Changez de métal, de fréquence, d\'intensité.' },
+    { titre: L('Monter la cellule photoélectrique', 'Set up the photoelectric cell'), duree: 6, texte: L('Dans une ampoule vidée de son air, une <strong>cathode</strong> métallique fait face à une <strong>anode</strong>. Un microampèremètre ferme le circuit : il mesure le courant dû aux électrons arrachés au métal.', 'In an evacuated bulb, a metal <strong>cathode</strong> faces an <strong>anode</strong>. A microammeter completes the circuit: it measures the current due to the electrons ejected from the metal.') },
+    { titre: L('Éclairer en lumière rouge', 'Illuminate with red light'), duree: 8, texte: L('Les photons rouges frappent la cathode, mais <strong>aucun électron</strong> ne sort. On pousse l\'intensité au maximum : toujours rien. La fréquence est sous le <strong>seuil</strong>.', 'The red photons strike the cathode, but <strong>no electrons</strong> come out. The intensity is turned up to maximum: still nothing. The frequency is below the <strong>threshold</strong>.') },
+    { titre: L('Augmenter la fréquence', 'Increase the frequency'), duree: 12, texte: L('On balaie le spectre vers le violet puis l\'ultraviolet. Dès que <strong>ν &gt; ν<sub>0</sub></strong>, les électrons jaillissent, et ils sont de plus en plus <strong>rapides</strong> : chaque fréquence donne un point E<sub>c max</sub>.', 'The spectrum is swept towards the violet and then the ultraviolet. As soon as <strong>ν &gt; ν<sub>0</sub></strong>, electrons shoot out, and they get <strong>faster</strong> and faster: each frequency gives one E<sub>c max</sub> point.') },
+    { titre: L('Faire varier l\'intensité', 'Vary the intensity'), duree: 8, texte: L('À fréquence fixée, plus de lumière signifie plus de photons, donc <strong>plus d\'électrons</strong> et un courant plus fort. Leur énergie cinétique, elle, <strong>ne change pas</strong>.', 'At a fixed frequency, more light means more photons, so <strong>more electrons</strong> and a larger current. Their kinetic energy, however, <strong>does not change</strong>.') },
+    { titre: L('Tracer la droite, mesurer h', 'Plot the line, measure h'), duree: 7, texte: L('Les points s\'alignent : <strong>E<sub>c max</sub> = h·ν - W</strong>. La pente donne la constante de Planck, l\'ordonnée à l\'origine le travail d\'extraction. Changez de métal, de fréquence, d\'intensité.', 'The points lie on a straight line: <strong>E<sub>c max</sub> = h·ν - W</strong>. The gradient gives the Planck constant, the y-intercept the work function. Change the metal, the frequency, the intensity.') },
   ],
   parametres: [
-    { id: 'w', label: 'Travail d\'extraction W', min: 2.1, max: 4.3, pas: 0.1, valeur: 2.3, unite: 'eV', decimales: 1 },
-    { id: 'nu', label: 'Fréquence de la lampe', min: 4, max: 12, pas: 0.1, valeur: 7.5, unite: '×10¹⁴ Hz', decimales: 1 },
-    { id: 'i', label: 'Intensité lumineuse', min: 10, max: 100, pas: 10, valeur: 60, unite: '%' },
+    { id: 'w', label: L('Travail d\'extraction W', 'Work function W'), min: 2.1, max: 4.3, pas: 0.1, valeur: 2.3, unite: 'eV', decimales: 1 },
+    { id: 'nu', label: L('Fréquence de la lampe', 'Lamp frequency'), min: 4, max: 12, pas: 0.1, valeur: 7.5, unite: '×10¹⁴ Hz', decimales: 1 },
+    { id: 'i', label: L('Intensité lumineuse', 'Light intensity'), min: 10, max: 100, pas: 10, valeur: 60, unite: '%' },
   ],
   graphique: {
     x: { label: 'ν (10¹⁴ Hz)', min: 0, max: 13, pas: 2 },
@@ -56,9 +60,9 @@ export default definirScene({
 
     // Circuit : anode, microampèremètre, cathode.
     const fil = el('path', { d: `M${X_ANODE} 290V403H212V304`, fill: 'none', stroke: C.metal, 'stroke-width': TRAIT, 'stroke-linejoin': 'round' }, scene);
-    const L = fil.getTotalLength();
+    const longueurFil = fil.getTotalLength();
     const porteurs = Array.from({ length: 8 }, () => el('circle', { r: 3, fill: C.cyan }, scene));
-    const amp = appareil(scene, { x: 281, y: 366, w: 150, h: 72, titre: 'AMPÈREMÈTRE', couleur: C.cyan });
+    const amp = appareil(scene, { x: 281, y: 366, w: 150, h: 72, titre: L('AMPÈREMÈTRE', 'AMMETER'), couleur: C.cyan });
 
     // Ampoule à vide, cathode incurvée, anode en tige.
     const ampoule = el('g', {}, scene);
@@ -97,7 +101,7 @@ export default definirScene({
     el('rect', { x: -56, y: -18, width: 50, height: 36, rx: 8, fill: C.panneau, stroke: C.metal, 'stroke-width': TRAIT }, corps);
     el('rect', { x: -66, y: -8, width: 10, height: 16, rx: 3, fill: C.metal }, corps);
     const lentille = el('rect', { x: -8, y: -14, width: 9, height: 28, rx: 4, fill: C.grille, stroke: C.verre, 'stroke-width': 1.5 }, corps);
-    const etiqLampe = etiquette(scene, { x: 624, y: 112, texte: 'Lampe', ancre: 'end' });
+    const etiqLampe = etiquette(scene, { x: 624, y: 112, texte: L('Lampe', 'Lamp'), ancre: 'end' });
     const etiqLambda = etiquette(scene, { x: 624, y: 131, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
 
     // Encart de résultat (dernière étape).
@@ -105,7 +109,7 @@ export default definirScene({
     el('rect', { x: 16, y: 22, width: 238, height: 116, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 32, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(46, 13, C.discret, POLICE).textContent = 'Relation d\'Einstein';
+    ligne(46, 13, C.discret, POLICE).textContent = L('Relation d\'Einstein', 'Einstein\'s relation');
     ligne(70, 15, C.texte).textContent = 'Ec max = h·ν - W';
     const resH = ligne(98, 15, C.jaune), resW = ligne(122, 14, C.jaune);
 
@@ -125,7 +129,7 @@ export default definirScene({
       lampe.style.transform = `translate(${lerp(90, 0, seg(a0, 0.72, 1, ease.out))}px, ${lerp(-130, 0, seg(a0, 0.72, 1, ease.out))}px)`;
       show(etiqLampe, seg(a0, 0.9, 1));
       show(etiqLambda, seg(a0, 0.9, 1));
-      etiqMetal.textContent = metal(w) ?? `W = ${fmt(w, 1)} eV`;
+      etiqMetal.textContent = nomMetal(metal(w)) ?? `W = ${fmt(w, 1)} eV`;
 
       // État de la lampe : fréquence et intensité, fonctions de l'image seule.
       const on = seg(a1, 0, 0.1);
@@ -163,11 +167,11 @@ export default definirScene({
 
       // Le courant circule dans le fil et s'affiche.
       porteurs.forEach((n, j) => {
-        const pt = fil.getPointAtLength(((T * 0.22 + j / 8) % 1) * L);
+        const pt = fil.getPointAtLength(((T * 0.22 + j / 8) % 1) * longueurFil);
         set(n, { cx: pt.x, cy: pt.y, opacity: emet && (j + 0.5) / 8 <= int + 0.1 && pt.y > 334 ? 0.9 : 0 });
       });
       amp.affiche(a0 > 0.8 ? `${fmt(iMicro, 2)} µA` : '');
-      etat.textContent = emet ? 'Électrons émis : h·ν > W' : 'Aucun électron : h·ν < W';
+      etat.textContent = emet ? L('Électrons émis : h·ν > W', 'Electrons emitted: h·ν > W') : L('Aucun électron : h·ν < W', 'No electrons: h·ν < W');
       etat.setAttribute('fill', emet ? C.menthe : C.corail);
       etat.style.opacity = String(seg(a1, 0.2, 0.32));
 
@@ -176,8 +180,8 @@ export default definirScene({
       const fit = droite(mesures.filter(([, y]) => y > 0).map(([x, y]): [number, number] => [x * U, y]));
       show(encart, seg(a4, 0.55, 0.8, ease.backOut), 16);
       const [mant, exp] = fit.h.toExponential(2).split('e');
-      resH.textContent = `h = ${mant.replace('.', ',')} × 10${exposant(exp)} J·s`;
-      resW.textContent = `W = ${fmt(fit.w, 1)} eV${metal(fit.w) ? ` (${metal(fit.w)})` : ''}`;
+      resH.textContent = L(`h = ${mant.replace('.', ',')} × 10${exposant(exp)} J·s`, `h = ${mant} × 10${exposant(exp)} J·s`);
+      resW.textContent = `W = ${fmt(fit.w, 1)} eV${metal(fit.w) ? ` (${nomMetal(metal(fit.w))})` : ''}`;
 
       if (graphique) {
         const pts: [number, number][] = [];
@@ -188,7 +192,7 @@ export default definirScene({
         else graphique.effacer('mesure');
         if (img.etape === 3 && emet && a3 > 0.4) {
           graphique.horizontale('palier', ec, { couleur: C.menthe });
-          graphique.repere('palierY', 0, ec, { couleur: C.menthe, rayon: 4, label: `Ec max = ${fmt(ec, 2)} eV, inchangée` });
+          graphique.repere('palierY', 0, ec, { couleur: C.menthe, rayon: 4, label: L(`Ec max = ${fmt(ec, 2)} eV, inchangée`, `Ec max = ${fmt(ec, 2)} eV, unchanged`) });
           graphique.opacite('palier', seg(a3, 0.4, 0.55));
           graphique.opacite('palierY', seg(a3, 0.4, 0.55));
         } else {
@@ -210,10 +214,10 @@ export default definirScene({
       }
 
       return [
-        { label: 'Fréquence', valeur: on > 0 ? `${fmt(nu, 2)} × 10¹⁴ Hz` : '...' },
-        { label: 'Énergie du photon', valeur: on > 0 ? `${fmt(energiePhoton(nu * U), 2)} eV` : '...' },
-        { label: 'Ec max des électrons', valeur: on > 0 ? `${fmt(ec, 2)} eV` : '...' },
-        { label: 'Courant', valeur: `${fmt(iMicro, 2)} µA` },
+        { label: L('Fréquence', 'Frequency'), valeur: on > 0 ? `${fmt(nu, 2)} × 10¹⁴ Hz` : '...' },
+        { label: L('Énergie du photon', 'Photon energy'), valeur: on > 0 ? `${fmt(energiePhoton(nu * U), 2)} eV` : '...' },
+        { label: L('Ec max des électrons', 'Electron Ec max'), valeur: on > 0 ? `${fmt(ec, 2)} eV` : '...' },
+        { label: L('Courant', 'Current'), valeur: `${fmt(iMicro, 2)} µA` },
       ];
     };
   },

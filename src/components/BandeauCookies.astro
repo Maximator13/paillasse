@@ -1,6 +1,13 @@
 ---
 // Bandeau de consentement. Aucun script de mesure d'audience ne se charge avant un « Accepter » explicite.
 // Le choix est mémorisé dans localStorage ; tout élément [data-cookies-ouvrir] rouvre le bandeau.
+import { UI, lien, type Lang } from '../i18n';
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = 'fr' } = Astro.props;
+const u = UI[lang].cookies;
 const domaine = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
 ---
 
@@ -14,16 +21,15 @@ const domaine = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
 >
   <div class="bc-in">
     <div>
-      <h2 id="cookies-titre">Mesure d'audience</h2>
+      <h2 id="cookies-titre">{u.titre}</h2>
       <p id="cookies-texte">
-        Avec votre accord, nous comptons les visites de façon anonyme (Plausible, sans cookie publicitaire) pour savoir
-        quels cours et TP sont utiles. Refuser n'empêche rien : tout le site reste accessible.{' '}
-        <a href="/confidentialite/">En savoir plus</a>
+        {u.texte}{' '}
+        <a href={lien(lang, '/confidentialite/')}>{u.plus}</a>
       </p>
     </div>
     <div class="bc-actions">
-      <button type="button" class="btn" data-choix="refuse">Refuser</button>
-      <button type="button" class="btn" data-choix="accepte">Accepter</button>
+      <button type="button" class="btn" data-choix="refuse">{u.refuser}</button>
+      <button type="button" class="btn" data-choix="accepte">{u.accepter}</button>
     </div>
   </div>
 </section>

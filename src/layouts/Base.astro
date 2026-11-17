@@ -4,57 +4,72 @@ import '@fontsource-variable/instrument-sans';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
 import { SITE } from '../data/site';
+import { LANGS, UI, actif, cheminNeutre, lien, type Lang } from '../i18n';
 import BandeauCookies from '../components/BandeauCookies.astro';
 
 interface Props {
+  lang?: Lang;
   titre: string;
   description: string;
-  /** Chemin d'une image de partage, relatif à la racine du site. */
+  /** Image de partage : nom d'un fichier de public/. */
   image?: string;
   type?: 'website' | 'article';
   noindex?: boolean;
+  /**
+   * À renseigner quand la page n'existe pas dans l'autre langue : chemin de repli (ex. '/terminale/')
+   * visé par le sélecteur de langue. Les balises hreflang sont alors omises.
+   */
+  sansTraduction?: string;
 }
-const { titre, description, image = '/og.png', type = 'website', noindex = false } = Astro.props;
+const { lang = 'fr', titre, description, image = 'og.png', type = 'website', noindex = false, sansTraduction } = Astro.props;
+const u = UI[lang];
+const autre: Lang = lang === 'fr' ? 'en' : 'fr';
 // Le nom du site n'est ajouté que si le titre reste sous 65 caractères : au-delà, les moteurs de recherche le tronquent.
 const avecNom = `${titre} | ${SITE.nom}`;
-const titreComplet = titre === SITE.nom ? `${SITE.nom} : ${SITE.slogan}` : avecNom.length <= 65 ? avecNom : titre;
-const canonique = new URL(Astro.url.pathname, Astro.site);
-const imageAbs = new URL(image, Astro.site);
+const titreComplet = titre === SITE.nom ? `${SITE.nom}${u.deuxPoints}${SITE.slogan[lang]}` : avecNom.length <= 65 ? avecNom : titre;
+const abs = (chemin: string) => new URL(chemin, Astro.site).href;
 const ici = Astro.url.pathname;
+const neutre = cheminNeutre(ici);
+const canonique = abs(ici);
+const imageAbs = abs(actif(image));
+const bilingue = !sansTraduction && !noindex;
 const gsc = import.meta.env.PUBLIC_GSC_VERIFICATION;
 const jsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: SITE.nom,
-  description: SITE.description,
-  url: new URL('/', Astro.site).href,
-  inLanguage: 'fr-FR',
+  description: SITE.description[lang],
+  url: abs(lien(lang, '/')),
+  inLanguage: u.locale,
 });
 const nav = [
-  { href: '/terminale/', label: 'Terminale' },
-  { href: '/tp/', label: 'TP animés' },
-  { href: '/college/', label: 'Collège' },
-  { href: '/prepa/', label: 'Prépa' },
+  { href: lien(lang, '/terminale/'), label: u.nav.terminale },
+  { href: lien(lang, '/tp/'), label: u.nav.tp },
+  { href: lien(lang, '/college/'), label: u.nav.college },
+  { href: lien(lang, '/prepa/'), label: u.nav.prepa },
 ];
 ---
 
 <!doctype html>
-<html lang="fr">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{titreComplet}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonique} />
+    {bilingue && LANGS.map((l) => <link rel="alternate" hreflang={l} href={abs(lien(l, neutre))} />)}
+    {bilingue && <link rel="alternate" hreflang="x-default" href={abs(lien('fr', neutre))} />}
     {noindex && <meta name="robots" content="noindex" />}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" type="image/svg+xml" href={actif('favicon.svg')} />
+    <link rel="sitemap" href={actif('sitemap-index.xml')} />
     {gsc && <meta name="google-site-verification" content={gsc} />}
     <script type="application/ld+json" set:html={jsonLd} />
     <meta name="theme-color" content="#0b1022" />
     <meta property="og:type" content={type} />
     <meta property="og:site_name" content={SITE.nom} />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale" content={u.og} />
+    {bilingue && <meta property="og:locale:alternate" content={UI[autre].og} />}
     <meta property="og:title" content={titreComplet} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonique} />
@@ -66,21 +81,24 @@ const nav = [
     <slot name="head" />
   </head>
   <body>
-    <a class="evitement" href="#contenu">Aller au contenu</a>
+    <a class="evitement" href="#contenu">{u.evitement}</a>
     <header class="entete">
       <div class="conteneur entete-in">
-        <a class="logo" href="/" aria-label={`${SITE.nom}, accueil`}>
+        <a class="logo" href={lien(lang, '/')} aria-label={u.logo(SITE.nom)}>
           <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
             <path d="M12 3h8M13 3v9L5.5 25.5A2.4 2.4 0 0 0 7.6 29h16.8a2.4 2.4 0 0 0 2.1-3.5L19 12V3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
             <path d="M9.2 22h13.6l2 3.9a.8.8 0 0 1-.7 1.1H7.9a.8.8 0 0 1-.7-1.1z" fill="var(--accent)"></path>
           </svg>
           <span>{SITE.nom}</span>
         </a>
-        <nav aria-label="Navigation principale">
+        <nav aria-label={u.navLabel}>
           <ul>
             {nav.map((n) => (
               <li><a href={n.href} aria-current={ici.startsWith(n.href) ? 'page' : undefined}>{n.label}</a></li>
             ))}
+            <li>
+              <a class="langue" href={lien(autre, sansTraduction ?? neutre)} lang={autre} hreflang={autre} aria-label={u.autreLangue}>{autre.toUpperCase()}</a>
+            </li>
           </ul>
         </nav>
       </div>
@@ -88,16 +106,16 @@ const nav = [
     <main id="contenu"><slot /></main>
     <footer class="pied">
       <div class="conteneur pied-in">
-        <p><strong>{SITE.nom}</strong> : {SITE.slogan.toLowerCase()}.</p>
+        <p><strong>{SITE.nom}</strong>{u.deuxPoints}{SITE.slogan[lang].toLowerCase()}.</p>
         <ul>
-          <li><a href="/mentions-legales/">Mentions légales</a></li>
-          <li><a href="/confidentialite/">Confidentialité</a></li>
-          <li><a href="/cgu/">CGU</a></li>
-          <li><button type="button" data-cookies-ouvrir>Gérer les cookies</button></li>
+          <li><a href={lien(lang, '/mentions-legales/')}>{u.pied.mentions}</a></li>
+          <li><a href={lien(lang, '/confidentialite/')}>{u.pied.confidentialite}</a></li>
+          <li><a href={lien(lang, '/cgu/')}>{u.pied.cgu}</a></li>
+          <li><button type="button" data-cookies-ouvrir>{u.pied.cookies}</button></li>
         </ul>
       </div>
     </footer>
-    <BandeauCookies />
+    <BandeauCookies lang={lang} />
   </body>
 </html>
 
@@ -110,6 +128,7 @@ const nav = [
   nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .8rem; border-radius: 8px; color: var(--encre); text-decoration: none; font-weight: 550; font-size: .97rem; white-space: nowrap; }
   nav a:hover { background: var(--ligne); }
   nav a[aria-current='page'] { background: var(--encre); color: var(--fond); }
+  nav a.langue { justify-content: center; min-width: 44px; margin-left: .3rem; border: 1px solid var(--ligne); font: 600 .82rem/1 var(--mono); letter-spacing: .06em; }
   .pied { border-top: 1px solid var(--ligne); margin-top: 3rem; padding-block: 2rem; color: var(--doux); font-size: .95rem; }
   .pied-in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem 2rem; align-items: center; }
   .pied p { margin: 0; }

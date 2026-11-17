@@ -6,9 +6,7 @@ const niveau = z.enum(['terminale']);
 const theme = z.enum(['matiere', 'mouvement', 'energie', 'ondes']);
 
 // Un fichier = un chapitre. id = "<niveau>/<slug>", ex. "terminale/titrages".
-const cours = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/cours' }),
-  schema: z.object({
+const schemaCours = z.object({
     titre: z.string(),
     description: z.string().min(50).max(170),
     niveau,
@@ -18,13 +16,10 @@ const cours = defineCollection({
     motsCles: z.array(z.string()).default([]),
     // slugs des TP liés (sans le niveau), ex. ["titrage-ph-metrique"]
     tp: z.array(z.string()).default([]),
-  }),
-});
+  });
 
 // Un fichier = la fiche d'un TP. Le slug doit correspondre au dossier src/tp/<slug>/.
-const tp = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/tp' }),
-  schema: z.object({
+const schemaTp = z.object({
     titre: z.string(),
     description: z.string().min(50).max(170),
     niveau,
@@ -36,7 +31,13 @@ const tp = defineCollection({
     chapitre: z.string(),
     objectifs: z.array(z.string()).min(1),
     materiel: z.array(z.string()).min(1),
-  }),
-});
+  });
 
-export const collections = { cours, tp };
+// Les versions anglaises reprennent les mêmes slugs et le même schéma, sous src/content/en/.
+const col = (base: string, schema: typeof schemaCours | typeof schemaTp) => defineCollection({ loader: glob({ pattern: '**/*.md', base }), schema });
+export const collections = {
+  cours: col('./src/content/cours', schemaCours),
+  tp: col('./src/content/tp', schemaTp),
+  coursEn: col('./src/content/en/cours', schemaCours),
+  tpEn: col('./src/content/en/tp', schemaTp),
+};

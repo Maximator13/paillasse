@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, seg, set, show, texte, uid } from '../../lib/anim';
+import { L as txt, avancement, clamp, ease, el, fmt, lerp, seg, set, show, texte, uid } from '../../lib/anim';
 import { etiquette } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -24,14 +24,14 @@ const debut = (i: number) => 0.01 + 0.15 * i; // instant où la fente i est rég
 const ouverture = (a: number) => 4 + 26 * clamp(Math.log(a / 40) / Math.log(A_OUVERTE / 40)) ** 1.5;
 
 const AXES_PROFIL = {
-  x: { label: 'Position x sur l\'écran (mm)', min: -60, max: 60, pas: 20 },
+  x: { label: txt('Position x sur l\'écran (mm)', 'Position x on the screen (mm)'), min: -60, max: 60, pas: 20 },
   y: { label: 'I / I0', min: 0, max: 1.15, pas: 0.2 }, // marge au-dessus du maximum pour l'étiquette de L
-  titre: 'Profil d\'intensité',
+  titre: txt('Profil d\'intensité', 'Intensity profile'),
 };
 const AXES_DROITE = {
   x: { label: '1/a (mm⁻¹)', min: 0, max: 30, pas: 5 },
   y: { label: 'L (mm)', min: 0, max: 100, pas: 20 },
-  titre: 'L en fonction de 1/a',
+  titre: txt('L en fonction de 1/a', 'L against 1/a'),
 };
 
 /** Cote : trait horizontal borné par deux butées, avec sa valeur. */
@@ -51,17 +51,17 @@ function cote(parent: Element, couleur: string, taille = 13) {
 
 export default definirScene({
   etapes: [
-    { titre: 'Aligner le banc d\'optique', duree: 5, texte: 'Vu de dessus, le banc porte un <strong>laser</strong>, une <strong>fente réglable</strong> (grande ouverte pour l\'instant) et un <strong>écran</strong>. En bas, le même écran est représenté vu de face.' },
-    { titre: 'Allumer le laser', duree: 5, texte: 'Le faisceau traverse la fente ouverte sans être gêné : il se propage <strong>en ligne droite</strong> et dessine un simple point lumineux sur l\'écran.' },
-    { titre: 'Resserrer la fente', duree: 9, texte: 'On referme la fente. Au lieu de s\'affiner, le faisceau <strong>s\'étale</strong> : c\'est la <strong>diffraction</strong>. Sur l\'écran, une tache centrale brillante apparaît, bordée de taches secondaires.' },
-    { titre: 'Mesurer la tache centrale', duree: 7, texte: 'La tache centrale est limitée par deux extinctions : on mesure sa largeur <strong>L</strong> à la règle. Comme l\'angle est petit, tan θ = L/(2D) ≈ θ : avec <strong>θ = λ/a</strong>, on obtient <strong>L = 2λD/a</strong>.' },
-    { titre: 'Changer la largeur de la fente', duree: 14, texte: 'On recommence pour six largeurs <strong>a</strong> connues, de 200 µm à 40 µm. Plus la fente est fine, plus la tache s\'élargit : chaque mesure donne un point du graphique <strong>L = f(1/a)</strong>.' },
-    { titre: 'Déterminer la longueur d\'onde', duree: 6, texte: 'Les points s\'alignent sur une droite passant par l\'origine, de pente <strong>2λD</strong> : on en déduit <strong>λ</strong>. Changez la fente, la couleur du laser ou la distance de l\'écran et observez la figure.' },
+    { titre: txt('Aligner le banc d\'optique', 'Align the optical bench'), duree: 5, texte: txt('Vu de dessus, le banc porte un <strong>laser</strong>, une <strong>fente réglable</strong> (grande ouverte pour l\'instant) et un <strong>écran</strong>. En bas, le même écran est représenté vu de face.', 'Seen from above, the bench carries a <strong>laser</strong>, an <strong>adjustable slit</strong> (wide open for now) and a <strong>screen</strong>. Below, the same screen is shown from the front.') },
+    { titre: txt('Allumer le laser', 'Switch on the laser'), duree: 5, texte: txt('Le faisceau traverse la fente ouverte sans être gêné : il se propage <strong>en ligne droite</strong> et dessine un simple point lumineux sur l\'écran.', 'The beam passes through the open slit unobstructed: it travels <strong>in a straight line</strong> and forms a single bright dot on the screen.') },
+    { titre: txt('Resserrer la fente', 'Narrow the slit'), duree: 9, texte: txt('On referme la fente. Au lieu de s\'affiner, le faisceau <strong>s\'étale</strong> : c\'est la <strong>diffraction</strong>. Sur l\'écran, une tache centrale brillante apparaît, bordée de taches secondaires.', 'The slit is narrowed. Instead of getting narrower, the beam <strong>spreads out</strong>: this is <strong>diffraction</strong>. On the screen, a bright central maximum appears, flanked by secondary maxima.') },
+    { titre: txt('Mesurer la tache centrale', 'Measure the central maximum'), duree: 7, texte: txt('La tache centrale est limitée par deux extinctions : on mesure sa largeur <strong>L</strong> à la règle. Comme l\'angle est petit, tan θ = L/(2D) ≈ θ : avec <strong>θ = λ/a</strong>, on obtient <strong>L = 2λD/a</strong>.', 'The central maximum is bounded by two minima: its width <strong>L</strong> is measured with the ruler. Since the angle is small, tan θ = L/(2D) ≈ θ: with <strong>θ = λ/a</strong>, we obtain <strong>L = 2λD/a</strong>.') },
+    { titre: txt('Changer la largeur de la fente', 'Change the slit width'), duree: 14, texte: txt('On recommence pour six largeurs <strong>a</strong> connues, de 200 µm à 40 µm. Plus la fente est fine, plus la tache s\'élargit : chaque mesure donne un point du graphique <strong>L = f(1/a)</strong>.', 'The measurement is repeated for six known widths <strong>a</strong>, from 200 µm to 40 µm. The narrower the slit, the wider the central maximum: each measurement gives one point on the graph <strong>L = f(1/a)</strong>.') },
+    { titre: txt('Déterminer la longueur d\'onde', 'Determine the wavelength'), duree: 6, texte: txt('Les points s\'alignent sur une droite passant par l\'origine, de pente <strong>2λD</strong> : on en déduit <strong>λ</strong>. Changez la fente, la couleur du laser ou la distance de l\'écran et observez la figure.', 'The points lie on a straight line through the origin, of gradient <strong>2λD</strong>: <strong>λ</strong> follows from it. Change the slit, the colour of the laser or the distance to the screen and watch the pattern.') },
   ],
   parametres: [
-    { id: 'a', label: 'Largeur de la fente a', min: 40, max: 200, pas: 5, valeur: 100, unite: 'µm' },
-    { id: 'lambda', label: 'Longueur d\'onde λ du laser', min: 400, max: 700, pas: 10, valeur: 650, unite: 'nm' },
-    { id: 'D', label: 'Distance fente-écran D', min: 1, max: 2.5, pas: 0.1, valeur: 2, unite: 'm' },
+    { id: 'a', label: txt('Largeur de la fente a', 'Slit width a'), min: 40, max: 200, pas: 5, valeur: 100, unite: 'µm' },
+    { id: 'lambda', label: txt('Longueur d\'onde λ du laser', 'Laser wavelength λ'), min: 400, max: 700, pas: 10, valeur: 650, unite: 'nm' },
+    { id: 'D', label: txt('Distance fente-écran D', 'Slit-to-screen distance D'), min: 1, max: 2.5, pas: 0.1, valeur: 2, unite: 'm' },
   ],
   graphique: AXES_PROFIL,
   affiche: { etape: 3, t: 1 },
@@ -109,7 +109,7 @@ export default definirScene({
     // Écran (vu de dessus), repéré par rapport à sa face éclairée.
     const ecran = el('g', {}, scene);
     el('rect', { x: 0, y: YC - H_ECRAN - 4, width: 6, height: 2 * H_ECRAN + 8, rx: 3, fill: C.verre }, ecran);
-    etiquette(ecran, { x: 8, y: YC - H_ECRAN - 14, texte: 'Écran', ancre: 'end' });
+    etiquette(ecran, { x: 8, y: YC - H_ECRAN - 14, texte: txt('Écran', 'Screen'), ancre: 'end' });
     const coteD = cote(scene, C.discret);
 
     // Angle de diffraction.
@@ -130,7 +130,7 @@ export default definirScene({
     }
     el('rect', { x: 28, y: YF - 32, width: 584, height: 64, fill: url(idFondu) }, el('mask', { id: idHalo, maskUnits: 'userSpaceOnUse', x: 28, y: YF - 32, width: 584, height: 64 }, defs));
     const face = el('g', {}, scene);
-    etiquette(face, { x: 24, y: YF - 43, texte: 'Écran vu de face', taille: 13, couleur: C.discret });
+    etiquette(face, { x: 24, y: YF - 43, texte: txt('Écran vu de face', 'Screen, front view'), taille: 13, couleur: C.discret });
     el('rect', { x: 24, y: YF - 35, width: 592, height: 70, rx: 10, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, face);
     const figure = el('rect', { x: 28, y: YF - 32, width: 584, height: 64, fill: url(idFigure), mask: url(idHalo) }, face);
 
@@ -151,7 +151,7 @@ export default definirScene({
     el('rect', { x: 24, y: 186, width: 156, height: 76, rx: 12, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 36, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(208, 13, C.discret, POLICE).textContent = 'Pente de la droite';
+    ligne(208, 13, C.discret, POLICE).textContent = txt('Pente de la droite', 'Line gradient');
     const lignePente = ligne(228, 13, C.texte);
     const resultat = ligne(252, 18, C.jaune);
 
@@ -209,7 +209,7 @@ export default definirScene({
       coteD.maj(X_FENTE, lerp(X_FENTE + 90, xe, seg(a1, 0.8, 1)), YC + H_ECRAN + 16, `D = ${fmt(D, 2)} m`, YC + H_ECRAN + 33);
       etiqLambda.textContent = `λ = ${fmt(p.lambda, 0)} nm`;
       etiqLambda.setAttribute('fill', teinte(0.35));
-      etiqA.textContent = a3 > 0.1 ? `a = ${fmt(a, 0)} µm` : 'Fente ouverte';
+      etiqA.textContent = a3 > 0.1 ? `a = ${fmt(a, 0)} µm` : txt('Fente ouverte', 'Slit open');
       set(machoires[0], { y: YC - 52, height: 52 - jeu / 2 });
       set(machoires[1], { y: YC + jeu / 2, height: 52 - jeu / 2 });
 
@@ -286,7 +286,7 @@ export default definirScene({
           graphique.courbe('ajustement', a6 > 0.05 ? [[0, 0], [xFin, k * xFin]] : [], { couleur: C.cyan, epaisseur: 2.5 });
           graphique.nuage('mesures', points.slice(0, n), { couleur: C.jaune, rayon: 4.5 });
           if (etape === 4 && n > 0 && a5 < 0.93) {
-            graphique.repere('dernier', ...points[n - 1], { couleur: C.jaune, label: `a = ${SERIE[n - 1]} µm : L = ${fmt(points[n - 1][1], 0)} mm` });
+            graphique.repere('dernier', ...points[n - 1], { couleur: C.jaune, label: txt(`a = ${SERIE[n - 1]} µm : L = ${fmt(points[n - 1][1], 0)} mm`, `a = ${SERIE[n - 1]} µm: L = ${fmt(points[n - 1][1], 0)} mm`) });
           } else graphique.effacer('dernier');
           if (a6 > 0.5) {
             graphique.repere('curseur', 1000 / p.a, L, { couleur: C.blanc, label: `a = ${fmt(p.a, 0)} µm` });
@@ -296,11 +296,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Largeur de la fente a', valeur: a3 > 0.1 ? `${fmt(a, 0)} µm` : 'ouverte' },
+        { label: txt('Largeur de la fente a', 'Slit width a'), valeur: a3 > 0.1 ? `${fmt(a, 0)} µm` : txt('ouverte', 'open') },
         { label: 'Angle θ = λ/a', valeur: diff >= 1 ? `${fmt(angle(lambda, a * 1e-6) * 1e3, 1)} mrad` : '...' },
-        { label: 'Tache centrale L', valeur: a4 > 0.55 ? `${fmt(L, 1)} mm` : '...' },
+        { label: txt('Tache centrale L', 'Central maximum L'), valeur: a4 > 0.55 ? `${fmt(L, 1)} mm` : '...' },
       ];
-      if (a6 > 0.45) mesures.push({ label: 'λ mesurée', valeur: `${fmt(lambdaMesuree, 0)} nm` });
+      if (a6 > 0.45) mesures.push({ label: txt('λ mesurée', 'Measured λ'), valeur: `${fmt(lambdaMesuree, 0)} nm` });
       return mesures;
     };
   },

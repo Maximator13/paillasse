@@ -1,22 +1,25 @@
 ---
-import type { CollectionEntry } from 'astro:content';
-import { THEMES, slugDe } from '../data/site';
+import { THEMES } from '../data/site';
+import { UI, type Lang } from '../i18n';
+import { langDe, lienCours, type Cours } from '../i18n/contenu';
 
 interface Props {
-  cours: CollectionEntry<'cours'>;
+  cours: Cours;
+  /** Langue de la page. La fiche elle-même peut être en français si sa traduction manque. */
+  lang?: Lang;
 }
-const { cours } = Astro.props;
+const { cours, lang = 'fr' } = Astro.props;
 const n = cours.data.tp.length;
 ---
 
-<a class="carte" href={`/${cours.data.niveau}/cours/${slugDe(cours.id)}/`} data-theme={cours.data.theme}>
+<a class="carte" href={lienCours(cours)} data-theme={cours.data.theme} lang={langDe(cours) !== lang ? langDe(cours) : undefined}>
   <div class="carte-corps">
     <span class="num">{String(cours.data.ordre).padStart(2, '0')}</span>
     <h3>{cours.data.titre}</h3>
     <p>{cours.data.description}</p>
-    <div class="meta">
-      <span class="pastille" data-theme={cours.data.theme}>{THEMES[cours.data.theme].court}</span>
-      <span>{cours.data.duree}{n > 0 && ` · ${n} TP animé${n > 1 ? 's' : ''}`}</span>
+    <div class="meta" lang={lang}>
+      <span class="pastille" data-theme={cours.data.theme}>{THEMES[cours.data.theme][lang].court}</span>
+      <span>{cours.data.duree}{n > 0 && ` · ${UI[lang].nTpAnimes(n)}`}</span>
     </div>
   </div>
 </a>

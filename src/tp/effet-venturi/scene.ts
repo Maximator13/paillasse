@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, rng, seg, set, show, uid } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, rng, seg, set, show, uid } from '../../lib/anim';
 import { etiquette, fleche, paillasse } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -24,15 +24,15 @@ const ouvertureCumulee = (a: number) => {
 
 export default definirScene({
   etapes: [
-    { titre: 'Découvrir le tube de Venturi', duree: 7, texte: 'Un tube horizontal de diamètre <strong>20 mm</strong> se resserre en un <strong>col</strong>, puis s\'évase. Trois tubes manométriques verticaux repèrent la pression. Eau au repos : le niveau est <strong>le même partout</strong>.' },
-    { titre: 'Mettre l\'eau en écoulement', duree: DUREE_2, texte: 'On ouvre la vanne de sortie : le régime devient permanent. Le débit volumique <strong>D<sub>v</sub> = v·S</strong> se conserve, donc les particules <strong>accélèrent</strong> là où la section diminue.' },
-    { titre: 'Lire les hauteurs manométriques', duree: 7, texte: 'Chaque hauteur d\'eau mesure la pression sous la prise : <strong>P = P<sub>atm</sub> + ρ·g·h</strong>. Le niveau est nettement plus bas au col : la pression y est <strong>plus faible</strong>, c\'est l\'effet Venturi.' },
-    { titre: 'Appliquer la relation de Bernoulli', duree: 9, texte: 'Le long d\'une ligne de courant horizontale, <strong>P + ½·ρ·v²</strong> reste constant : ce que le fluide gagne en vitesse (en vert), il le perd en pression. Le calcul redonne l\'écart mesuré.' },
-    { titre: 'Mesurer un débit', duree: 6, texte: 'La dénivellation <strong>Δh</strong> suffit pour remonter au débit : le tube de Venturi sert de débitmètre. Changez le débit ou le diamètre du col et observez les niveaux et les courbes.' },
+    { titre: L('Découvrir le tube de Venturi', 'Meet the Venturi tube'), duree: 7, texte: L('Un tube horizontal de diamètre <strong>20 mm</strong> se resserre en un <strong>col</strong>, puis s\'évase. Trois tubes manométriques verticaux repèrent la pression. Eau au repos : le niveau est <strong>le même partout</strong>.', 'A horizontal tube of diameter <strong>20 mm</strong> narrows to a <strong>throat</strong>, then widens again. Three vertical manometer tubes indicate the pressure. Water at rest: the level is <strong>the same everywhere</strong>.') },
+    { titre: L('Mettre l\'eau en écoulement', 'Start the water flowing'), duree: DUREE_2, texte: L('On ouvre la vanne de sortie : le régime devient permanent. Le débit volumique <strong>D<sub>v</sub> = v·S</strong> se conserve, donc les particules <strong>accélèrent</strong> là où la section diminue.', 'The outlet valve is opened: the flow becomes steady. The volume flow rate <strong>D<sub>v</sub> = v·S</strong> is conserved, so the particles <strong>speed up</strong> where the cross-section decreases.') },
+    { titre: L('Lire les hauteurs manométriques', 'Read the manometer heights'), duree: 7, texte: L('Chaque hauteur d\'eau mesure la pression sous la prise : <strong>P = P<sub>atm</sub> + ρ·g·h</strong>. Le niveau est nettement plus bas au col : la pression y est <strong>plus faible</strong>, c\'est l\'effet Venturi.', 'Each height of water measures the pressure beneath the tapping: <strong>P = P<sub>atm</sub> + ρ·g·h</strong>. The level is clearly lower at the throat: the pressure there is <strong>lower</strong>, this is the Venturi effect.') },
+    { titre: L('Appliquer la relation de Bernoulli', "Apply Bernoulli's equation"), duree: 9, texte: L('Le long d\'une ligne de courant horizontale, <strong>P + ½·ρ·v²</strong> reste constant : ce que le fluide gagne en vitesse (en vert), il le perd en pression. Le calcul redonne l\'écart mesuré.', 'Along a horizontal streamline, <strong>P + ½·ρ·v²</strong> stays constant: what the fluid gains in speed (in green), it loses in pressure. The calculation gives back the measured difference.') },
+    { titre: L('Mesurer un débit', 'Measure a flow rate'), duree: 6, texte: L('La dénivellation <strong>Δh</strong> suffit pour remonter au débit : le tube de Venturi sert de débitmètre. Changez le débit ou le diamètre du col et observez les niveaux et les courbes.', 'The height difference <strong>Δh</strong> is enough to work back to the flow rate: the Venturi tube acts as a flow meter. Change the flow rate or the throat diameter and watch the levels and the curves.') },
   ],
   parametres: [
-    { id: 'dv', label: 'Débit volumique', min: 4, max: 11, pas: 0.5, valeur: 10, unite: 'L/min', decimales: 1 },
-    { id: 'col', label: 'Diamètre du col', min: 10, max: 16, pas: 0.5, valeur: 12, unite: 'mm', decimales: 1 },
+    { id: 'dv', label: L('Débit volumique', 'Volume flow rate'), min: 4, max: 11, pas: 0.5, valeur: 10, unite: 'L/min', decimales: 1 },
+    { id: 'col', label: L('Diamètre du col', 'Throat diameter'), min: 10, max: 16, pas: 0.5, valeur: 12, unite: 'mm', decimales: 1 },
   ],
   graphique: {
     x: { label: 'x (cm)', min: 0, max: 40, pas: 10 },
@@ -89,8 +89,8 @@ export default definirScene({
     // Repères et annotations.
     const gRepos = el('g', {}, scene);
     el('line', { x1: X(PRISES[0]) + DEMI + 2, x2: X(PRISES[2]) - DEMI - 2, y1: Y_REPOS, y2: Y_REPOS, stroke: C.discret, 'stroke-width': 1.5, 'stroke-dasharray': '5 5' }, gRepos);
-    etiquette(gRepos, { x: 215, y: Y_REPOS - 7, texte: 'niveau au repos', ancre: 'middle', taille: 13, couleur: C.discret });
-    const noms = ['Amont', 'Col', 'Aval'].map((nom, i) => etiquette(scene, { x: X(PRISES[i]), y: 112, texte: nom, ancre: 'middle', taille: 14 }));
+    etiquette(gRepos, { x: 215, y: Y_REPOS - 7, texte: L('niveau au repos', 'level at rest'), ancre: 'middle', taille: 13, couleur: C.discret });
+    const noms = [L('Amont', 'Upstream'), L('Col', 'Throat'), L('Aval', 'Downstream')].map((nom, i) => etiquette(scene, { x: X(PRISES[i]), y: 112, texte: nom, ancre: 'middle', taille: 14 }));
     const vecteurs = PRISES.map((x) => fleche(scene, { x1: X(x), y1: 392, x2: X(x), y2: 392, couleur: C.menthe, epaisseur: 3.5 }));
     const etiqV = PRISES.map((x) => etiquette(scene, { x: X(x), y: 415, texte: '', ancre: 'middle', mono: true, taille: 13, couleur: C.menthe }));
     const ligneH1 = el('line', { stroke: C.jaune, 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, scene);
@@ -119,8 +119,8 @@ export default definirScene({
       ligne(60, 14, C.texte, MONO, formule);
       return { g, resultat: ligne(85, 17, C.jaune, MONO, '') };
     };
-    const encartP = encart(16, 'Relation de Bernoulli, tube horizontal', 'P1 + ½·ρ·v1² = P2 + ½·ρ·v2²');
-    const encartD = encart(324, 'Débitmètre de Venturi : on lit Δh', 'v2 = √(2·g·Δh / (1 − S2²/S1²))');
+    const encartP = encart(16, L('Relation de Bernoulli, tube horizontal', "Bernoulli's equation, horizontal tube"), 'P1 + ½·ρ·v1² = P2 + ½·ρ·v2²');
+    const encartD = encart(324, L('Débitmètre de Venturi : on lit Δh', 'Venturi flow meter: read Δh'), 'v2 = √(2·g·Δh / (1 − S2²/S1²))');
 
     let cle = -1, vol: number[] = [], bases: number[] = [];
 
@@ -241,7 +241,7 @@ export default definirScene({
         const xs = Array.from({ length: 161 }, (_, i) => (TUBE.L * i) / 160);
         if (q > 0) {
           graphique.courbe('v', xs.map((x) => [x * 100, vEn(x)]), { couleur: C.menthe, epaisseur: 2.5 });
-          graphique.repere('lv', 40, v1, { couleur: C.menthe, rayon: 3, label: 'vitesse' });
+          graphique.repere('lv', 40, v1, { couleur: C.menthe, rayon: 3, label: L('vitesse', 'speed') });
           graphique.opacite('lv', seg(a2, 0.5, 0.64));
         } else {
           graphique.effacer('v');
@@ -264,7 +264,7 @@ export default definirScene({
           graphique.opacite('sonde', opP);
         } else graphique.effacer('sonde');
         if (a4 > 0.76) {
-          graphique.repere('lp', 40, pEn(TUBE.L), { couleur: C.cyan, rayon: 3, label: 'pression' });
+          graphique.repere('lp', 40, pEn(TUBE.L), { couleur: C.cyan, rayon: 3, label: L('pression', 'pressure') });
           graphique.opacite('lp', seg(a4, 0.76, 0.86));
         } else graphique.effacer('lp');
         if (a5 > 0.15) {
@@ -274,12 +274,12 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Débit', valeur: `${fmt(q * p.dv, 1)} L/min` },
-        { label: 'Vitesse en amont', valeur: `${fmt(v1, 2)} m/s` },
-        { label: 'Vitesse au col', valeur: `${fmt(v2, 2)} m/s` },
+        { label: L('Débit', 'Flow rate'), valeur: `${fmt(q * p.dv, 1)} L/min` },
+        { label: L('Vitesse en amont', 'Upstream speed'), valeur: `${fmt(v1, 2)} m/s` },
+        { label: L('Vitesse au col', 'Throat speed'), valeur: `${fmt(v2, 2)} m/s` },
       ];
-      if (a4 > 0.8) mesures.push({ label: 'Écart de pression', valeur: `${fmt(dP / 1000, 2)} kPa` });
-      else if (a3 > 0.74) mesures.push({ label: 'Dénivellation', valeur: `${fmt(dh * 100, 1)} cm` });
+      if (a4 > 0.8) mesures.push({ label: L('Écart de pression', 'Pressure difference'), valeur: `${fmt(dP / 1000, 2)} kPa` });
+      else if (a3 > 0.74) mesures.push({ label: L('Dénivellation', 'Height difference'), valeur: `${fmt(dh * 100, 1)} cm` });
       return mesures;
     };
   },

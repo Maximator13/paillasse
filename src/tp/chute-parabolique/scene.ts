@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, seg, show } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, seg, show } from '../../lib/anim';
 import { etiquette, fleche, paillasse } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -15,21 +15,21 @@ const Y = (y: number) => SOL - y * ECH;
 
 export default definirScene({
   etapes: [
-    { titre: 'Filmer le lancer', duree: 5, texte: 'La caméra, fixe et bien de face, filme à <strong>25 images par seconde</strong>. Un étalon de <strong>1,00 m</strong> placé dans le plan du mouvement donne l\'échelle, le lanceur fixe l\'angle de tir <strong>α</strong>.' },
-    { titre: 'Pointer image par image', duree: 10, texte: 'On repère le centre de la balle sur chaque image retenue : c\'est la <strong>chronophotographie</strong>. Les composantes <strong>v<sub>x</sub></strong> et <strong>v<sub>y</sub></strong> de la vitesse se reportent en direct sur le graphique.' },
-    { titre: 'Tracer vitesse et accélération', duree: 8, texte: 'Le vecteur vitesse est <strong>tangent</strong> à la trajectoire. Le vecteur accélération, lui, est partout le même : vertical, vers le bas, de valeur <strong>g</strong>. Sur le graphique, v<sub>x</sub> est constante et v<sub>y</sub> décroît avec une pente égale à -g.' },
-    { titre: 'Superposer la parabole modèle', duree: 7, texte: 'La deuxième loi de Newton conduit à une trajectoire <strong>parabolique</strong>. Elle passe par tous les points du pointage. Au sommet <strong>S</strong>, v<sub>y</sub> s\'annule.' },
-    { titre: 'Mesurer la flèche et la portée', duree: 6, texte: 'La <strong>flèche</strong> est l\'altitude du sommet, la <strong>portée</strong> l\'abscisse du point de chute. Changez la vitesse initiale, l\'angle ou la hauteur de lancement et observez la trajectoire.' },
+    { titre: L('Filmer le lancer', 'Film the launch'), duree: 5, texte: L('La caméra, fixe et bien de face, filme à <strong>25 images par seconde</strong>. Un étalon de <strong>1,00 m</strong> placé dans le plan du mouvement donne l\'échelle, le lanceur fixe l\'angle de tir <strong>α</strong>.', 'The camera, fixed and facing the motion squarely, films at <strong>25 frames per second</strong>. A <strong>1.00 m</strong> reference rule placed in the plane of the motion gives the scale, and the launcher sets the launch angle <strong>α</strong>.') },
+    { titre: L('Pointer image par image', 'Track frame by frame'), duree: 10, texte: L('On repère le centre de la balle sur chaque image retenue : c\'est la <strong>chronophotographie</strong>. Les composantes <strong>v<sub>x</sub></strong> et <strong>v<sub>y</sub></strong> de la vitesse se reportent en direct sur le graphique.', 'The centre of the ball is marked on each selected frame: this is the <strong>chronophotograph</strong>. The components <strong>v<sub>x</sub></strong> and <strong>v<sub>y</sub></strong> of the velocity are plotted live on the graph.') },
+    { titre: L('Tracer vitesse et accélération', 'Draw velocity and acceleration'), duree: 8, texte: L('Le vecteur vitesse est <strong>tangent</strong> à la trajectoire. Le vecteur accélération, lui, est partout le même : vertical, vers le bas, de valeur <strong>g</strong>. Sur le graphique, v<sub>x</sub> est constante et v<sub>y</sub> décroît avec une pente égale à -g.', 'The velocity vector is <strong>tangent</strong> to the trajectory. The acceleration vector is the same everywhere: vertical, directed downwards, of magnitude <strong>g</strong>. On the graph, v<sub>x</sub> is constant and v<sub>y</sub> decreases with a gradient equal to -g.') },
+    { titre: L('Superposer la parabole modèle', 'Superimpose the model parabola'), duree: 7, texte: L('La deuxième loi de Newton conduit à une trajectoire <strong>parabolique</strong>. Elle passe par tous les points du pointage. Au sommet <strong>S</strong>, v<sub>y</sub> s\'annule.', 'Newton\'s second law leads to a <strong>parabolic</strong> trajectory. It passes through all the tracked points. At the highest point <strong>S</strong>, v<sub>y</sub> is zero.') },
+    { titre: L('Mesurer la flèche et la portée', 'Measure maximum height and range'), duree: 6, texte: L('La <strong>flèche</strong> est l\'altitude du sommet, la <strong>portée</strong> l\'abscisse du point de chute. Changez la vitesse initiale, l\'angle ou la hauteur de lancement et observez la trajectoire.', 'The <strong>maximum height</strong> is the height of the highest point, the <strong>range</strong> is the x-coordinate of the landing point. Change the initial speed, the angle or the launch height and observe the trajectory.') },
   ],
   parametres: [
-    { id: 'v0', label: 'Vitesse initiale', min: 3.5, max: 6, pas: 0.1, valeur: 5, unite: 'm/s', decimales: 1 },
-    { id: 'alpha', label: 'Angle de tir', min: 20, max: 70, pas: 1, valeur: 50, unite: '°', decimales: 0 },
-    { id: 'h', label: 'Hauteur de lancement', min: 0.4, max: 1.2, pas: 0.05, valeur: 0.8, unite: 'm', decimales: 2 },
+    { id: 'v0', label: L('Vitesse initiale', 'Initial speed'), min: 3.5, max: 6, pas: 0.1, valeur: 5, unite: 'm/s', decimales: 1 },
+    { id: 'alpha', label: L('Angle de tir', 'Launch angle'), min: 20, max: 70, pas: 1, valeur: 50, unite: '°', decimales: 0 },
+    { id: 'h', label: L('Hauteur de lancement', 'Launch height'), min: 0.4, max: 1.2, pas: 0.05, valeur: 0.8, unite: 'm', decimales: 2 },
   ],
   graphique: {
     x: { label: 't (s)', min: 0, max: 1.4, pas: 0.2 },
     y: { label: 'v (m/s)', min: -8, max: 6, pas: 2 },
-    titre: 'vx et vy',
+    titre: L('vx et vy', 'vx and vy'),
   },
   affiche: { etape: 3, t: 1 },
 
@@ -96,13 +96,13 @@ export default definirScene({
     // Bandeau haut : caméra, légende, équation du modèle.
     const gRec = el('g', {}, scene);
     const voyant = el('circle', { cx: 24, cy: 31, r: 6, fill: C.corail }, gRec);
-    etiquette(gRec, { x: 38, y: 36, texte: '25 img/s', taille: 13, mono: true });
+    etiquette(gRec, { x: 38, y: 36, texte: L('25 img/s', '25 fps'), taille: 13, mono: true });
     const etiqDt = etiquette(scene, { x: 18, y: 60, texte: '', taille: 13, mono: true, couleur: C.jaune });
     const legV = el('g', {}, scene), legA = el('g', {}, scene);
     fleche(legV, { x1: 136, y1: 31, x2: 166, y2: 31, couleur: C.cyan, epaisseur: 2.5 });
-    etiquette(legV, { x: 174, y: 36, texte: 'vitesse v, tangente', taille: 14, couleur: C.cyan });
+    etiquette(legV, { x: 174, y: 36, texte: L('vitesse v, tangente', 'velocity v, tangent'), taille: 14, couleur: C.cyan });
     fleche(legA, { x1: 136, y1: 54, x2: 166, y2: 54, couleur: C.corail, epaisseur: 2.5 });
-    etiquette(legA, { x: 174, y: 59, texte: 'accélération a = g', taille: 14, couleur: C.corail });
+    etiquette(legA, { x: 174, y: 59, texte: L('accélération a = g', 'acceleration a = g'), taille: 14, couleur: C.corail });
     const etiqEq = etiquette(scene, { x: 136, y: 84, texte: 'y = -g·x²/(2·v0²·cos²α) + x·tan α + h', taille: 13, mono: true, couleur: C.violet });
 
     // Encart de résultat (dernière étape).
@@ -201,9 +201,9 @@ export default definirScene({
       etiqPortee.setAttribute('text-anchor', aGauche ? 'end' : 'start');
       show(etiqPortee, seg(a4, 0.66, 0.8));
       show(encart, seg(a4, 0.6, 0.9, ease.backOut), 16);
-      resFleche.textContent = `Flèche yS = ${fmt(S.y, 2)} m`;
-      resPortee.textContent = `Portée xP = ${fmt(xP, 2)} m`;
-      resDuree.textContent = `Durée tP = ${fmt(Tv, 2)} s`;
+      resFleche.textContent = L(`Flèche yS = ${fmt(S.y, 2)} m`, `Height yS = ${fmt(S.y, 2)} m`);
+      resPortee.textContent = L(`Portée xP = ${fmt(xP, 2)} m`, `Range xP = ${fmt(xP, 2)} m`);
+      resDuree.textContent = L(`Durée tP = ${fmt(Tv, 2)} s`, `Time tP = ${fmt(Tv, 2)} s`);
 
       if (graphique) {
         const vus = pts.slice(1, n).filter((_, k) => vol > 0 && tv >= pts[k + 2].t - 1e-9);
@@ -215,16 +215,16 @@ export default definirScene({
         graphique.courbe('mvx', a2 > 0.5 ? [[0, v0.vx], [tm, v0.vx]] : [], { couleur: C.menthe, epaisseur: 2 });
         graphique.courbe('mvy', a2 > 0.5 ? [[0, v0.vy], [tm, v0.vy - G * tm]] : [], { couleur: C.rose, epaisseur: 2 });
         if (a2 > 0.8) {
-          graphique.repere('lvx', tm, v0.vx, { couleur: C.menthe, rayon: 3, label: 'vx constante' });
+          graphique.repere('lvx', tm, v0.vx, { couleur: C.menthe, rayon: 3, label: L('vx constante', 'vx constant') });
           const tl = Math.min(tm, 0.95); // l'étiquette reste à droite du point, hors de la droite
-          graphique.repere('lvy', tl, v0.vy - G * tl, { couleur: C.rose, rayon: 3, label: 'vy : pente -g' });
+          graphique.repere('lvy', tl, v0.vy - G * tl, { couleur: C.rose, rayon: 3, label: L('vy : pente -g', 'vy: gradient -g') });
         } else {
           graphique.effacer('lvx');
           graphique.effacer('lvy');
         }
         if (a3 > 0.7) {
           graphique.verticale('ts', S.t, { couleur: C.jaune });
-          graphique.repere('s', S.t, 0, { couleur: C.jaune, label: `vy = 0 à tS = ${fmt(S.t, 2)} s` });
+          graphique.repere('s', S.t, 0, { couleur: C.jaune, label: L(`vy = 0 à tS = ${fmt(S.t, 2)} s`, `vy = 0 at tS = ${fmt(S.t, 2)} s`) });
           graphique.opacite('ts', seg(a3, 0.7, 0.85));
           graphique.opacite('s', seg(a3, 0.8, 0.95));
         } else {
@@ -234,11 +234,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Date t', valeur: `${fmt(tv, 2)} s` },
-        { label: 'Vitesse v', valeur: `${fmt(Math.hypot(v.vx, v.vy), 2)} m/s` },
-        { label: 'Composante vy', valeur: `${fmt(v.vy, 2)} m/s` },
+        { label: L('Date t', 'Time t'), valeur: `${fmt(tv, 2)} s` },
+        { label: L('Vitesse v', 'Speed v'), valeur: `${fmt(Math.hypot(v.vx, v.vy), 2)} m/s` },
+        { label: L('Composante vy', 'Component vy'), valeur: `${fmt(v.vy, 2)} m/s` },
       ];
-      if (a4 > 0.6) mesures.push({ label: 'Portée', valeur: `${fmt(xP, 2)} m` });
+      if (a4 > 0.6) mesures.push({ label: L('Portée', 'Range'), valeur: `${fmt(xP, 2)} m` });
       return mesures;
     };
   },

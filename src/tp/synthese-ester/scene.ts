@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, remap, rng, seg, set, show, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, remap, rng, seg, set, show, uid } from '../../lib/anim';
 import { bulles, eprouvette, etiquette, fleche, gouttes, paillasse, potence, recipient } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -12,21 +12,21 @@ const COUL = { acide: C.corail, alcool: C.cyan, ester: C.jaune, eau: C.bleu };
 
 export default definirScene({
   etapes: [
-    { titre: 'Introduire les réactifs', duree: 7, texte: 'Dans le ballon, on verse <strong>0,20 mol</strong> de 3-méthylbutan-1-ol, puis l\'acide éthanoïque et quelques gouttes d\'acide sulfurique concentré : le <strong>catalyseur</strong>.' },
-    { titre: 'Monter le réfrigérant', duree: 6, texte: 'Le réfrigérant à boules est fixé verticalement sur le ballon. L\'eau froide entre <strong>par le bas</strong> et ressort par le haut.' },
-    { titre: 'Chauffer à reflux', duree: 14, texte: 'Le mélange bout : les vapeurs montent, se <strong>condensent</strong> sur les parois froides et retombent dans le ballon. On chauffe longtemps sans perdre de matière, et l\'ester se forme peu à peu.' },
-    { titre: 'Atteindre l\'équilibre', duree: 6, texte: 'L\'avancement plafonne à <strong>x<sub>f</sub></strong>, en dessous de x<sub>max</sub> : la transformation est <strong>limitée</strong>. Estérification et hydrolyse se compensent, Q<sub>r</sub> = K.' },
-    { titre: 'Calculer le rendement', duree: 6, texte: 'On coupe le chauffage. Le rendement vaut <strong>η = x<sub>f</sub> / x<sub>max</sub></strong>, soit 67 % en mélange équimolaire. Ajoutez un excès d\'acide, baissez la température ou retirez le catalyseur : que devient la courbe ?' },
+    { titre: L('Introduire les réactifs', 'Add the reactants'), duree: 7, texte: L('Dans le ballon, on verse <strong>0,20 mol</strong> de 3-méthylbutan-1-ol, puis l\'acide éthanoïque et quelques gouttes d\'acide sulfurique concentré : le <strong>catalyseur</strong>.', '<strong>0.20 mol</strong> of 3-methylbutan-1-ol is poured into the flask, followed by the ethanoic acid and a few drops of concentrated sulfuric acid: the <strong>catalyst</strong>.') },
+    { titre: L('Monter le réfrigérant', 'Fit the condenser'), duree: 6, texte: L('Le réfrigérant à boules est fixé verticalement sur le ballon. L\'eau froide entre <strong>par le bas</strong> et ressort par le haut.', 'The bulb condenser is fitted vertically on the flask. Cold water enters <strong>at the bottom</strong> and leaves at the top.') },
+    { titre: L('Chauffer à reflux', 'Heat under reflux'), duree: 14, texte: L('Le mélange bout : les vapeurs montent, se <strong>condensent</strong> sur les parois froides et retombent dans le ballon. On chauffe longtemps sans perdre de matière, et l\'ester se forme peu à peu.', 'The mixture boils: the vapours rise, <strong>condense</strong> on the cold walls and fall back into the flask. The mixture is heated for a long time without losing any material, and the ester forms little by little.') },
+    { titre: L('Atteindre l\'équilibre', 'Reach equilibrium'), duree: 6, texte: L('L\'avancement plafonne à <strong>x<sub>f</sub></strong>, en dessous de x<sub>max</sub> : la transformation est <strong>limitée</strong>. Estérification et hydrolyse se compensent, Q<sub>r</sub> = K.', 'The extent of reaction levels off at <strong>x<sub>f</sub></strong>, below x<sub>max</sub>: the reaction is <strong>limited</strong>. Esterification and hydrolysis balance each other, Q<sub>r</sub> = K.') },
+    { titre: L('Calculer le rendement', 'Calculate the yield'), duree: 6, texte: L('On coupe le chauffage. Le rendement vaut <strong>η = x<sub>f</sub> / x<sub>max</sub></strong>, soit 67 % en mélange équimolaire. Ajoutez un excès d\'acide, baissez la température ou retirez le catalyseur : que devient la courbe ?', 'The heating is switched off. The yield is <strong>η = x<sub>f</sub> / x<sub>max</sub></strong>, that is 67% for an equimolar mixture. Add an excess of acid, lower the temperature or remove the catalyst: what happens to the curve?') },
   ],
   parametres: [
-    { id: 'acide', label: 'Acide éthanoïque introduit', min: 0.2, max: 0.6, pas: 0.05, valeur: 0.2, unite: 'mol', decimales: 2 },
-    { id: 'theta', label: 'Température du mélange', min: 60, max: 120, pas: 5, valeur: 120, unite: '°C' },
-    { id: 'gouttes', label: 'Acide sulfurique (catalyseur)', min: 0, max: 10, pas: 1, valeur: 5, unite: 'gouttes' },
+    { id: 'acide', label: L('Acide éthanoïque introduit', 'Ethanoic acid added'), min: 0.2, max: 0.6, pas: 0.05, valeur: 0.2, unite: 'mol', decimales: 2 },
+    { id: 'theta', label: L('Température du mélange', 'Temperature of the mixture'), min: 60, max: 120, pas: 5, valeur: 120, unite: '°C' },
+    { id: 'gouttes', label: L('Acide sulfurique (catalyseur)', 'Sulfuric acid (catalyst)'), min: 0, max: 10, pas: 1, valeur: 5, unite: L('gouttes', 'drops') },
   ],
   graphique: {
     x: { label: 't (min)', min: 0, max: T_MAX, pas: 10 },
     y: { label: 'x (mol)', min: 0, max: 0.22, pas: 0.05, decimales: 2 },
-    titre: 'avancement',
+    titre: L('avancement', 'extent of reaction'),
   },
   affiche: { etape: 2, t: 0.6 },
 
@@ -67,10 +67,10 @@ export default definirScene({
     const flux = el('path', { d: `M${X0 + 46} 246H${X0 + 24}M${X0 + 24} 122H${X0 + 46}`, stroke: C.blanc, 'stroke-width': 2, 'stroke-dasharray': '4 7', opacity: 0.8 }, tuyaux);
     fleche(tuyaux, { x1: X0 + 72, y1: 246, x2: X0 + 52, y2: 246, couleur: C.bleu });
     fleche(tuyaux, { x1: X0 + 52, y1: 122, x2: X0 + 72, y2: 122, couleur: C.bleu });
-    etiquette(tuyaux, { x: X0 + 78, y: 251, texte: 'eau froide', taille: 13, couleur: C.bleu });
-    etiquette(tuyaux, { x: X0 + 78, y: 127, texte: 'sortie d\'eau', taille: 13, couleur: C.bleu });
-    etiquette(tuyaux, { x: X0 - 36, y: 180, texte: 'Réfrigérant', taille: 13, ancre: 'end', couleur: C.discret });
-    etiquette(tuyaux, { x: X0 - 36, y: 197, texte: 'à boules', taille: 13, ancre: 'end', couleur: C.discret });
+    etiquette(tuyaux, { x: X0 + 78, y: 251, texte: L('eau froide', 'cold water'), taille: 13, couleur: C.bleu });
+    etiquette(tuyaux, { x: X0 + 78, y: 127, texte: L('sortie d\'eau', 'water out'), taille: 13, couleur: C.bleu });
+    etiquette(tuyaux, { x: X0 - 36, y: 180, texte: L('Réfrigérant', 'Bulb'), taille: 13, ancre: 'end', couleur: C.discret });
+    etiquette(tuyaux, { x: X0 - 36, y: 197, texte: L('à boules', 'condenser'), taille: 13, ancre: 'end', couleur: C.discret });
 
     // Vapeurs qui montent puis gouttes de condensat qui retombent.
     const gVap = el('g', {}, scene);
@@ -90,12 +90,12 @@ export default definirScene({
         g.setAttribute('transform', `translate(${px + 13} ${py + 92}) rotate(${-105 * incl} -13 -92)`);
         g.style.opacity = q > 0 && q < 1 ? '1' : '0';
         set(liq, { y: lerp(-68, -90, incl), height: 64 * (1 - verse) });
-        lab.textContent = `${nom} : ${fmt(vol, 1)} mL`;
+        lab.textContent = L(`${nom} : ${fmt(vol, 1)} mL`, `${nom}: ${fmt(vol, 1)} mL`);
         show(lab, seg(q, 0.05, 0.2) - seg(q, 0.85, 1));
         return verse;
       };
     };
-    const vAlcool = verseuse(COUL.alcool, 'Alcool'), vAcide = verseuse(COUL.acide, 'Acide');
+    const vAlcool = verseuse(COUL.alcool, L('Alcool', 'Alcohol')), vAcide = verseuse(COUL.acide, L('Acide', 'Acid'));
     const pip = el('g', {}, scene);
     el('ellipse', { cx: X0, cy: 226, rx: 8, ry: 13, fill: C.corail, stroke: C.verre, 'stroke-width': 1.5 }, pip);
     el('path', { d: `M${X0 - 4} 238V268L${X0 - 1.5} 284H${X0 + 1.5}L${X0 + 4} 268V238Z`, fill: C.jaune, 'fill-opacity': 0.45, stroke: C.verre, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, pip);
@@ -104,15 +104,15 @@ export default definirScene({
 
     // Équation (sert de légende) et bilan de matière en barres.
     const eq = etiquette(scene, { x: 508, y: 62, texte: '', ancre: 'middle', taille: 15 });
-    ([['acide', COUL.acide], [' + ', C.discret], ['alcool', COUL.alcool], [' ⇄ ', C.texte], ['ester', COUL.ester], [' + ', C.discret], ['eau', COUL.eau]] as const)
+    ([[L('acide', 'acid'), COUL.acide], [' + ', C.discret], [L('alcool', 'alcohol'), COUL.alcool], [' ⇄ ', C.texte], ['ester', COUL.ester], [' + ', C.discret], [L('eau', 'water'), COUL.eau]] as const)
       .forEach(([s, fill]) => { el('tspan', { fill }, eq).textContent = s; });
     const bilan = el('g', {}, scene);
     el('rect', { x: 392, y: 84, width: 232, height: 244, rx: 14, fill: C.panneau, stroke: C.grille, 'stroke-width': 1.5 }, bilan);
-    el('text', { x: 408, y: 108, fill: C.discret, 'font-family': POLICE, 'font-size': 13, 'font-weight': 600 }, bilan).textContent = 'Quantités de matière (mol)';
+    el('text', { x: 408, y: 108, fill: C.discret, 'font-family': POLICE, 'font-size': 13, 'font-weight': 600 }, bilan).textContent = L('Quantités de matière (mol)', 'Amounts of substance (mol)');
     el('line', { x1: 404, x2: 612, y1: 296, y2: 296, stroke: C.metal, 'stroke-width': 1.5 }, bilan);
     const barres = (['acide', 'alcool', 'ester', 'eau'] as const).map((nom, i) => {
       const x = 430 + i * 52;
-      el('text', { x, y: 316, fill: COUL[nom], 'font-family': POLICE, 'font-size': 13, 'font-weight': 600, 'text-anchor': 'middle' }, bilan).textContent = nom;
+      el('text', { x, y: 316, fill: COUL[nom], 'font-family': POLICE, 'font-size': 13, 'font-weight': 600, 'text-anchor': 'middle' }, bilan).textContent = L(nom, { acide: 'acid', alcool: 'alcohol', ester: 'ester', eau: 'water' }[nom]);
       const b = el('rect', { x: x - 17, width: 34, rx: 4, fill: COUL[nom] }, bilan);
       const v = el('text', { x, fill: C.texte, 'font-family': MONO, 'font-size': 13, 'font-weight': 600, 'text-anchor': 'middle' }, bilan);
       return (n: number) => {
@@ -128,7 +128,7 @@ export default definirScene({
     el('rect', { x: 392, y: 338, width: 232, height: 92, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 408, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(360, 13, C.discret, POLICE).textContent = 'Rendement après 60 min';
+    ligne(360, 13, C.discret, POLICE).textContent = L('Rendement après 60 min', 'Yield after 60 min');
     const resultat = ligne(388, 21, C.jaune);
     const limite = ligne(414, 13, C.texte);
 
@@ -157,7 +157,7 @@ export default definirScene({
       pip.style.opacity = cata && d > 0 && d < 1 ? '1' : '0';
       pip.style.transform = `translateY(${-300 * (1 - seg(d, 0, 0.25, ease.out)) - 300 * seg(d, 0.82, 1, ease.in)}px)`;
       gtt.maj(T, cata && d > 0.28 && d < 0.8 ? 0.5 : 0);
-      labCata.textContent = cata ? `H2SO4 : ${Math.round(p.gouttes * seg(d, 0.28, 0.8, ease.lin))} gouttes` : 'sans catalyseur';
+      labCata.textContent = cata ? L(`H2SO4 : ${Math.round(p.gouttes * seg(d, 0.28, 0.8, ease.lin))} gouttes`, `H2SO4: ${Math.round(p.gouttes * seg(d, 0.28, 0.8, ease.lin))} drops`) : L('sans catalyseur', 'no catalyst');
       show(labCata, seg(d, 0.15, 0.3) - seg(a1, 0, 0.12));
 
       // Étape 2 : le réfrigérant descend, l'eau circule.
@@ -219,15 +219,15 @@ export default definirScene({
 
       // Résultat.
       show(encart, seg(a4, 0.25, 0.55, ease.backOut), 16);
-      resultat.textContent = `η = ${fmt(100 * x60 / N_ALCOOL, 0)} %`;
-      limite.textContent = `à l'équilibre : ${fmt(100 * xEq / N_ALCOOL, 0)} %`;
+      resultat.textContent = L(`η = ${fmt(100 * x60 / N_ALCOOL, 0)} %`, `η = ${fmt(100 * x60 / N_ALCOOL, 0)}%`);
+      limite.textContent = L(`à l'équilibre : ${fmt(100 * xEq / N_ALCOOL, 0)} %`, `at equilibrium: ${fmt(100 * xEq / N_ALCOOL, 0)}%`);
 
       if (graphique) {
         graphique.courbe('x', a2 > 0 ? pts.filter(([t]) => t <= tMin) : [], { couleur: C.jaune, epaisseur: 3 });
         if (a2 > 0 && a2 < 1) graphique.repere('mesure', tMin, x, { couleur: C.blanc, rayon: 4 });
         else graphique.effacer('mesure');
         if (a3 > 0.08) {
-          const pc = (v: number) => (a4 > 0.3 ? ` (${fmt(100 * v / N_ALCOOL, 0)} %)` : '');
+          const pc = (v: number) => (a4 > 0.3 ? L(` (${fmt(100 * v / N_ALCOOL, 0)} %)`, ` (${fmt(100 * v / N_ALCOOL, 0)}%)`) : '');
           graphique.horizontale('xmax', N_ALCOOL, { couleur: C.discret, label: `x max = ${fmt(N_ALCOOL, 2)} mol${pc(N_ALCOOL)}` });
           graphique.horizontale('xf', xEq, { couleur: C.menthe, label: `x f = ${fmt(xEq, 3)} mol${pc(xEq)}` });
           graphique.opacite('xmax', seg(a3, 0.08, 0.35));
@@ -241,10 +241,10 @@ export default definirScene({
       }
 
       return [
-        { label: 'Durée de chauffage', valeur: `${fmt(tMin, 0)} min` },
-        { label: 'Avancement x', valeur: `${fmt(x, 3)} mol` },
+        { label: L('Durée de chauffage', 'Heating time'), valeur: `${fmt(tMin, 0)} min` },
+        { label: L('Avancement x', 'Extent of reaction x'), valeur: `${fmt(x, 3)} mol` },
         { label: 'Quotient Qr (K = 4)', valeur: fmt(quotient(x, m), 2) },
-        { label: 'Rendement', valeur: `${fmt(100 * taux, 0)} %` },
+        { label: L('Rendement', 'Yield'), valeur: L(`${fmt(100 * taux, 0)} %`, `${fmt(100 * taux, 0)}%`) },
       ];
     };
   },

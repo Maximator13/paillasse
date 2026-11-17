@@ -1,0 +1,81 @@
+---
+import { render } from 'astro:content';
+import 'katex/dist/katex.min.css';
+import Base from '../../layouts/Base.astro';
+import CarteTp from '../CarteTp.astro';
+import { THEMES, slugDe } from '../../data/site';
+import { UI, lien, type Lang } from '../../i18n';
+import { lesTp, lienCours, type Cours } from '../../i18n/contenu';
+
+interface Props {
+  lang: Lang;
+  cours: Cours;
+  precedent?: Cours;
+  suivant?: Cours;
+  /** Vrai si le chapitre existe dans les deux langues. */
+  traduit: boolean;
+}
+const { lang, cours, precedent, suivant, traduit } = Astro.props;
+const u = UI[lang];
+const { Content } = await render(cours);
+const tps = (await lesTp(lang)).filter((t) => cours.data.tp.includes(slugDe(t.id)));
+const d = cours.data;
+
+const T = {
+  fr: {
+    suffixe: ' : cours de Terminale',
+    surtitre: `Chapitre ${d.ordre} · ${d.duree} de lecture`,
+    experience: "Voir l'expérience",
+    voisins: 'Chapitres voisins',
+    precedent: 'Chapitre précédent',
+    suivant: 'Chapitre suivant',
+  },
+  en: {
+    suffixe: ': Terminale lesson',
+    surtitre: `Chapter ${d.ordre} · ${d.duree} read`,
+    experience: 'Watch the experiment',
+    voisins: 'Neighbouring chapters',
+    precedent: 'Previous chapter',
+    suivant: 'Next chapter',
+  },
+}[lang];
+// Le suffixe n'est ajouté que si le titre reste court.
+const titre = `${d.titre}${T.suffixe}`.length <= 55 ? `${d.titre}${T.suffixe}` : d.titre;
+---
+
+<Base lang={lang} titre={titre} description={d.description} type="article" sansTraduction={traduit ? undefined : '/terminale/'}>
+  <article class="section conteneur" data-theme={d.theme}>
+    <ol class="fil">
+      <li><a href={lien(lang, '/')}>{u.accueil}</a></li>
+      <li><a href={lien(lang, '/terminale/')}>Terminale</a></li>
+      <li><a href={lien(lang, `/terminale/#${d.theme}`)}>{THEMES[d.theme][lang].court}</a></li>
+    </ol>
+    <p class="surtitre">{T.surtitre}</p>
+    <h1>{d.titre}</h1>
+    <p class="chapo">{d.description}</p>
+
+    <div class="prose"><Content /></div>
+
+    {tps.length > 0 && (
+      <section class="tp-lies">
+        <h2>{T.experience}</h2>
+        <div class="grille">{tps.map((t) => <CarteTp tp={t} lang={lang} />)}</div>
+      </section>
+    )}
+
+    <nav class="voisins" aria-label={T.voisins}>
+      {precedent ? <a href={lienCours(precedent)}><span>{T.precedent}</span>{precedent.data.titre}</a> : <span />}
+      {suivant && <a class="droite" href={lienCours(suivant)}><span>{T.suivant}</span>{suivant.data.titre}</a>}
+    </nav>
+  </article>
+</Base>
+
+<style>
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
+  .prose { margin-top: 2.5rem; }
+  .tp-lies { margin-top: 4rem; }
+  .voisins { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 4rem; border-top: 1.5px solid var(--ligne); padding-top: 1.5rem; }
+  .voisins a { display: flex; flex-direction: column; gap: .3rem; text-decoration: none; font-weight: 650; color: var(--encre); padding: .5rem 0; }
+  .voisins a span { font: 500 .75rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--doux); }
+  .voisins .droite { text-align: right; align-items: flex-end; }
+</style>

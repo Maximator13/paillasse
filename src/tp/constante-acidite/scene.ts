@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte } from '../../lib/anim';
 import { appareil, becher, etiquette, paillasse } from '../../lib/labkit';
 import { C, MONO, POLICE } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -18,15 +18,15 @@ const SONDE_DX = 27, Y_IMMERGE = 428, LEVEE = 112, L_SONDE = 100;
 
 export default definirScene({
   etapes: [
-    { titre: 'Préparer cinq mélanges', duree: 10, texte: 'Dans cinq béchers, on mélange des volumes différents de solution d\'acide <strong>AH</strong> et de sa base conjuguée <strong>A<sup>-</sup></strong>, de même concentration. Le rapport [A<sup>-</sup>]/[AH] vaut alors V<sub>B</sub>/V<sub>A</sub>.' },
-    { titre: 'Brancher le pH-mètre', duree: 5, texte: 'Le pH-mètre, étalonné avec deux solutions tampons, est mis en service. La sonde rincée est amenée au-dessus du premier bécher.' },
-    { titre: 'Mesurer de bécher en bécher', duree: 14, texte: 'La sonde plonge dans chaque mélange. Plus la base A<sup>-</sup> est abondante, plus le pH est élevé : chaque mesure donne <strong>un point</strong> du graphique.' },
-    { titre: 'Tracer la droite', duree: 7, texte: 'Les points s\'alignent sur une droite de pente 1 : <strong>pH = pK<sub>A</sub> + log([A<sup>-</sup>]/[AH])</strong>. L\'ordonnée à l\'origine donne le pK<sub>A</sub> du couple.' },
-    { titre: 'Lire le diagramme de prédominance', duree: 7, texte: 'Si pH &lt; pK<sub>A</sub>, l\'acide AH prédomine ; si pH &gt; pK<sub>A</sub>, c\'est la base A<sup>-</sup>. Changez le <strong>pK<sub>A</sub></strong> ou diluez les solutions et observez la droite.' },
+    { titre: L('Préparer cinq mélanges', 'Prepare five mixtures'), duree: 10, texte: L('Dans cinq béchers, on mélange des volumes différents de solution d\'acide <strong>AH</strong> et de sa base conjuguée <strong>A<sup>-</sup></strong>, de même concentration. Le rapport [A<sup>-</sup>]/[AH] vaut alors V<sub>B</sub>/V<sub>A</sub>.', 'In five beakers, different volumes of a solution of the acid <strong>AH</strong> and of its conjugate base <strong>A<sup>-</sup></strong>, of the same concentration, are mixed. The ratio [A<sup>-</sup>]/[AH] is then equal to V<sub>B</sub>/V<sub>A</sub>.') },
+    { titre: L('Brancher le pH-mètre', 'Connect the pH meter'), duree: 5, texte: L('Le pH-mètre, étalonné avec deux solutions tampons, est mis en service. La sonde rincée est amenée au-dessus du premier bécher.', 'The pH meter, calibrated with two buffer solutions, is switched on. The rinsed probe is brought above the first beaker.') },
+    { titre: L('Mesurer de bécher en bécher', 'Measure beaker by beaker'), duree: 14, texte: L('La sonde plonge dans chaque mélange. Plus la base A<sup>-</sup> est abondante, plus le pH est élevé : chaque mesure donne <strong>un point</strong> du graphique.', 'The probe is dipped into each mixture. The more base A<sup>-</sup> there is, the higher the pH: each measurement gives <strong>one point</strong> on the graph.') },
+    { titre: L('Tracer la droite', 'Draw the straight line'), duree: 7, texte: L('Les points s\'alignent sur une droite de pente 1 : <strong>pH = pK<sub>A</sub> + log([A<sup>-</sup>]/[AH])</strong>. L\'ordonnée à l\'origine donne le pK<sub>A</sub> du couple.', 'The points lie on a straight line of gradient 1: <strong>pH = pK<sub>A</sub> + log([A<sup>-</sup>]/[AH])</strong>. The y-intercept gives the pK<sub>A</sub> of the pair.') },
+    { titre: L('Lire le diagramme de prédominance', 'Read the predominance diagram'), duree: 7, texte: L('Si pH &lt; pK<sub>A</sub>, l\'acide AH prédomine ; si pH &gt; pK<sub>A</sub>, c\'est la base A<sup>-</sup>. Changez le <strong>pK<sub>A</sub></strong> ou diluez les solutions et observez la droite.', 'If pH &lt; pK<sub>A</sub>, the acid AH predominates; if pH &gt; pK<sub>A</sub>, the base A<sup>-</sup> does. Change the <strong>pK<sub>A</sub></strong> or dilute the solutions and watch the line.') },
   ],
   parametres: [
-    { id: 'pKa', label: 'pKa du couple', min: 3.5, max: 6, pas: 0.1, valeur: 4.8, decimales: 1 },
-    { id: 'c', label: 'Concentration des solutions', min: 0.002, max: 0.1, pas: 0.002, valeur: 0.1, unite: 'mol/L', decimales: 3 },
+    { id: 'pKa', label: L('pKa du couple', 'pKa of the pair'), min: 3.5, max: 6, pas: 0.1, valeur: 4.8, decimales: 1 },
+    { id: 'c', label: L('Concentration des solutions', 'Concentration of the solutions'), min: 0.002, max: 0.1, pas: 0.002, valeur: 0.1, unite: 'mol/L', decimales: 3 },
   ],
   graphique: {
     x: { label: 'log([A-]/[AH])', min: -X_LOG, max: X_LOG, pas: 0.6, decimales: 1 },
@@ -63,9 +63,9 @@ export default definirScene({
     // Légende des entités.
     const legende = el('g', {}, scene);
     el('circle', { cx: 46, cy: 117, r: 5, fill: ACIDE }, legende);
-    etiquette(legende, { x: 58, y: 122, texte: 'acide AH', taille: 13 });
+    etiquette(legende, { x: 58, y: 122, texte: L('acide AH', 'acid AH'), taille: 13 });
     el('circle', { cx: 146, cy: 117, r: 5, fill: BASE }, legende);
-    etiquette(legende, { x: 158, y: 122, texte: 'base conjuguée A-', taille: 13 });
+    etiquette(legende, { x: 158, y: 122, texte: L('base conjuguée A-', 'conjugate base A-'), taille: 13 });
 
     // Béchers, entités en solution, étiquettes.
     const bechers = XB.map((x, i) => {
@@ -90,7 +90,7 @@ export default definirScene({
 
     // pH-mètre et sonde mobile (étapes 2 et 3).
     const gPhm = el('g', {}, scene);
-    const phm = appareil(gPhm, { x: 484, y: 18, w: 140, h: 74, titre: 'pH-MÈTRE' });
+    const phm = appareil(gPhm, { x: 484, y: 18, w: 140, h: 74, titre: L('pH-MÈTRE', 'pH METER') });
     const cable = el('path', { fill: 'none', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, scene);
     const gSonde = el('g', {}, scene);
     el('rect', { x: -5, y: -L_SONDE, width: 10, height: 18, rx: 3, fill: C.metal }, gSonde);
@@ -102,7 +102,7 @@ export default definirScene({
     el('rect', { x: 40, y: 140, width: 300, height: 108, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 56, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(166, 13, C.discret, POLICE).textContent = 'Relation attendue (droite de pente 1)';
+    ligne(166, 13, C.discret, POLICE).textContent = L('Relation attendue (droite de pente 1)', 'Expected relation (line of gradient 1)');
     ligne(192, 15, C.texte).textContent = 'pH = pKa + log([A-]/[AH])';
     const resultat = ligne(226, 15, C.jaune);
 
@@ -136,7 +136,7 @@ export default definirScene({
         if (s > 0.25 && s < 0.95) { verse = s < 0.6 ? ACIDE : BASE; ySurfVerse = ySurf; }
         if (s > 0 && s < 1) {
           contenu.setAttribute('fill', s < 0.6 ? ACIDE : BASE);
-          nomPip.textContent = s < 0.6 ? 'acide AH' : 'base A-';
+          nomPip.textContent = s < 0.6 ? L('acide AH', 'acid AH') : 'base A-';
         }
       });
       const yPip = -340 * (1 - seg(a1, 0, 0.05, ease.out)) - 340 * seg(a1, 0.96, 1, ease.in);
@@ -162,7 +162,7 @@ export default definirScene({
       const lu = seg(u, 0.45, 0.7, ease.out); // stabilisation de la lecture
       const mesure = a3 > 0 && (k > 0 || u >= 0.45);
       const affichage = lerp(k === 0 ? 7 : phs[k - 1], phs[k], lu);
-      phm.affiche(a2 < 0.35 ? '' : mesure ? fmt(affichage, 2) : '-,--');
+      phm.affiche(a2 < 0.35 ? '' : mesure ? fmt(affichage, 2) : L('-,--', '-.--'));
       const nMes = a3 <= 0 ? 0 : k + (u >= 0.7 ? 1 : 0);
       bechers.forEach(({ lecture }, i) => {
         lecture.textContent = `pH ${fmt(phs[i], 2)}`;
@@ -178,7 +178,7 @@ export default definirScene({
       const [mant, ex] = ka(reg.ordonnee).toExponential(1).split('e').map(Number); // mantisse arrondie dans [1 ; 10[
       resultat.textContent = a5 > 0.5
         ? `pKa = ${fmt(reg.ordonnee, 2)} · Ka = ${fmt(mant, 1)} × 10⁻${'⁰¹²³⁴⁵⁶⁷⁸⁹'[-ex]}`
-        : `pKa = ${fmt(reg.ordonnee, 2)} · pente = ${fmt(reg.pente, 2)}`;
+        : L(`pKa = ${fmt(reg.ordonnee, 2)} · pente = ${fmt(reg.pente, 2)}`, `pKa = ${fmt(reg.ordonnee, 2)} · gradient = ${fmt(reg.pente, 2)}`);
       const balayage = seg(a5, 0.05, 0.5, ease.inOut) * NB;
       bandes.forEach((b, j) => { b.style.opacity = String(clamp(balayage - j)); });
       const xp = xD(p.pKa), pk = seg(a5, 0.45, 0.65, ease.backOut);
@@ -213,10 +213,10 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Rapport [A-]/[AH]', valeur: mesure ? fmt(rapport(MELANGES[u >= 0.45 ? k : k - 1]), 2) : '...' },
+        { label: L('Rapport [A-]/[AH]', 'Ratio [A-]/[AH]'), valeur: mesure ? fmt(rapport(MELANGES[u >= 0.45 ? k : k - 1]), 2) : '...' },
         { label: 'pH', valeur: mesure ? fmt(affichage, 2) : '...' },
       ];
-      if (a4 > 0.6) mesures.push({ label: 'pKa mesuré', valeur: fmt(reg.ordonnee, 2) }, { label: 'Pente', valeur: fmt(reg.pente, 2) });
+      if (a4 > 0.6) mesures.push({ label: L('pKa mesuré', 'Measured pKa'), valeur: fmt(reg.ordonnee, 2) }, { label: L('Pente', 'Gradient'), valeur: fmt(reg.pente, 2) });
       return mesures;
     };
   },

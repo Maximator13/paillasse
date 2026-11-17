@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, remap, seg, set, show, texte, uid } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, mix, remap, seg, set, show, texte, uid } from '../../lib/anim';
 import { becher, etiquette, fleche, paillasse, thermometre } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -21,16 +21,16 @@ const teinte = (temp: number) => mix(C.bleu, C.corail, (temp - 15) / 65);
 
 export default definirScene({
   etapes: [
-    { titre: 'Verser l\'eau chaude', duree: 6, texte: 'On verse <strong>100 g d\'eau chaude</strong> dans un bécher posé sur du liège. L\'air de la salle, à la température <strong>T<sub>ext</sub></strong>, joue le rôle de thermostat : l\'eau lui cède aussitôt de l\'énergie.' },
-    { titre: 'Plonger le thermomètre', duree: 5, texte: 'Le thermomètre, d\'abord à la température de la salle, plonge dans l\'eau : sa colonne grimpe jusqu\'à <strong>T<sub>0</sub></strong>. On déclenche le chronomètre, c\'est l\'instant <strong>t = 0</strong>.' },
-    { titre: 'Laisser refroidir', duree: (DUREE * 60) / ACCELERATION, texte: 'Le temps est <strong>accéléré 400 fois</strong>. La température chute vite, puis de plus en plus lentement : le flux thermique <strong>Φ = h·S·(T<sub>ext</sub> − T)</strong> faiblit à mesure que l\'écart avec l\'air se réduit.' },
-    { titre: 'Mesurer le temps caractéristique', duree: 8, texte: 'La tangente à l\'origine coupe l\'asymptote <strong>T = T<sub>ext</sub></strong> à la date <strong>τ</strong>. On remonte le temps jusqu\'à cet instant : l\'écart de température a déjà diminué de <strong>63 %</strong>.' },
-    { titre: 'Modéliser par une exponentielle', duree: 6, texte: 'Le premier principe donne <strong>m·c·dT/dt = h·S·(T<sub>ext</sub> − T)</strong>, de solution exponentielle avec <strong>τ = m·c/(h·S)</strong>. Modifiez la température de l\'air, celle de l\'eau ou le coefficient d\'échange.' },
+    { titre: L('Verser l\'eau chaude', 'Pour in the hot water'), duree: 6, texte: L('On verse <strong>100 g d\'eau chaude</strong> dans un bécher posé sur du liège. L\'air de la salle, à la température <strong>T<sub>ext</sub></strong>, joue le rôle de thermostat : l\'eau lui cède aussitôt de l\'énergie.', '<strong>100 g of hot water</strong> is poured into a beaker standing on cork. The air in the room, at temperature <strong>T<sub>ext</sub></strong>, acts as a thermostat: the water starts transferring energy to it straight away.') },
+    { titre: L('Plonger le thermomètre', 'Insert the thermometer'), duree: 5, texte: L('Le thermomètre, d\'abord à la température de la salle, plonge dans l\'eau : sa colonne grimpe jusqu\'à <strong>T<sub>0</sub></strong>. On déclenche le chronomètre, c\'est l\'instant <strong>t = 0</strong>.', 'The thermometer, initially at room temperature, is lowered into the water: its column climbs to <strong>T<sub>0</sub></strong>. The stopwatch is started, this is the instant <strong>t = 0</strong>.') },
+    { titre: L('Laisser refroidir', 'Leave to cool'), duree: (DUREE * 60) / ACCELERATION, texte: L('Le temps est <strong>accéléré 400 fois</strong>. La température chute vite, puis de plus en plus lentement : le flux thermique <strong>Φ = h·S·(T<sub>ext</sub> − T)</strong> faiblit à mesure que l\'écart avec l\'air se réduit.', 'Time is <strong>speeded up 400 times</strong>. The temperature falls quickly, then more and more slowly: the thermal flux <strong>Φ = h·S·(T<sub>ext</sub> − T)</strong> weakens as the difference with the air shrinks.') },
+    { titre: L('Mesurer le temps caractéristique', 'Measure the characteristic time'), duree: 8, texte: L('La tangente à l\'origine coupe l\'asymptote <strong>T = T<sub>ext</sub></strong> à la date <strong>τ</strong>. On remonte le temps jusqu\'à cet instant : l\'écart de température a déjà diminué de <strong>63 %</strong>.', 'The tangent at the origin meets the asymptote <strong>T = T<sub>ext</sub></strong> at time <strong>τ</strong>. We rewind to that instant: the temperature difference has already fallen by <strong>63%</strong>.') },
+    { titre: L('Modéliser par une exponentielle', 'Model with an exponential'), duree: 6, texte: L('Le premier principe donne <strong>m·c·dT/dt = h·S·(T<sub>ext</sub> − T)</strong>, de solution exponentielle avec <strong>τ = m·c/(h·S)</strong>. Modifiez la température de l\'air, celle de l\'eau ou le coefficient d\'échange.', 'The first law gives <strong>m·c·dT/dt = h·S·(T<sub>ext</sub> − T)</strong>, whose solution is an exponential with <strong>τ = m·c/(h·S)</strong>. Change the air temperature, the water temperature or the heat transfer coefficient.') },
   ],
   parametres: [
-    { id: 'tExt', label: 'Température de l\'air', min: 10, max: 30, pas: 1, valeur: 20, unite: '°C' },
-    { id: 't0', label: 'Température initiale de l\'eau', min: 50, max: 90, pas: 1, valeur: 80, unite: '°C' },
-    { id: 'h', label: 'Coefficient d\'échange h', min: 10, max: 40, pas: 1, valeur: 20, unite: 'W/(m²·K)' },
+    { id: 'tExt', label: L('Température de l\'air', 'Air temperature'), min: 10, max: 30, pas: 1, valeur: 20, unite: '°C' },
+    { id: 't0', label: L('Température initiale de l\'eau', 'Initial water temperature'), min: 50, max: 90, pas: 1, valeur: 80, unite: '°C' },
+    { id: 'h', label: L('Coefficient d\'échange h', 'Heat transfer coefficient h'), min: 10, max: 40, pas: 1, valeur: 20, unite: 'W/(m²·K)' },
   ],
   graphique: {
     x: { label: 't (min)', min: 0, max: DUREE, pas: 15 },
@@ -58,7 +58,7 @@ export default definirScene({
       if (d % 20 === 0) texte(scene, 49, yT(d) + 4.5, String(d), { fill: C.discret, 'font-family': MONO, 'font-size': 13, 'text-anchor': 'end' });
     }
     const thAir = thermometre(scene, { x: XA, y: 337, h: 263, couleur: C.cyan });
-    etiquette(scene, { x: 20, y: 48, texte: 'Air ambiant', taille: 13, couleur: C.discret });
+    etiquette(scene, { x: 20, y: 48, texte: L('Air ambiant', 'Ambient air'), taille: 13, couleur: C.discret });
     // Niveau de l'air, prolongé jusqu'au thermomètre plongé dans l'eau : l'asymptote de la courbe.
     const niveauAir = el('line', { x1: 76, stroke: C.cyan, 'stroke-width': 1.5, 'stroke-dasharray': '5 5' }, scene);
     const etiqAir = etiquette(scene, { x: 92, y: 0, texte: '', taille: 13, mono: true, couleur: C.cyan });
@@ -135,9 +135,9 @@ export default definirScene({
     const cadre = el('rect', { x: 346, y: 24, width: 278, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (parent: Element, y: number, taille: number, couleur: string, contenu = '', police = MONO) =>
       texte(parent, 362, y, contenu, { fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 });
-    ligne(encart, 48, 13, C.discret, 'Temps caractéristique', POLICE);
+    ligne(encart, 48, 13, C.discret, L('Temps caractéristique', 'Characteristic time'), POLICE);
     const lTau = ligne(encart, 75, 19, C.jaune);
-    const l63 = ligne(encart, 98, 13, C.texte, 'à t = τ, l\'écart a diminué de 63 %', POLICE);
+    const l63 = ligne(encart, 98, 13, C.texte, L('à t = τ, l\'écart a diminué de 63 %', 'at t = τ, the gap has fallen by 63%'), POLICE);
     const modele = el('g', {}, encart);
     ligne(modele, 126, 13, C.texte, 'T = Text + (T0 − Text)·exp(−t/τ)');
     const lFormule = ligne(modele, 148, 13, C.cyan);
@@ -185,7 +185,7 @@ export default definirScene({
       set(filet, { y1: lerp(214, ySurf, queue), y2: lerp(214, ySurf, tete), stroke: teinte(p.t0), opacity: tete > 0 && queue < 1 ? 0.9 : 0 });
       bec.liquide(niveau, teinte(temp));
       show(etiqSysteme, seg(a1, 0.84, 1));
-      etiqSysteme.textContent = `m = 100 g · S = 120 cm² · h = ${fmt(p.h, 0)} W/(m²·K)${p.h < 18 ? ' (isolé)' : p.h > 24 ? ' (ventilé)' : ''}`;
+      etiqSysteme.textContent = `m = 100 g · S = 120 cm² · h = ${fmt(p.h, 0)} W/(m²·K)${p.h < 18 ? L(' (isolé)', ' (insulated)') : p.h > 24 ? L(' (ventilé)', ' (ventilated)') : ''}`;
 
       // Le phénomène : halo, flux à travers la paroi et volutes d'air chaud, proportionnés à la puissance cédée.
       const chaud = seg(a1, 0.5, 0.86), force = Math.sqrt(cede);
@@ -242,8 +242,8 @@ export default definirScene({
 
       // Étapes 4 et 5 : temps caractéristique, part de l'écart déjà parcourue, puis modèle.
       const part = seg(a4, 0.84, 0.96);
-      coteEcart.maj(yAir, yEau, lu ? 1 : 0, part > 0.5 ? '37 %' : 'écart', couleurFlux);
-      coteParcouru.maj(yEau, y0, part, '63 %');
+      coteEcart.maj(yAir, yEau, lu ? 1 : 0, part > 0.5 ? L('37 %', '37%') : L('écart', 'gap'), couleurFlux);
+      coteParcouru.maj(yEau, y0, part, L('63 %', '63%'));
       show(encart, seg(a4, 0.36, 0.5, ease.backOut), 16);
       cadre.setAttribute('height', String(lerp(88, 140, seg(a5, 0.04, 0.24))));
       lTau.textContent = `τ = ${fmt(tauMin, 1)} min`;
@@ -284,11 +284,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Temps écoulé', valeur: `${fmt(date / 60, 1)} min` },
-        { label: 'Température de l\'eau', valeur: lu ? `${fmt(lue, 1)} °C` : '...' },
-        { label: 'Flux cédé à l\'air', valeur: `${fmt(cede * chaud, 1)} W` },
+        { label: L('Temps écoulé', 'Elapsed time'), valeur: `${fmt(date / 60, 1)} min` },
+        { label: L('Température de l\'eau', 'Water temperature'), valeur: lu ? `${fmt(lue, 1)} °C` : '...' },
+        { label: L('Flux cédé à l\'air', 'Flux released to the air'), valeur: `${fmt(cede * chaud, 1)} W` },
       ];
-      if (a4 > 0.34) mesures.push({ label: 'Temps caractéristique', valeur: `${fmt(tauMin, 1)} min` });
+      if (a4 > 0.34) mesures.push({ label: L('Temps caractéristique', 'Characteristic time'), valeur: `${fmt(tauMin, 1)} min` });
       return mesures;
     };
   },

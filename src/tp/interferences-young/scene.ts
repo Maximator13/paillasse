@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, seg, set, show, texte, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, seg, set, show, texte, uid } from '../../lib/anim';
 import { etiquette } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -25,20 +25,20 @@ const FOND = [1, 3, 5].map((q) => parseInt(C.fond.slice(q, q + 2), 16));
 
 export default definirScene({
   etapes: [
-    { titre: 'Le banc d\'optique', duree: 6, texte: 'Vu de dessus : un <strong>laser</strong> éclaire deux fentes fines et parallèles, distantes de <strong>b</strong>. Un écran est placé à la distance <strong>D</strong>, très grande devant b.' },
-    { titre: 'Deux sources cohérentes', duree: 10, texte: 'Chaque fente diffracte la lumière : S<sub>1</sub> et S<sub>2</sub> émettent deux ondes <strong>cohérentes</strong> qui se superposent. Le long de certaines lignes elles se renforcent, le long d\'autres elles s\'annulent.' },
-    { titre: 'Les franges d\'interférences', duree: 9, texte: 'Sur l\'écran, chaque ligne de renfort donne une <strong>frange brillante</strong>, chaque ligne d\'extinction une <strong>frange sombre</strong>. L\'intensité lumineuse varie périodiquement avec la position x.' },
-    { titre: 'La différence de marche', duree: 14, texte: 'En un point M, les deux ondes n\'ont pas parcouru le même chemin : <strong>δ = S<sub>2</sub>M − S<sub>1</sub>M = b·x / D</strong>. Si δ = k·λ, elles arrivent en phase (constructif). Si δ = (k + 1/2)·λ, en opposition (destructif).' },
-    { titre: 'Mesurer l\'interfrange', duree: 8, texte: 'L\'<strong>interfrange i</strong> est la distance entre deux franges brillantes consécutives. Pour gagner en précision, on mesure plusieurs interfranges d\'un coup, puis on divise.' },
-    { titre: 'Déterminer la longueur d\'onde', duree: 6, texte: 'Comme <strong>i = λ·D / b</strong>, on en déduit <strong>λ = i·b / D</strong>. Changez l\'écart des fentes, la couleur du laser ou la distance de l\'écran et observez les franges.' },
+    { titre: L('Le banc d\'optique', 'The optical bench'), duree: 6, texte: L('Vu de dessus : un <strong>laser</strong> éclaire deux fentes fines et parallèles, distantes de <strong>b</strong>. Un écran est placé à la distance <strong>D</strong>, très grande devant b.', 'Seen from above: a <strong>laser</strong> illuminates two narrow parallel slits, a distance <strong>b</strong> apart. A screen is placed at a distance <strong>D</strong>, very large compared with b.') },
+    { titre: L('Deux sources cohérentes', 'Two coherent sources'), duree: 10, texte: L('Chaque fente diffracte la lumière : S<sub>1</sub> et S<sub>2</sub> émettent deux ondes <strong>cohérentes</strong> qui se superposent. Le long de certaines lignes elles se renforcent, le long d\'autres elles s\'annulent.', 'Each slit diffracts the light: S<sub>1</sub> and S<sub>2</sub> emit two <strong>coherent</strong> waves that superpose. Along some lines they reinforce each other, along others they cancel out.') },
+    { titre: L('Les franges d\'interférences', 'Interference fringes'), duree: 9, texte: L('Sur l\'écran, chaque ligne de renfort donne une <strong>frange brillante</strong>, chaque ligne d\'extinction une <strong>frange sombre</strong>. L\'intensité lumineuse varie périodiquement avec la position x.', 'On the screen, each line of reinforcement gives a <strong>bright fringe</strong>, each line of cancellation a <strong>dark fringe</strong>. The light intensity varies periodically with position x.') },
+    { titre: L('La différence de marche', 'The path difference'), duree: 14, texte: L('En un point M, les deux ondes n\'ont pas parcouru le même chemin : <strong>δ = S<sub>2</sub>M − S<sub>1</sub>M = b·x / D</strong>. Si δ = k·λ, elles arrivent en phase (constructif). Si δ = (k + 1/2)·λ, en opposition (destructif).', 'At a point M, the two waves have not travelled the same distance: <strong>δ = S<sub>2</sub>M − S<sub>1</sub>M = b·x / D</strong>. If δ = k·λ, they arrive in phase (constructive). If δ = (k + 1/2)·λ, in antiphase (destructive).') },
+    { titre: L('Mesurer l\'interfrange', 'Measuring the fringe spacing'), duree: 8, texte: L('L\'<strong>interfrange i</strong> est la distance entre deux franges brillantes consécutives. Pour gagner en précision, on mesure plusieurs interfranges d\'un coup, puis on divise.', 'The <strong>fringe spacing i</strong> is the distance between two consecutive bright fringes. For better precision, measure several fringe spacings at once, then divide.') },
+    { titre: L('Déterminer la longueur d\'onde', 'Finding the wavelength'), duree: 6, texte: L('Comme <strong>i = λ·D / b</strong>, on en déduit <strong>λ = i·b / D</strong>. Changez l\'écart des fentes, la couleur du laser ou la distance de l\'écran et observez les franges.', 'Since <strong>i = λ·D / b</strong>, it follows that <strong>λ = i·b / D</strong>. Change the slit separation, the colour of the laser or the screen distance and watch the fringes.') },
   ],
   parametres: [
-    { id: 'b', label: 'Écart b entre les fentes', min: 0.1, max: 0.3, pas: 0.01, valeur: 0.2, unite: 'mm', decimales: 2 },
-    { id: 'lambda', label: 'Longueur d\'onde λ du laser', min: 450, max: 700, pas: 10, valeur: 650, unite: 'nm' },
-    { id: 'D', label: 'Distance D fentes-écran', min: 1.2, max: 2.2, pas: 0.1, valeur: 2, unite: 'm', decimales: 1 },
+    { id: 'b', label: L('Écart b entre les fentes', 'Slit separation b'), min: 0.1, max: 0.3, pas: 0.01, valeur: 0.2, unite: 'mm', decimales: 2 },
+    { id: 'lambda', label: L('Longueur d\'onde λ du laser', 'Laser wavelength λ'), min: 450, max: 700, pas: 10, valeur: 650, unite: 'nm' },
+    { id: 'D', label: L('Distance D fentes-écran', 'Slit-to-screen distance D'), min: 1.2, max: 2.2, pas: 0.1, valeur: 2, unite: 'm', decimales: 1 },
   ],
   graphique: {
-    x: { label: 'x sur l\'écran (mm)', min: -X_MAX, max: X_MAX, pas: 5 },
+    x: { label: L('x sur l\'écran (mm)', 'x on the screen (mm)'), min: -X_MAX, max: X_MAX, pas: 5 },
     y: { label: 'I / Imax', min: 0, max: 1.25, pas: 0.25, decimales: 2 },
   },
   affiche: { etape: 2, t: 1 },
@@ -76,13 +76,13 @@ export default definirScene({
 
     const gPlaque = el('g', {}, scene);
     const morceaux = [0, 1, 2].map(() => el('rect', { x: XF - 3, width: 6, rx: 1.5, fill: C.metal, stroke: C.verre, 'stroke-width': 1 }, gPlaque));
-    etiquette(gPlaque, { x: XF - 4, y: Y0 + HP + 22, texte: 'Bifente', ancre: 'end' });
+    etiquette(gPlaque, { x: XF - 4, y: Y0 + HP + 22, texte: L('Bifente', 'Double slit'), ancre: 'end' });
     const etiqB = etiquette(gPlaque, { x: XF - 4, y: Y0 + HP + 40, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
 
     const gEcran = el('g', {}, scene);
     const lueur = el('rect', { width: 7, fill: `url(#${idFr})` }, gEcran);
     const barre = el('rect', { y: Y0 - DEMI - 4, width: 5, height: 2 * DEMI + 8, rx: 2, fill: C.verre }, gEcran);
-    const etiqEcran = etiquette(gEcran, { x: 0, y: Y0 - DEMI - 12, texte: 'Écran', ancre: 'middle' });
+    const etiqEcran = etiquette(gEcran, { x: 0, y: Y0 - DEMI - 12, texte: L('Écran', 'Screen'), ancre: 'middle' });
 
     const gCote = el('g', {}, scene);
     const coteD = el('path', { fill: 'none', stroke: C.discret, 'stroke-width': 1.5, 'stroke-linecap': 'round' }, gCote);
@@ -101,7 +101,7 @@ export default definirScene({
       el('line', { x1: XS + WS + 1, x2: XS + WS + (long ? 7 : 4), y1: yy, y2: yy, stroke: C.discret, 'stroke-width': 1.5 }, gFace);
       if (long) texte(gFace, XS + WS + 10, yy + 4.5, String(mm), { fill: C.discret, 'font-family': MONO, 'font-size': 13 });
     }
-    etiquette(gFace, { x: XS + WS, y: Y0 - DEMI - 12, texte: 'Vu de face', ancre: 'end', taille: 14 });
+    etiquette(gFace, { x: XS + WS, y: Y0 - DEMI - 12, texte: L('Vu de face', 'Front view'), ancre: 'end', taille: 14 });
     etiquette(gFace, { x: XS + WS + 8, y: Y0 - DEMI - 12, texte: 'mm', mono: true, taille: 13, couleur: C.discret });
 
     // Différence de marche (étape 4).
@@ -134,15 +134,15 @@ export default definirScene({
 
     const gLegende = el('g', {}, scene);
     const echRenfort = el('line', { x1: 24, x2: 66, y1: YB + 26, y2: YB + 26, 'stroke-width': 2.6, 'stroke-linecap': 'round' }, gLegende);
-    etiquette(gLegende, { x: 78, y: YB + 31, texte: 'Renfort : δ = k·λ, les ondes arrivent en phase', taille: 14 });
+    etiquette(gLegende, { x: 78, y: YB + 31, texte: L('Renfort : δ = k·λ, les ondes arrivent en phase', 'Reinforcement: δ = k·λ, the waves arrive in phase'), taille: 14 });
     const gLegExt = el('g', {}, gLegende);
     el('line', { x1: 24, x2: 66, y1: YB + 58, y2: YB + 58, stroke: C.discret, 'stroke-width': 1.6, 'stroke-dasharray': '1 6', 'stroke-linecap': 'round' }, gLegExt);
-    etiquette(gLegExt, { x: 78, y: YB + 63, texte: 'Extinction : δ = (k + 1/2)·λ, elles arrivent en opposition', taille: 14, couleur: C.discret });
+    etiquette(gLegExt, { x: 78, y: YB + 63, texte: L('Extinction : δ = (k + 1/2)·λ, elles arrivent en opposition', 'Cancellation: δ = (k + 1/2)·λ, they arrive in antiphase'), taille: 14, couleur: C.discret });
 
     const gSinus = el('g', {}, scene);
     panneau(gSinus, 16, 608);
-    ecrit(gSinus, 28, YB + 21, 13, C.discret, POLICE, 'Ondes reçues en M');
-    ecrit(gSinus, 270, YB + 21, 13, C.discret, POLICE, 'Leur somme');
+    ecrit(gSinus, 28, YB + 21, 13, C.discret, POLICE, L('Ondes reçues en M', 'Waves received at M'));
+    ecrit(gSinus, 270, YB + 21, 13, C.discret, POLICE, L('Leur somme', 'Their sum'));
     const YC = YB + 61, AMP = 13, PERIODE = 72;
     for (const [x0, L] of [[28, 220], [270, 196]]) el('line', { x1: x0, x2: x0 + L, y1: YC, y2: YC, stroke: C.grille, 'stroke-width': 1 }, gSinus);
     const courbeOnde = (couleurTrait: string, ep: number) => el('polyline', { fill: 'none', stroke: couleurTrait, 'stroke-width': ep, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, gSinus);
@@ -153,12 +153,12 @@ export default definirScene({
 
     const gMesure = el('g', {}, scene);
     panneau(gMesure, 16, 296);
-    ecrit(gMesure, 32, YB + 24, 13, C.discret, POLICE, 'Mesure sur plusieurs interfranges');
+    ecrit(gMesure, 32, YB + 24, 13, C.discret, POLICE, L('Mesure sur plusieurs interfranges', 'Measuring several fringe spacings'));
     const tNi = ecrit(gMesure, 32, YB + 52, 15, C.texte);
     const tI = ecrit(gMesure, 32, YB + 82, 18, C.jaune);
     const gResultat = el('g', {}, scene);
     panneau(gResultat, 328, 296, C.jaune);
-    ecrit(gResultat, 344, YB + 24, 13, C.discret, POLICE, 'Longueur d\'onde du laser');
+    ecrit(gResultat, 344, YB + 24, 13, C.discret, POLICE, L('Longueur d\'onde du laser', 'Wavelength of the laser'));
     ecrit(gResultat, 344, YB + 52, 15, C.texte, MONO, 'λ = i·b / D');
     const tLambda = ecrit(gResultat, 344, YB + 82, 19, C.jaune);
 
@@ -296,8 +296,8 @@ export default definirScene({
       const nat = nature(delta, p.lambda);
       const ton = nat === 'constructive' ? C.menthe : nat === 'destructive' ? C.corail : C.discret;
       tDelta.textContent = `δ = ${fmt(ordreM, 2)} λ`;
-      tEtat.textContent = nat === 'constructive' ? 'Ondes en phase' : nat === 'destructive' ? 'Opposition de phase' : 'Déphasage partiel';
-      tFrange.textContent = nat === 'constructive' ? 'Frange brillante' : nat === 'destructive' ? 'Frange sombre' : 'Éclairement moyen';
+      tEtat.textContent = nat === 'constructive' ? L('Ondes en phase', 'Waves in phase') : nat === 'destructive' ? L('Opposition de phase', 'In antiphase') : L('Déphasage partiel', 'Partial phase shift');
+      tFrange.textContent = nat === 'constructive' ? L('Frange brillante', 'Bright fringe') : nat === 'destructive' ? L('Frange sombre', 'Dark fringe') : L('Éclairement moyen', 'Medium brightness');
       for (const n of [tEtat, tFrange]) n.setAttribute('fill', ton);
 
       // Étape 5 : deux mâchoires s'écartent du centre jusqu'aux franges brillantes d'ordre -n et +n.
@@ -348,11 +348,11 @@ export default definirScene({
 
       const enM = a4 > 0.04;
       const mesures = [
-        { label: 'Différence de marche en M', valeur: enM ? `${fmt(delta, 0)} nm` : '...' },
-        { label: 'Intensité en M', valeur: enM ? `${fmt(iM * 100, 0)} %` : '...' },
-        { label: 'Interfrange', valeur: a5 > 0.78 ? `${fmt(i, 2)} mm` : '...' },
+        { label: L('Différence de marche en M', 'Path difference at M'), valeur: enM ? `${fmt(delta, 0)} nm` : '...' },
+        { label: L('Intensité en M', 'Intensity at M'), valeur: enM ? `${fmt(iM * 100, 0)} %` : '...' },
+        { label: L('Interfrange', 'Fringe spacing'), valeur: a5 > 0.78 ? `${fmt(i, 2)} mm` : '...' },
       ];
-      if (a6 > 0.3) mesures.push({ label: 'Longueur d\'onde', valeur: `${fmt(longueurOnde(i, p.b, p.D), 0)} nm` });
+      if (a6 > 0.3) mesures.push({ label: L('Longueur d\'onde', 'Wavelength'), valeur: `${fmt(longueurOnde(i, p.b, p.D), 0)} nm` });
       return mesures;
     };
   },

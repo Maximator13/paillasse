@@ -1,0 +1,72 @@
+---
+import Base from '../../layouts/Base.astro';
+import CarteCours from '../CarteCours.astro';
+import CarteTp from '../CarteTp.astro';
+import { ORDRE_THEMES, THEMES } from '../../data/site';
+import { UI, lien, type Lang } from '../../i18n';
+import { lesCours, lesTp } from '../../i18n/contenu';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const u = UI[lang];
+const cours = (await lesCours(lang)).filter((c) => c.data.niveau === 'terminale');
+const tps = (await lesTp(lang)).filter((t) => t.data.niveau === 'terminale');
+
+const T = {
+  fr: {
+    titre: 'Physique-chimie Terminale spécialité : cours et TP animés',
+    description: 'Tout le programme de spécialité physique-chimie de Terminale : fiches de cours claires et travaux pratiques animés, classés par thème.',
+    surtitre: 'Lycée · spécialité physique-chimie',
+    chapo: `${cours.length} chapitres et ${tps.length} TP animés, organisés selon les quatre thèmes du programme officiel.`,
+    sommaire: 'Thèmes du programme',
+  },
+  en: {
+    titre: 'Terminale physics and chemistry: lessons and practicals',
+    description: 'The whole Terminale physics-chemistry speciality syllabus: clear lesson notes and animated practicals, organised by theme.',
+    surtitre: 'Lycée · physics-chemistry speciality',
+    chapo: `${cours.length} chapters and ${tps.length} animated practicals, organised according to the four themes of the official syllabus.`,
+    sommaire: 'Syllabus themes',
+  },
+}[lang];
+---
+
+<Base lang={lang} titre={T.titre} description={T.description}>
+  <section class="section conteneur">
+    <ol class="fil"><li><a href={lien(lang, '/')}>{u.accueil}</a></li><li>Terminale</li></ol>
+    <p class="surtitre">{T.surtitre}</p>
+    <h1>Terminale</h1>
+    <p class="chapo">{T.chapo}</p>
+    <nav class="sommaire" aria-label={T.sommaire}>
+      {ORDRE_THEMES.map((t) => <a class="pastille" data-theme={t} href={`#${t}`}>{THEMES[t][lang].court}</a>)}
+    </nav>
+  </section>
+
+  {ORDRE_THEMES.map((t) => {
+    const cs = cours.filter((c) => c.data.theme === t);
+    const ts = tps.filter((x) => x.data.theme === t);
+    return (
+      <section class="section conteneur theme" id={t} data-theme={t}>
+        <p class="surtitre">{THEMES[t][lang].matiere}</p>
+        <h2>{THEMES[t][lang].label}</h2>
+        <h3 class="sous">{u.cours}</h3>
+        <div class="grille">{cs.map((c) => <CarteCours cours={c} lang={lang} />)}</div>
+        {ts.length > 0 && (
+          <>
+            <h3 class="sous">{u.tpAnimes}</h3>
+            <div class="grille">{ts.map((x) => <CarteTp tp={x} lang={lang} />)}</div>
+          </>
+        )}
+      </section>
+    );
+  })}
+</Base>
+
+<style>
+  .sommaire { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+  .sommaire a { text-decoration: none; min-height: 44px; padding-inline: 1rem; }
+  .theme { padding-top: 0; scroll-margin-top: 90px; }
+  .theme h2 { border-left: 6px solid var(--t); padding-left: .8rem; }
+  .sous { margin: 2rem 0 1rem; font: 600 .8rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--doux); }
+</style>

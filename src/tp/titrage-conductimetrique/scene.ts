@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte, uid } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, mix, rng, seg, set, show, texte, uid } from '../../lib/anim';
 import { agitateur, appareil, barreau, becher, burette, etiquette, gouttes, paillasse, potence } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -19,19 +19,19 @@ const BX = 408, BW = 212, BY = 296;
 
 export default definirScene({
   etapes: [
-    { titre: 'Préparer la solution à titrer', duree: 6, texte: 'On prélève <strong>V<sub>0</sub> = 10,0 mL</strong> de sérum physiologique, puis on ajoute un grand volume d\'eau distillée : la dilution due à la burette deviendra négligeable.' },
-    { titre: 'Installer le montage', duree: 7, texte: 'La burette contient du nitrate d\'argent à <strong>C<sub>1</sub> = 0,100 mol/L</strong>. La cellule du conductimètre plonge dans la solution, qui ne contient pour l\'instant que des ions <strong>Na<sup>+</sup></strong> et <strong>Cl<sup>−</sup></strong>.' },
-    { titre: 'Avant l\'équivalence', duree: 10, texte: 'Chaque ion Ag<sup>+</sup> versé précipite avec un ion Cl<sup>−</sup>. Un ion NO<sub>3</sub><sup>−</sup>, un peu moins conducteur, prend sa place : la conductivité <strong>baisse doucement</strong>.' },
-    { titre: 'Après l\'équivalence', duree: 8, texte: 'Il n\'y a plus d\'ions chlorure. Les ions Ag<sup>+</sup> et NO<sub>3</sub><sup>−</sup> versés s\'accumulent : la conductivité <strong>augmente nettement</strong>.' },
-    { titre: 'Tracer les deux droites', duree: 7, texte: 'On modélise chaque série de points par une droite. Leur intersection marque la <strong>rupture de pente</strong> : son abscisse est le volume équivalent <strong>V<sub>E</sub></strong>.' },
-    { titre: 'Calculer la concentration', duree: 5, texte: 'À l\'équivalence, <strong>C<sub>0</sub>·V<sub>0</sub> = C<sub>1</sub>·V<sub>E</sub></strong>. Changez la concentration du sérum, puis réduisez le volume d\'eau : les portions de droite se courbent.' },
+    { titre: L('Préparer la solution à titrer', 'Preparing the solution to be titrated'), duree: 6, texte: L('On prélève <strong>V<sub>0</sub> = 10,0 mL</strong> de sérum physiologique, puis on ajoute un grand volume d\'eau distillée : la dilution due à la burette deviendra négligeable.', 'A sample of <strong>V<sub>0</sub> = 10.0 mL</strong> of saline solution is taken, then a large volume of distilled water is added: the dilution caused by the burette becomes negligible.') },
+    { titre: L('Installer le montage', 'Setting up the apparatus'), duree: 7, texte: L('La burette contient du nitrate d\'argent à <strong>C<sub>1</sub> = 0,100 mol/L</strong>. La cellule du conductimètre plonge dans la solution, qui ne contient pour l\'instant que des ions <strong>Na<sup>+</sup></strong> et <strong>Cl<sup>−</sup></strong>.', 'The burette contains silver nitrate at <strong>C<sub>1</sub> = 0.100 mol/L</strong>. The conductivity cell dips into the solution, which for now contains only <strong>Na<sup>+</sup></strong> and <strong>Cl<sup>−</sup></strong> ions.') },
+    { titre: L('Avant l\'équivalence', 'Before the equivalence point'), duree: 10, texte: L('Chaque ion Ag<sup>+</sup> versé précipite avec un ion Cl<sup>−</sup>. Un ion NO<sub>3</sub><sup>−</sup>, un peu moins conducteur, prend sa place : la conductivité <strong>baisse doucement</strong>.', 'Each Ag<sup>+</sup> ion added precipitates with a Cl<sup>−</sup> ion. An NO<sub>3</sub><sup>−</sup> ion, which conducts slightly less well, takes its place: the conductivity <strong>falls gently</strong>.') },
+    { titre: L('Après l\'équivalence', 'After the equivalence point'), duree: 8, texte: L('Il n\'y a plus d\'ions chlorure. Les ions Ag<sup>+</sup> et NO<sub>3</sub><sup>−</sup> versés s\'accumulent : la conductivité <strong>augmente nettement</strong>.', 'There are no chloride ions left. The Ag<sup>+</sup> and NO<sub>3</sub><sup>−</sup> ions added build up: the conductivity <strong>rises markedly</strong>.') },
+    { titre: L('Tracer les deux droites', 'Drawing the two straight lines'), duree: 7, texte: L('On modélise chaque série de points par une droite. Leur intersection marque la <strong>rupture de pente</strong> : son abscisse est le volume équivalent <strong>V<sub>E</sub></strong>.', 'Each set of points is modelled by a straight line. Their intersection marks the <strong>change in slope</strong>: its abscissa is the equivalence volume <strong>V<sub>E</sub></strong>.') },
+    { titre: L('Calculer la concentration', 'Calculating the concentration'), duree: 5, texte: L('À l\'équivalence, <strong>C<sub>0</sub>·V<sub>0</sub> = C<sub>1</sub>·V<sub>E</sub></strong>. Changez la concentration du sérum, puis réduisez le volume d\'eau : les portions de droite se courbent.', 'At the equivalence point, <strong>C<sub>0</sub>·V<sub>0</sub> = C<sub>1</sub>·V<sub>E</sub></strong>. Change the concentration of the saline solution, then reduce the volume of water: the straight-line portions bend.') },
   ],
   parametres: [
-    { id: 'c0', label: 'Concentration en ions chlorure', min: 0.1, max: 0.2, pas: 0.002, valeur: 0.154, unite: 'mol/L', decimales: 3 },
-    { id: 'eau', label: 'Eau distillée ajoutée', min: 50, max: 250, pas: 10, valeur: 200, unite: 'mL', decimales: 0 },
+    { id: 'c0', label: L('Concentration en ions chlorure', 'Chloride ion concentration'), min: 0.1, max: 0.2, pas: 0.002, valeur: 0.154, unite: 'mol/L', decimales: 3 },
+    { id: 'eau', label: L('Eau distillée ajoutée', 'Distilled water added'), min: 50, max: 250, pas: 10, valeur: 200, unite: 'mL', decimales: 0 },
   ],
   graphique: {
-    x: { label: 'V versé (mL)', min: 0, max: V_MAX, pas: 5 },
+    x: { label: L('V versé (mL)', 'V added (mL)'), min: 0, max: V_MAX, pas: 5 },
     y: { label: 'σ (mS/m)', min: 0, max: 160 },
   },
   affiche: { etape: 3, t: 0.6 },
@@ -41,7 +41,7 @@ export default definirScene({
     const agit = agitateur(scene, { x: 262, y: 440, w: 160 });
     const bec = becher(scene, { x: 262, y: agit.yPlateau, w: 140, h: 130 });
     const bar = barreau(scene, { x: 262, y: agit.yPlateau - 2 });
-    const etiqSerum = etiquette(scene, { x: 256, y: 465, texte: 'Sérum : V0 = 10,0 mL', ancre: 'end', mono: true, taille: 13, couleur: C.cyan });
+    const etiqSerum = etiquette(scene, { x: 256, y: 465, texte: L('Sérum : V0 = 10,0 mL', 'Saline: V0 = 10.0 mL'), ancre: 'end', mono: true, taille: 13, couleur: C.cyan });
     const etiqEau = etiquette(scene, { x: 268, y: 465, texte: '', mono: true, taille: 13, couleur: C.discret });
 
     // Pipette jaugée (étape 1).
@@ -62,12 +62,12 @@ export default definirScene({
     const montage = el('g', {}, scene);
     potence(montage, { x: 78, y: 440, h: 420, pinces: [{ y: 62, vers: 262 }, { y: 150, vers: 262 }] });
     const bur = burette(montage, { x: 262, yHaut: 30, h: 150 });
-    etiquette(montage, { x: 294, y: 40, texte: 'Nitrate d\'argent', taille: 14 });
-    etiquette(montage, { x: 294, y: 59, texte: 'C1 = 0,100 mol/L', mono: true, taille: 13, couleur: C.discret });
+    etiquette(montage, { x: 294, y: 40, texte: L('Nitrate d\'argent', 'Silver nitrate'), taille: 14 });
+    etiquette(montage, { x: 294, y: 59, texte: L('C1 = 0,100 mol/L', 'C1 = 0.100 mol/L'), mono: true, taille: 13, couleur: C.discret });
     const gtt = gouttes(scene, { x: 262, y1: bur.bec.y, y2: 340, couleur: C.verre });
 
     // Cellule conductimétrique : deux plaques en regard, reliées au conductimètre. Plaques placées bas pour rester immergées avec 50 mL d'eau.
-    const cond = appareil(scene, { x: 440, y: 364, w: 160, h: 76, titre: 'CONDUCTIMÈTRE', couleur: C.jaune });
+    const cond = appareil(scene, { x: 440, y: 364, w: 160, h: 76, titre: L('CONDUCTIMÈTRE', 'CONDUCTIMETER'), couleur: C.jaune });
     const gCell = el('g', {}, scene);
     const cable = el('path', { fill: 'none', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, gCell);
     const cellule = el('g', {}, gCell);
@@ -81,7 +81,7 @@ export default definirScene({
 
     // Barre de Kohlrausch : la conductivité est la somme des contributions de chaque ion.
     const gBarre = el('g', {}, scene);
-    etiquette(gBarre, { x: BX, y: BY - 9, texte: 'σ = somme des λ·[ion]', taille: 13, couleur: C.texte });
+    etiquette(gBarre, { x: BX, y: BY - 9, texte: L('σ = somme des λ·[ion]', 'σ = sum of λ·[ion]'), taille: 13, couleur: C.texte });
     el('rect', { x: BX, y: BY, width: BW, height: 14, rx: 4, fill: C.grille }, gBarre);
     const ordre: Ion[] = ['Na', 'Cl', 'NO3', 'Ag'];
     const parts = ordre.map((i) => el('rect', { y: BY, height: 14, fill: COULEUR[i] }, gBarre));
@@ -98,7 +98,7 @@ export default definirScene({
     const gIons = el('g', { 'clip-path': `url(#${clip})` }, loupe);
     const solide = etiquette(gIons, { x: 0, y: 92, texte: 'AgCl (s)', ancre: 'middle', taille: 13, couleur: C.verre });
     el('circle', { r: LR, fill: 'none', stroke: C.jaune, 'stroke-width': TRAIT }, loupe);
-    etiquette(loupe, { x: 0, y: -LR - 12, texte: 'Les ions, vus à la loupe', ancre: 'middle', taille: 14, couleur: C.jaune });
+    etiquette(loupe, { x: 0, y: -LR - 12, texte: L('Les ions, vus à la loupe', 'The ions, magnified'), ancre: 'middle', taille: 14, couleur: C.jaune });
 
     const ion = (i: Ion) => {
       const g = el('g', {}, gIons);
@@ -136,7 +136,7 @@ export default definirScene({
     el('rect', { x: 404, y: 84, width: 220, height: 150, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 420, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(112, 13, C.discret, POLICE).textContent = 'À l\'équivalence';
+    ligne(112, 13, C.discret, POLICE).textContent = L('À l\'équivalence', 'At the equivalence point');
     ligne(140, 15, C.texte).textContent = 'C0·V0 = C1·VE';
     const resC = ligne(176, 17, C.jaune), resT = ligne(208, 14, C.menthe);
 
@@ -169,7 +169,7 @@ export default definirScene({
       set(jet, { d: `M318 160Q300 166 296 ${ys.toFixed(1)}` });
       jet.style.opacity = eau > 0 && eau < 1 ? '1' : '0';
       show(etiqSerum, seg(a1, 0.3, 0.42), 6);
-      etiqEau.textContent = `+ eau distillée : ${fmt(p.eau, 0)} mL`;
+      etiqEau.textContent = L(`+ eau distillée : ${fmt(p.eau, 0)} mL`, `+ distilled water: ${fmt(p.eau, 0)} mL`);
       show(etiqEau, seg(a1, 0.84, 0.96), 6);
 
       // Étape 2 : montage, remplissage de la burette, cellule, agitation, ouverture de la loupe.
@@ -230,7 +230,7 @@ export default definirScene({
       const c0 = (C1 * fit.vE) / V0;
       show(encart, seg(a6, 0.25, 0.55, ease.backOut), 16);
       resC.textContent = `C0 = ${fmt(c0, 3)} mol/L`;
-      resT.textContent = `soit ${fmt(c0 * M_NACL, 1)} g/L de NaCl`;
+      resT.textContent = L(`soit ${fmt(c0 * M_NACL, 1)} g/L de NaCl`, `i.e. ${fmt(c0 * M_NACL, 1)} g/L of NaCl`);
 
       const trouve = a5 > 0.68;
       if (graphique) {
@@ -252,10 +252,10 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Volume versé', valeur: `${fmt(v, 1)} mL` },
-        { label: 'Conductivité', valeur: allume ? `${fmt(sigma, 1)} mS/m` : '...' },
+        { label: L('Volume versé', 'Volume added'), valeur: `${fmt(v, 1)} mL` },
+        { label: L('Conductivité', 'Conductivity'), valeur: allume ? `${fmt(sigma, 1)} mS/m` : '...' },
       ];
-      if (trouve) mesures.push({ label: 'Volume équivalent', valeur: `${fmt(fit.vE, 1)} mL` });
+      if (trouve) mesures.push({ label: L('Volume équivalent', 'Equivalence volume'), valeur: `${fmt(fit.vE, 1)} mL` });
       if (a6 > 0.3) mesures.push({ label: 'Concentration C0', valeur: `${fmt(c0, 3)} mol/L` });
       return mesures;
     };

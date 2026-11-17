@@ -1,4 +1,4 @@
-import { avancement, clamp, ease, el, fmt, lerp, seg, set, show, trace, uid } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, seg, set, show, trace, uid } from '../../lib/anim';
 import { appareil, etiquette, fleche } from '../../lib/labkit';
 import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -13,20 +13,20 @@ const ROUTE = 150, XM = 320, RMAX = 600, NF = 36;
 
 export default definirScene({
   etapes: [
-    { titre: 'Installer le micro', duree: 5, texte: 'Vue de dessus : une source sonore de fréquence <strong>f<sub>E</sub></strong> est posée sur une voie rectiligne. Un micro relié à un système d\'acquisition est placé à la distance <strong>d</strong> de la voie.' },
-    { titre: 'Source immobile', duree: 6, texte: 'À l\'arrêt, les fronts d\'onde sont des cercles <strong>concentriques</strong>, espacés d\'une longueur d\'onde λ = c/f<sub>E</sub>. Le micro mesure exactement la fréquence émise.' },
-    { titre: 'La source passe devant le micro', duree: 12, texte: 'Chaque front reste centré sur le point où il a été émis : les fronts se <strong>resserrent à l\'avant</strong> et s\'écartent à l\'arrière. Le son perçu est plus aigu à l\'approche, puis <strong>bascule</strong> vers le grave au passage.' },
-    { titre: 'Lire les deux paliers', duree: 6, texte: 'Sur l\'enregistrement, on relève la fréquence <strong>f<sub>A</sub></strong> à l\'approche et <strong>f<sub>B</sub></strong> à l\'éloignement. Elles correspondent aux longueurs d\'onde raccourcie et allongée.' },
-    { titre: 'Mesurer la vitesse', duree: 6, texte: 'Avec c = 340 m/s : <strong>v = c·(f<sub>A</sub> − f<sub>B</sub>)/(f<sub>A</sub> + f<sub>B</sub>)</strong>. Changez la vitesse, la fréquence émise ou la distance du micro et observez les fronts et la courbe.' },
+    { titre: L('Installer le micro', 'Set up the microphone'), duree: 5, texte: L('Vue de dessus : une source sonore de fréquence <strong>f<sub>E</sub></strong> est posée sur une voie rectiligne. Un micro relié à un système d\'acquisition est placé à la distance <strong>d</strong> de la voie.', 'Top view: a sound source of frequency <strong>f<sub>E</sub></strong> sits on a straight track. A microphone connected to a data logger is placed at distance <strong>d</strong> from the track.') },
+    { titre: L('Source immobile', 'Source at rest'), duree: 6, texte: L('À l\'arrêt, les fronts d\'onde sont des cercles <strong>concentriques</strong>, espacés d\'une longueur d\'onde λ = c/f<sub>E</sub>. Le micro mesure exactement la fréquence émise.', 'At rest, the wavefronts are <strong>concentric</strong> circles, one wavelength λ = c/f<sub>E</sub> apart. The microphone measures exactly the emitted frequency.') },
+    { titre: L('La source passe devant le micro', 'The source passes the microphone'), duree: 12, texte: L('Chaque front reste centré sur le point où il a été émis : les fronts se <strong>resserrent à l\'avant</strong> et s\'écartent à l\'arrière. Le son perçu est plus aigu à l\'approche, puis <strong>bascule</strong> vers le grave au passage.', 'Each wavefront stays centred on the point where it was emitted: the wavefronts <strong>bunch together ahead</strong> and spread apart behind. The perceived sound is higher in pitch on approach, then <strong>switches</strong> to a lower pitch as the source passes.') },
+    { titre: L('Lire les deux paliers', 'Read off the two plateaus'), duree: 6, texte: L('Sur l\'enregistrement, on relève la fréquence <strong>f<sub>A</sub></strong> à l\'approche et <strong>f<sub>B</sub></strong> à l\'éloignement. Elles correspondent aux longueurs d\'onde raccourcie et allongée.', 'On the recording, read off the frequency <strong>f<sub>A</sub></strong> on approach and <strong>f<sub>B</sub></strong> as the source moves away. They correspond to the shortened and lengthened wavelengths.') },
+    { titre: L('Mesurer la vitesse', 'Measure the speed'), duree: 6, texte: L('Avec c = 340 m/s : <strong>v = c·(f<sub>A</sub> − f<sub>B</sub>)/(f<sub>A</sub> + f<sub>B</sub>)</strong>. Changez la vitesse, la fréquence émise ou la distance du micro et observez les fronts et la courbe.', 'With c = 340 m/s: <strong>v = c·(f<sub>A</sub> − f<sub>B</sub>)/(f<sub>A</sub> + f<sub>B</sub>)</strong>. Change the speed, the emitted frequency or the microphone distance and watch the wavefronts and the curve.') },
   ],
   parametres: [
-    { id: 'v', label: 'Vitesse de la source', min: 10, max: 40, pas: 1, valeur: 25, unite: 'm/s', decimales: 0 },
-    { id: 'fe', label: 'Fréquence émise', min: 400, max: 1000, pas: 20, valeur: 680, unite: 'Hz', decimales: 0 },
-    { id: 'd', label: 'Distance du micro', min: 8, max: 30, pas: 1, valeur: 10, unite: 'm', decimales: 0 },
+    { id: 'v', label: L('Vitesse de la source', 'Speed of the source'), min: 10, max: 40, pas: 1, valeur: 25, unite: 'm/s', decimales: 0 },
+    { id: 'fe', label: L('Fréquence émise', 'Emitted frequency'), min: 400, max: 1000, pas: 20, valeur: 680, unite: 'Hz', decimales: 0 },
+    { id: 'd', label: L('Distance du micro', 'Microphone distance'), min: 8, max: 30, pas: 1, valeur: 10, unite: 'm', decimales: 0 },
   ],
   graphique: {
     x: { label: 't (s)', min: -T0, max: T0, pas: 1 },
-    y: { label: 'f perçue (Hz)', min: 555, max: 805, pas: 50 },
+    y: { label: L('f perçue (Hz)', 'perceived f (Hz)'), min: 555, max: 805, pas: 50 },
   },
   affiche: { etape: 2, t: 0.62 },
 
@@ -39,8 +39,8 @@ export default definirScene({
     el('rect', { x: 0, y: ROUTE - 13, width: 640, height: 26, fill: C.panneau, opacity: 0.7 }, voie);
     for (const y of [ROUTE - 13, ROUTE + 13]) el('line', { x1: 0, x2: 640, y1: y, y2: y, stroke: C.grille, 'stroke-width': 2 }, voie);
     el('line', { x1: 0, x2: 640, y1: ROUTE, y2: ROUTE, stroke: C.metal, 'stroke-width': 1.5, 'stroke-dasharray': '14 12', opacity: 0.45 }, voie);
-    etiquette(voie, { x: 20, y: 34, texte: 'Vue de dessus', taille: 13, couleur: C.discret });
-    const note = etiquette(scene, { x: 20, y: 54, texte: `Schéma : son ralenti ${RALENTI} fois`, taille: 13, couleur: C.discret });
+    etiquette(voie, { x: 20, y: 34, texte: L('Vue de dessus', 'Top view'), taille: 13, couleur: C.discret });
+    const note = etiquette(scene, { x: 20, y: 54, texte: L(`Schéma : son ralenti ${RALENTI} fois`, `Diagram: sound slowed ${RALENTI} times`), taille: 13, couleur: C.discret });
 
     // Fronts d'onde et points d'émission.
     const gFronts = el('g', { 'clip-path': `url(#${clip})` }, scene);
@@ -53,10 +53,10 @@ export default definirScene({
     const ligneD = el('line', { x1: XM, x2: XM, y1: ROUTE, stroke: C.discret, 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, gMicro);
     const halo = el('circle', { cx: XM, r: 16, fill: C.menthe, opacity: 0 }, gMicro);
     const micro = el('circle', { cx: XM, r: 7, fill: C.menthe, stroke: C.verre, 'stroke-width': TRAIT }, gMicro);
-    const etiqMicro = etiquette(gMicro, { x: XM + 20, y: 0, texte: 'Micro', taille: 13, couleur: C.menthe });
+    const etiqMicro = etiquette(gMicro, { x: XM + 20, y: 0, texte: L('Micro', 'Microphone'), taille: 13, couleur: C.menthe });
     const etiqD = etiquette(scene, { x: XM - 20, y: 0, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
     const gApp = el('g', {}, scene);
-    const freq = appareil(gApp, { x: 24, y: 372, w: 156, h: 76, titre: 'FRÉQUENCE (Hz)' });
+    const freq = appareil(gApp, { x: 24, y: 372, w: 156, h: 76, titre: L('FRÉQUENCE (Hz)', 'FREQUENCY (Hz)') });
 
     // Source : chariot portant un haut-parleur.
     const source = el('g', {}, scene);
@@ -90,7 +90,7 @@ export default definirScene({
     el('rect', { x: 396, y: 348, width: 228, height: 112, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 412, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
-    ligne(372, 13, C.discret, POLICE).textContent = 'Vitesse mesurée';
+    ligne(372, 13, C.discret, POLICE).textContent = L('Vitesse mesurée', 'Measured speed');
     ligne(396, 13, C.texte).textContent = 'v = c·(fA − fB)/(fA + fB)';
     const resultat = ligne(424, 19, C.jaune);
     const conversion = ligne(446, 13, C.discret);
@@ -109,7 +109,7 @@ export default definirScene({
         cleAxe = fE;
         // Demi-étendue proportionnelle à fE : couvre le décalage maximal (v = 40 m/s) sans écraser la courbe aux basses fréquences.
         const demi = Math.ceil((fE * 0.153) / 25) * 25;
-        graphique.axes({ y: { label: 'f perçue (Hz)', min: fE - demi, max: fE + demi, pas: demi > 100 ? 50 : 25 } });
+        graphique.axes({ y: { label: L('f perçue (Hz)', 'perceived f (Hz)'), min: fE - demi, max: fE + demi, pas: demi > 100 ? 50 : 25 } });
       }
       const a0 = avancement(img, 0), a1 = avancement(img, 1), a2 = avancement(img, 2), a3 = avancement(img, 3), a4 = avancement(img, 4);
 
@@ -180,14 +180,14 @@ export default definirScene({
       if (a3 > 0 && fronts.length > 2) {
         const xa1 = cx(1) + fronts[1].rayon, xa2 = cx(2) + fronts[2].rayon;
         const xb1 = cx(1) - fronts[1].rayon, xb2 = cx(2) - fronts[2].rayon;
-        coteAvant.maj(xa1, xa2, ROUTE - 62, Math.min(xa2 + 76, 622), `λ avant = ${fmt(longueurOnde(fE, v, 1), 2)} m`);
-        coteArriere.maj(xb2, xb1, ROUTE - 28, xb1 + 24, `λ arrière = ${fmt(longueurOnde(fE, v, -1), 2)} m`);
+        coteAvant.maj(xa1, xa2, ROUTE - 62, Math.min(xa2 + 76, 622), L(`λ avant = ${fmt(longueurOnde(fE, v, 1), 2)} m`, `λ ahead = ${fmt(longueurOnde(fE, v, 1), 2)} m`));
+        coteArriere.maj(xb2, xb1, ROUTE - 28, xb1 + 24, L(`λ arrière = ${fmt(longueurOnde(fE, v, -1), 2)} m`, `λ behind = ${fmt(longueurOnde(fE, v, -1), 2)} m`));
       }
 
       // Étape 5 : vitesse déduite des deux fréquences.
       show(encart, seg(a4, 0.05, 0.35, ease.backOut), 16);
       resultat.textContent = `v = ${fmt(vMesuree, 1)} m/s`;
-      conversion.textContent = `soit ${fmt(vMesuree * 3.6, 0)} km/h`;
+      conversion.textContent = L(`soit ${fmt(vMesuree * 3.6, 0)} km/h`, `i.e. ${fmt(vMesuree * 3.6, 0)} km/h`);
 
       if (graphique) {
         if (recu && emet) {
@@ -204,7 +204,7 @@ export default definirScene({
         if (a3 > 0.62) {
           graphique.horizontale('fb', fB, { couleur: C.violet, label: `fB = ${fmt(fB, 0)} Hz` });
           graphique.opacite('fb', seg(a3, 0.62, 0.77));
-          graphique.verticale('passage', 0, { couleur: C.discret, label: 'au plus près' });
+          graphique.verticale('passage', 0, { couleur: C.discret, label: L('au plus près', 'closest') });
           graphique.opacite('passage', seg(a3, 0.78, 0.95));
         } else {
           graphique.effacer('fb');
@@ -213,11 +213,11 @@ export default definirScene({
       }
 
       const mesures = [
-        { label: 'Fréquence émise', valeur: `${fmt(fE, 0)} Hz` },
-        { label: 'Fréquence perçue', valeur: recu ? `${fmt(f, 0)} Hz` : '...' },
-        { label: 'Date', valeur: enRoute ? `${fmt(tau, 2)} s` : '...' },
+        { label: L('Fréquence émise', 'Emitted frequency'), valeur: `${fmt(fE, 0)} Hz` },
+        { label: L('Fréquence perçue', 'Perceived frequency'), valeur: recu ? `${fmt(f, 0)} Hz` : '...' },
+        { label: L('Date', 'Time'), valeur: enRoute ? `${fmt(tau, 2)} s` : '...' },
       ];
-      if (a4 > 0.3) mesures.push({ label: 'Vitesse mesurée', valeur: `${fmt(vMesuree, 1)} m/s` });
+      if (a4 > 0.3) mesures.push({ label: L('Vitesse mesurée', 'Measured speed'), valeur: `${fmt(vMesuree, 1)} m/s` });
       return mesures;
     };
   },

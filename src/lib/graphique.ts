@@ -19,6 +19,8 @@ export interface OptionsTrace {
   epaisseur?: number;
   pointille?: boolean;
   label?: string;
+  /** Étiquette posée sous le repère ou la ligne (au-dessus par défaut), quand une courbe passe au-dessus. */
+  dessous?: boolean;
   rayon?: number;
 }
 type Pt = [number, number];
@@ -118,7 +120,7 @@ export function creerGraphique(svg: SVGSVGElement, config: ConfigGraphique): Gra
       el('circle', { cx: X(x), cy: Y(y), r: o.rayon ?? 5, fill: c, stroke: C.fond, 'stroke-width': 1.5 }, g);
       if (o.label) {
         const aGauche = X(x) > W - 130;
-        texte(g, X(x) + (aGauche ? -12 : 12), Y(y) - 10, o.label, {
+        texte(g, X(x) + (aGauche ? -12 : 12), Y(y) + (o.dessous ? 20 : -10), o.label, {
           fill: c, 'font-family': MONO, 'font-size': 12.5, 'font-weight': 600, 'text-anchor': aGauche ? 'end' : 'start',
           stroke: C.fond, 'stroke-width': 4, 'paint-order': 'stroke',
         });
@@ -139,7 +141,7 @@ export function creerGraphique(svg: SVGSVGElement, config: ConfigGraphique): Gra
       g.replaceChildren();
       const c = o.couleur ?? C.discret;
       el('line', { x1: M.g, x2: W - M.d, y1: Y(y), y2: Y(y), stroke: c, 'stroke-width': o.epaisseur ?? 1.5, 'stroke-dasharray': o.pointille === false ? 'none' : '5 5' }, g);
-      if (o.label) texte(g, W - M.d - 6, Y(y) - 6, o.label, {
+      if (o.label) texte(g, W - M.d - 6, Y(y) + (o.dessous ? 16 : -6), o.label, {
         fill: c, 'font-family': MONO, 'font-size': 12.5, 'font-weight': 600, 'text-anchor': 'end',
         stroke: C.fond, 'stroke-width': 4, 'paint-order': 'stroke',
       });

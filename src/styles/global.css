@@ -128,3 +128,11 @@ a.carte:hover { transform: translateY(-2px); border-color: var(--t, var(--accent
 
 /* KaTeX dessine les flèches de vecteurs et les accents extensibles en SVG : la règle générale sur les svg les écrasait à une largeur nulle. */
 .katex svg { max-width: none; }
+
+/* Exposants et indices (⁴ à ⁹, ⁻, ₀ à ₉) : absents des sous-ensembles de JetBrains Mono, pris ici dans la police complète, avec ¹ ² ³,
+   pour que tous aient le même dessin. Les fichiers ne sont téléchargés que si la page affiche un de ces caractères. */
+/* Mêmes descripteurs (graisse 100 800, style normal) que les sous-ensembles du paquet : sinon le navigateur écarte la police principale. */
+@font-face {
+  font-family: 'JetBrains Mono Variable'; font-style: normal; font-weight: 100 800; font-display: swap;
+  src: url('../assets/polices/JetBrainsMono-SemiBold.woff2') format('woff2'); unicode-range: U+00B2-00B3, U+00B9, U+2070-209F;
+}

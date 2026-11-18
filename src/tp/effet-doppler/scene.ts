@@ -227,7 +227,7 @@ export default definirScene({
           graphique.opacite('fa', seg(a3, 0.45, 0.6));
         } else graphique.effacer('fa');
         if (a3 > 0.62) {
-          graphique.horizontale('fb', fB, { couleur: C.violet, label: `fB = ${fmt(fB, 0)} Hz` });
+          graphique.horizontale('fb', fB, { couleur: C.violet, label: `fB = ${fmt(fB, 0)} Hz`, dessous: true });
           graphique.opacite('fb', seg(a3, 0.62, 0.77));
           graphique.verticale('passage', 0, { couleur: C.discret, label: L('au plus près', 'closest') });
           graphique.opacite('passage', seg(a3, 0.78, 0.95));

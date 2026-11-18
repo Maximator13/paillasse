@@ -240,7 +240,7 @@ export default definirScene({
           graphique.nuage(`sat${i}`, entree[i] > 0 ? [[donnees[i][0] / 1e22, donnees[i][1] / 1e9]] : [], { couleur: s.couleur, rayon: 5 });
           graphique.opacite(`sat${i}`, entree[i]);
         });
-        if (a2 > 0) graphique.repere('moi', a ** 3 / 1e22, (tour ? Tp : a2 * Tp) ** 2 / 1e9, { couleur: C.cyan, label: tour ? L('votre satellite', 'your satellite') : undefined });
+        if (a2 > 0) graphique.repere('moi', a ** 3 / 1e22, (tour ? Tp : a2 * Tp) ** 2 / 1e9, { couleur: C.cyan, label: tour ? L('votre satellite', 'your satellite') : undefined, dessous: true });
         else graphique.effacer('moi');
       }
 

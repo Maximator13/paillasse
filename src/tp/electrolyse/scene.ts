@@ -1,28 +1,45 @@
 import { avancement, ease, el, fmt, L, lerp, mix, rng, seg, set, show, trace, uid } from '../../lib/anim';
 import { appareil, becher, etiquette, fleche, paillasse } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { charge, quantiteElectrons, tension, volumeH2, volumeO2 } from './model';
 
-const SOLUTION = mix(C.bleu, C.verre, 0.35);
 const X_CATHODE = 165, X_ANODE = 275; // axes des deux tubes
 const Y_HAUT = 118, Y_BAS = 404, R = 17; // tube retourné : sommet fermé, ouverture en bas
 const Y_ZERO = 120, PX_PAR_ML = 4.2; // graduation : le gaz s'accumule depuis le sommet
 const yGaz = (v: number) => Y_ZERO + PX_PAR_ML * v;
+/** Valeur selon le thème courant (opacités pensées séparément pour le fond nuit et le fond blanc). */
+const selon = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
+
+/** Dégradé à identifiant unique, renvoie la valeur de fill correspondante. */
+function degrade(g: Element, attrs: Record<string, string | number>, arrets: [number, string, number][]) {
+  const id = uid('elec');
+  const gr = el('linearGradient', { id, ...attrs }, el('defs', {}, g));
+  for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+  return `url(#${id})`;
+}
+const VERTICAL = { x1: 0, y1: 0, x2: 0, y2: 1 };
 
 /** Tube à essai gradué retourné sur une électrode : plein de solution, le gaz chasse le liquide par le haut. */
-function tubeRetourne(parent: Element, cx: number, couleur: string) {
+function tubeRetourne(parent: Element, cx: number, couleur: string, solution: string) {
   const g = el('g', {}, parent);
   const id = uid('tube');
   const d = `M${cx - R} ${Y_BAS}V${Y_HAUT + R}A${R} ${R} 0 0 1 ${cx + R} ${Y_HAUT + R}V${Y_BAS}`;
   el('path', { d: d + 'Z' }, el('clipPath', { id }, g));
   const dedans = el('g', { 'clip-path': `url(#${id})` }, g);
-  const liquide = el('rect', { x: cx - R, width: 2 * R, y: Y_HAUT, height: Y_BAS - Y_HAUT, fill: SOLUTION, opacity: 0.82 }, dedans);
+  const liquide = el('rect', { x: cx - R, width: 2 * R, y: Y_HAUT, height: Y_BAS - Y_HAUT, fill: solution, opacity: 0.82 }, dedans);
   const gaz = el('rect', { x: cx - R, width: 2 * R, y: Y_HAUT, height: 0, fill: couleur, opacity: 0.22 }, dedans);
   const menisque = el('rect', { x: cx - R, width: 2 * R, height: 3, fill: couleur, opacity: 0 }, dedans);
-  el('path', { d, fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+  // Verre en volume, accordé au kit : voile, reflet cylindrique, épaisseur de paroi, contour.
+  el('path', { d: d + 'Z', fill: C.verre, 'fill-opacity': selon(0.08, 0.3) }, dedans);
+  el('path', { d: d + 'Z', fill: degrade(g, { gradientUnits: 'userSpaceOnUse', x1: cx - R, x2: cx + R, y1: 0, y2: 0 }, [
+    [0, C.ombre, selon(0.32, 0.1)], [0.1, C.ombre, 0], [0.15, C.blanc, 0], [0.24, C.blanc, selon(0.2, 0.55)],
+    [0.34, C.blanc, 0], [0.78, C.ombre, 0], [1, C.ombre, selon(0.38, 0.14)],
+  ]) }, g);
+  el('path', { d, fill: 'none', stroke: C.verre, 'stroke-width': 5, opacity: selon(0.2, 0.75), 'clip-path': `url(#${id})` }, g);
+  el('path', { d, fill: 'none', stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
   for (let v = 5; v <= 50; v += 5) {
-    el('line', { x1: cx + R - (v % 10 ? 8 : 13), x2: cx + R - 2, y1: yGaz(v), y2: yGaz(v), stroke: C.verre, 'stroke-width': 1, opacity: 0.6 }, g);
+    el('line', { x1: cx + R - (v % 10 ? 8 : 13), x2: cx + R - 2, y1: yGaz(v), y2: yGaz(v), stroke: C.trait, 'stroke-width': 1, opacity: 0.6 }, g);
   }
   return {
     g,
@@ -79,6 +96,7 @@ export default definirScene({
   affiche: { etape: 3, t: 0.8 },
 
   monter({ scene, graphique }) {
+    const SOLUTION = mix(C.bleu, C.verre, 0.35);
     paillasse(scene);
 
     // Fils (écrits dans le sens de déplacement des électrons).
@@ -93,15 +111,17 @@ export default definirScene({
 
     // Cuve sur son socle à bornes.
     const cuve = el('g', {}, scene);
-    el('rect', { x: 85, y: 420, width: 270, height: 20, rx: 5, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, cuve);
+    el('rect', { x: 87, y: 423, width: 270, height: 18, rx: 5, fill: C.ombre, opacity: selon(0.35, 0.1) }, cuve);
+    el('rect', { x: 85, y: 420, width: 270, height: 20, rx: 5, fill: degrade(cuve, VERTICAL, [[0, mix(C.panneau, C.metal, selon(0.22, 0.14)), 1], [1, C.panneau, 1]]), stroke: C.metal, 'stroke-width': 2 }, cuve);
     el('circle', { cx: 95, cy: 430, r: 5, fill: C.bleu }, cuve);
     el('circle', { cx: 345, cy: 430, r: 5, fill: C.corail }, cuve);
     const bac = becher(cuve, { x: 220, y: 420, w: 250, h: 140 });
 
-    const tubeH2 = tubeRetourne(scene, X_CATHODE, C.cyan);
-    const tubeO2 = tubeRetourne(scene, X_ANODE, C.corail);
+    const tubeH2 = tubeRetourne(scene, X_CATHODE, C.cyan, SOLUTION);
+    const tubeO2 = tubeRetourne(scene, X_ANODE, C.corail, SOLUTION);
     const gElectrodes = el('g', {}, scene);
-    for (const x of [X_CATHODE, X_ANODE]) el('rect', { x: x - 3, y: 374, width: 6, height: 46, rx: 2, fill: C.metal, stroke: C.verre, 'stroke-width': 1.2 }, gElectrodes);
+    const metal = degrade(gElectrodes, {}, [[0, mix(C.metal, C.ombre, 0.1), 1], [0.3, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1]]);
+    for (const x of [X_CATHODE, X_ANODE]) el('rect', { x: x - 3, y: 374, width: 6, height: 46, rx: 2, fill: metal, stroke: C.trait, 'stroke-width': 1.2 }, gElectrodes);
     const gBulles = el('g', {}, scene);
     const bullesH2 = bullesElectrode(gBulles, X_CATHODE, 16, 3, C.blanc);
     const bullesO2 = bullesElectrode(gBulles, X_ANODE, 8, 8, C.blanc);
@@ -127,6 +147,7 @@ export default definirScene({
 
     // Encart de résultat (dernière étape).
     const encart = el('g', {}, scene);
+    el('rect', { x: 402, y: 92, width: 224, height: 126, rx: 14, fill: C.ombre, opacity: selon(0.35, 0.1) }, encart);
     el('rect', { x: 400, y: 88, width: 224, height: 126, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 414, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);

@@ -1,6 +1,6 @@
 import { L, avancement, clamp, ease, el, fmt, lerp, mix, remap, rng, seg, set, show, texte, uid } from '../../lib/anim';
 import { appareil, etiquette, paillasse, thermometre, tubeEssai } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { absorbance, concentration, constanteVitesse, demiReaction, regression, releves } from './model';
 
@@ -8,7 +8,6 @@ const T_MAX = 360; // s, durée du suivi
 const DT = 12; // s, entre deux relevés
 const SEUIL = 0.01; // absorbance en dessous de laquelle la mesure n'est plus exploitable
 const THETA_REF = 25, CAT_REF = 0.05; // réglages de départ
-const INCOLORE = C.verre;
 const XC = 340, Y_F = 392; // axe de la cuve, hauteur du faisceau
 const X_ENTREE = 214, Y_HAUT = 296, Y_PLONGE = 398, Y_VERSE = 362; // trajet de la pipette (pointe)
 const CX = 76, CY = 92, L_ARC = 2 * Math.PI * 25; // chronomètre
@@ -18,7 +17,19 @@ const AXE_LN = { label: 'ln A', min: -5, max: 1, pas: 1 };
 
 /** Intensité perçue de la teinte bleue pour une absorbance donnée (0 : incolore, 1 : saturée). */
 const intensite = (a: number) => 1 - Math.exp(-1.6 * a);
-const couleur = (a: number) => mix(INCOLORE, C.bleu, intensite(a));
+const couleur = (a: number) => mix(C.verre, C.bleu, intensite(a));
+/** Valeur selon le thème courant (un même voile ne se voit pas pareil sur fond nuit et sur fond blanc). */
+const selon = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
+/** Dégradé à identifiant unique, renvoie la valeur de fill correspondante. */
+function remplissage(g: Element, type: 'linearGradient' | 'radialGradient', attrs: Record<string, string | number>, arrets: [number, string, number][]) {
+  const id = uid('degrade');
+  const gr = el(type, { id, ...attrs }, el('defs', {}, g));
+  for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+  return `url(#${id})`;
+}
+/** Ombre douce sur la paillasse sous un objet posé, centré en cx, de demi-largeur rx. */
+const ombreSol = (g: Element, cx: number, rx: number) =>
+  el('ellipse', { cx, cy: 436, rx: rx * 1.08, ry: 9, fill: remplissage(g, 'radialGradient', {}, [[0, C.ombre, selon(0.6, 0.22)], [0.6, C.ombre, selon(0.32, 0.1)], [1, C.ombre, 0]]) }, g);
 const opacite = (a: number) => lerp(0.3, 0.92, intensite(a));
 /** Onde triangulaire : va-et-vient entre 0 et L (rebonds sur les parois). */
 const tri = (v: number, L: number) => {
@@ -61,9 +72,10 @@ export default definirScene({
     paillasse(scene);
 
     // Bain thermostaté : les deux solutions y prennent la température choisie.
+    ombreSol(scene, 118, 92);
     const eau = el('path', { d: 'M27 370H209V428Q209 439 198 439H38Q27 439 27 428Z', 'fill-opacity': 0.26 }, scene);
-    el('line', { x1: 28, x2: 208, y1: 370, y2: 370, stroke: C.blanc, 'stroke-width': 2, opacity: 0.3 }, scene);
-    el('path', { d: 'M26 354V428Q26 440 38 440H198Q210 440 210 428V354', fill: 'none', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round' }, scene);
+    el('line', { x1: 28, x2: 208, y1: 370, y2: 370, stroke: C.blanc, 'stroke-width': 2, opacity: selon(0.3, 0.8) }, scene);
+    el('path', { d: 'M26 354V428Q26 440 38 440H198Q210 440 210 428V354', fill: 'none', stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round' }, scene);
     const tubeBM = tubeEssai(scene, { x: 64, y: 432, h: 116 });
     const tubeVitC = tubeEssai(scene, { x: 132, y: 432, h: 116 });
     const thermo = thermometre(scene, { x: 184, y: 432, h: 124 });
@@ -73,8 +85,11 @@ export default definirScene({
 
     // Spectrophotomètre en coupe : lampe, faisceau, cuve, détecteur, afficheur.
     const spec = el('g', {}, scene);
-    el('rect', { x: 236, y: 326, width: 388, height: 114, rx: 12, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, spec);
-    el('rect', { x: 250, y: 340, width: 196, height: 86, rx: 8, fill: C.fond }, spec);
+    ombreSol(spec, 430, 194);
+    el('rect', { x: 236, y: 326, width: 388, height: 114, rx: 12, fill: remplissage(spec, 'linearGradient', { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, mix(C.panneau, C.metal, selon(0.22, 0.14)), 1], [1, C.panneau, 1]]), stroke: C.metal, 'stroke-width': 2 }, spec);
+    el('path', { d: 'M248 328.5H612', stroke: C.blanc, 'stroke-width': 1.5, opacity: selon(0.18, 0.9), 'stroke-linecap': 'round' }, spec);
+    el('rect', { x: 250, y: 340, width: 196, height: 86, rx: 8, fill: C.fond, stroke: C.grille, 'stroke-width': 1.5 }, spec);
+    el('path', { d: 'M256 342H319M361 342H440', stroke: C.ombre, 'stroke-width': 2, opacity: selon(0.5, 0.12), 'stroke-linecap': 'round' }, spec);
     el('rect', { x: XC - 19, y: 324, width: 38, height: 18, fill: C.fond }, spec);
     const halo = el('circle', { cx: 270, cy: Y_F, r: 16, fill: C.orange, opacity: 0 }, spec);
     const lampe = el('circle', { cx: 270, cy: Y_F, r: 8, stroke: C.metal, 'stroke-width': 2 }, spec);
@@ -91,7 +106,8 @@ export default definirScene({
     el('stop', { offset: 0, 'stop-color': C.orange }, degrade);
     const stopFin = el('stop', { offset: 1, 'stop-color': C.orange }, degrade);
     const fCuve = el('rect', { x: XC - 15, y: Y_F - 2.5, height: 5, fill: `url(#${idF})` }, spec);
-    el('path', { d: `M${XC - 15} 350V408Q${XC - 15} 413 ${XC - 10} 413H${XC + 10}Q${XC + 15} 413 ${XC + 15} 408V350`, fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round' }, spec);
+    el('path', { d: `M${XC - 15} 350V408Q${XC - 15} 413 ${XC - 10} 413H${XC + 10}Q${XC + 15} 413 ${XC + 15} 408V350`, fill: C.verre, 'fill-opacity': selon(0.08, 0.3), stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round' }, spec);
+    el('line', { x1: XC - 9, x2: XC - 9, y1: 356, y2: 404, stroke: C.blanc, 'stroke-width': 2, opacity: selon(0.2, 0.55), 'stroke-linecap': 'round' }, spec);
     el('rect', { x: XC - 21, y: 414.5, width: 42, height: 6, rx: 2, fill: C.metal }, spec);
     const capot = el('rect', { x: XC - 25, y: 320, width: 50, height: 9, rx: 3, fill: C.metal }, spec);
 
@@ -100,14 +116,15 @@ export default definirScene({
     const bouton = el('g', {}, chrono);
     el('rect', { x: CX - 4, y: CY - 53, width: 8, height: 10, fill: C.metal }, bouton);
     el('rect', { x: CX - 10, y: CY - 61, width: 20, height: 9, rx: 3, fill: C.orange }, bouton);
-    el('circle', { cx: CX, cy: CY, r: 44, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, chrono);
+    el('circle', { cx: CX + 2, cy: CY + 4, r: 45, fill: C.ombre, opacity: selon(0.35, 0.1) }, chrono);
+    el('circle', { cx: CX, cy: CY, r: 44, fill: remplissage(chrono, 'radialGradient', { cx: 0.4, cy: 0.35, r: 0.7 }, [[0, C.panneau, 1], [1, mix(C.panneau, C.metal, selon(0.22, 0.14)), 1]]), stroke: C.trait, 'stroke-width': TRAIT }, chrono);
     for (let i = 0; i < 12; i++) {
-      el('line', { x1: CX, x2: CX, y1: CY - 40, y2: CY - (i % 3 ? 36 : 33), stroke: i % 3 ? C.discret : C.verre, 'stroke-width': i % 3 ? 1.5 : 2.2, 'stroke-linecap': 'round', transform: `rotate(${i * 30} ${CX} ${CY})` }, chrono);
+      el('line', { x1: CX, x2: CX, y1: CY - 40, y2: CY - (i % 3 ? 36 : 33), stroke: i % 3 ? C.discret : C.trait, 'stroke-width': i % 3 ? 1.5 : 2.2, 'stroke-linecap': 'round', transform: `rotate(${i * 30} ${CX} ${CY})` }, chrono);
     }
     el('circle', { cx: CX, cy: CY, r: 25, fill: 'none', stroke: C.grille, 'stroke-width': 4 }, chrono);
     const arc = el('circle', { cx: CX, cy: CY, r: 25, fill: 'none', stroke: C.menthe, 'stroke-width': 4, 'stroke-linecap': 'round', transform: `rotate(-90 ${CX} ${CY})` }, chrono);
     const aiguille = el('line', { x1: CX, x2: CX, y1: CY + 9, y2: CY - 34, stroke: C.corail, 'stroke-width': 3, 'stroke-linecap': 'round' }, chrono);
-    el('circle', { cx: CX, cy: CY, r: 4.5, fill: C.verre }, chrono);
+    el('circle', { cx: CX, cy: CY, r: 4.5, fill: C.trait }, chrono);
     const etiqT = etiquette(scene, { x: CX, y: 162, texte: '', ancre: 'middle', mono: true });
 
     // Vue microscopique de la cuve.
@@ -121,8 +138,10 @@ export default definirScene({
     const compteur = texte(loupe, 434, 44, '', { ...legende, fill: C.texte });
     el('circle', { cx: 422, cy: 221.5, r: 5, fill: 'none', stroke: C.discret, 'stroke-width': 1.3 }, loupe);
     texte(loupe, 434, 226, L('incolore', 'colourless'), { ...legende, fill: C.discret });
-    el('circle', { cx: 506, cy: 221.5, r: 2.6, fill: C.cyan }, loupe);
-    texte(loupe, 514, 226, L('H3O+ catalyseur', 'H3O+ catalyst'), { ...legende, fill: C.discret });
+    // « colourless » est plus long que « incolore » : la seconde légende se décale en anglais.
+    const xCat = Number(L('506', '516'));
+    el('circle', { cx: xCat, cy: 221.5, r: 2.6, fill: C.cyan }, loupe);
+    texte(loupe, xCat + 8, 226, L('H3O+ catalyseur', 'H3O+ catalyst'), { ...legende, fill: C.discret });
     const idZ = uid('zone');
     el('rect', { x: ZONE.x, y: ZONE.y, width: ZONE.w, height: ZONE.h, rx: 8 }, el('clipPath', { id: idZ }, loupe));
     const gP = el('g', { 'clip-path': `url(#${idZ})` }, loupe);
@@ -134,7 +153,7 @@ export default definirScene({
     // u : fraction restante de colorant à laquelle l'ion réagit (suite du nombre d'or, bien répartie quel que soit l'effectif).
     const cvs = Array.from({ length: 48 }, (_, i) => ({
       ...mobile(13), u: ((i + 0.5) * 0.618034) % 1,
-      halo: el('circle', { fill: 'none', stroke: C.blanc, 'stroke-width': 1.6 }, gP),
+      halo: el('circle', { fill: 'none', stroke: C.texte, 'stroke-width': 1.6 }, gP),
       n: el('circle', { r: 5.5, fill: C.bleu, 'stroke-width': 1.3 }, gP),
     }));
     const position = (m: Mobile, T: number, s: number, marge: number) => ({
@@ -149,7 +168,7 @@ export default definirScene({
     const mono = { 'font-family': MONO, 'font-size': 13, 'font-weight': 600 };
     const minis = [0, 1, 2, 3].map((n) => {
       const x = 184 + 58 * n, g = el('g', {}, bilan);
-      const corps = el('rect', { x: -12, y: -19, width: 24, height: 38, rx: 4, stroke: C.verre, 'stroke-width': 2 }, g);
+      const corps = el('rect', { x: -12, y: -19, width: 24, height: 38, rx: 4, stroke: C.trait, 'stroke-width': 2 }, g);
       const date = texte(bilan, x, 119, '', { ...mono, fill: C.texte, 'text-anchor': 'middle' });
       const div = n ? texte(bilan, x - 29, 84, '÷2', { ...mono, fill: C.jaune, 'text-anchor': 'middle' }) : null;
       return { x, g, corps, date, div };
@@ -163,8 +182,8 @@ export default definirScene({
     const idP = uid('pipette'), forme = 'M-4 -92V-14L-1.5 0H1.5L4 -14V-92';
     el('path', { d: forme + 'Z' }, el('clipPath', { id: idP }, pip));
     const liqPip = el('rect', { x: -5, width: 10, opacity: 0.9, 'clip-path': `url(#${idP})` }, pip);
-    el('path', { d: forme, fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, pip);
-    const poire = el('ellipse', { cx: 0, cy: -104, fill: C.corail, stroke: C.verre, 'stroke-width': 2 }, pip);
+    el('path', { d: forme, fill: C.verre, 'fill-opacity': selon(0.08, 0.3), stroke: C.trait, 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, pip);
+    const poire = el('ellipse', { cx: 0, cy: -104, fill: C.corail, stroke: C.trait, 'stroke-width': 2 }, pip);
 
     const kRef = constanteVitesse(THETA_REF, CAT_REF);
     let cle = '', fins: [number, number][] = [], points: [number, number][] = [], depart: [number, number][] = [], lnPts: [number, number][] = [];
@@ -192,10 +211,10 @@ export default definirScene({
       // Étapes 1 et 2 : la pipette apporte le colorant, puis l'acide ascorbique.
       const p1 = trajet(a1, 64), p2 = trajet(clamp(a2 / 0.66), 132), pp = etape === 0 ? p1 : p2;
       pip.setAttribute('transform', `translate(${pp.x} ${pp.y})`);
-      set(liqPip, { y: -90 * pp.plein, height: 90 * pp.plein + 1, fill: etape === 0 ? C.bleu : INCOLORE });
+      set(liqPip, { y: -90 * pp.plein, height: 90 * pp.plein + 1, fill: etape === 0 ? C.bleu : C.verre });
       set(poire, { rx: 9 + 2.5 * pp.presse, ry: 13 - 4 * pp.presse });
       tubeBM.liquide(0.62 - 0.12 * p1.aspire, C.bleu);
-      tubeVitC.liquide(0.62 - 0.08 * p2.aspire, INCOLORE);
+      tubeVitC.liquide(0.62 - 0.08 * p2.aspire, C.verre);
       const niveau = 0.5 * p1.verse + 0.3 * p2.verse;
 
       // Étape 3 : la réaction avance, le chronomètre tourne.
@@ -266,7 +285,7 @@ export default definirScene({
         (ln ? ['depart', 'modele', 'points', 'curseur', 'demi', 't12', 'r1', 'r2', 'r3'] : ['lnpts', 'droite', 'pente']).forEach((id) => graphique.effacer(id));
         if (ln) {
           // ln A = f(t) : les points s'alignent, la droite donne k.
-          graphique.nuage('lnpts', lnPts.slice(0, Math.round(lnPts.length * seg(a5, 0.08, 0.5, ease.lin))), { couleur: C.verre, rayon: 3.5 });
+          graphique.nuage('lnpts', lnPts.slice(0, Math.round(lnPts.length * seg(a5, 0.08, 0.5, ease.lin))), { couleur: C.trait, rayon: 3.5 });
           const xf = T_MAX * seg(a5, 0.5, 0.78);
           graphique.courbe('droite', xf > 0 ? [[0, droite.ordonnee], [xf, droite.ordonnee + droite.pente * xf]] : [], { couleur: C.jaune, epaisseur: 2.5 });
           if (a5 > 0.78) {
@@ -278,8 +297,8 @@ export default definirScene({
           graphique.courbe('depart', a6 > 0 ? depart : [], { couleur: C.discret, epaisseur: 2, pointille: true });
           graphique.opacite('depart', seg(a6, 0.1, 0.5));
           graphique.courbe('modele', a3 > 0 ? fins.filter(([x]) => x <= tExp) : [], { couleur: C.bleu, epaisseur: 3 });
-          graphique.nuage('points', a3 > 0 ? points.filter(([x]) => x <= tExp) : [], { couleur: C.verre, rayon: 3 });
-          if (a3 > 0 && a3 < 1) graphique.repere('curseur', tExp, A, { couleur: C.blanc, rayon: 4 });
+          graphique.nuage('points', a3 > 0 ? points.filter(([x]) => x <= tExp) : [], { couleur: C.trait, rayon: 3 });
+          if (a3 > 0 && a3 < 1) graphique.repere('curseur', tExp, A, { couleur: C.texte, rayon: 4 });
           else graphique.effacer('curseur');
           // Lecture graphique : A0/2 à t1/2, A0/4 à 2 t1/2, A0/8 à 3 t1/2.
           // Étiquettes regroupées aux réglages extrêmes : en haut si t1/2 est grand, près du point s'il est petit.

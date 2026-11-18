@@ -1,17 +1,19 @@
-/* Lecteur de TP. Toujours sombre : c'est la "scène". */
+/* Lecteur de TP : la "scène". Couleurs uniquement via les jetons --scene-* de global.css (fond blanc en clair, nuit en sombre). */
 .lecteur {
   --l: var(--scene-ligne);
   background: var(--scene); color: var(--scene-texte); border-radius: calc(var(--rayon) + 4px);
   border: 1px solid var(--l); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr);
-  box-shadow: 0 30px 60px -40px rgb(11 16 34 / .8);
+  box-shadow: 0 30px 60px -40px var(--scene-ombre);
 }
 .lecteur-ecran {
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
-  background: radial-gradient(120% 90% at 20% 0%, rgb(91 140 255 / .1), transparent 60%), var(--scene);
+  background: radial-gradient(120% 90% at 20% 0%, var(--scene-halo), transparent 60%), var(--scene);
 }
+.lecteur-cadre { position: relative; min-width: 0; }
 .lecteur-scene, .lecteur-graph { width: 100%; height: auto; }
+.lecteur-scene { display: block; }
 .lecteur-scene { aspect-ratio: 4 / 3; }
-.lecteur-graph { aspect-ratio: 4 / 3; border-top: 1.5px solid var(--l); background: rgb(11 16 34 / .55); }
+.lecteur-graph { aspect-ratio: 4 / 3; border-top: 1.5px solid var(--l); background: var(--scene-graph); }
 @media (min-width: 860px) {
   .lecteur-ecran { grid-template-columns: minmax(0, 4fr) minmax(0, 3fr); align-items: center; }
   .lecteur-graph { border-top: 0; border-left: 1.5px solid var(--l); height: 100%; }
@@ -25,7 +27,7 @@
 }
 .lecteur-mesures:empty { display: none; }
 .lecteur-mesures div { display: flex; flex-direction: column; }
-.lecteur-mesures dt { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--scene-doux); }
+.lecteur-mesures dt { font-size: .7rem; letter-spacing: .08em; color: var(--scene-doux); }
 .lecteur-mesures dd { margin: 0; font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .lecteur-pied { display: grid; gap: 1rem; padding: 1.1rem 1.2rem 1.3rem; border-top: 1.5px solid var(--l); grid-template-columns: minmax(0, 1fr); }
@@ -34,12 +36,12 @@
 }
 .lecteur-etape [data-num] { font: 600 .75rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--scene-doux); margin: 0 0 .5rem; }
 .lecteur-etape h3 { font-size: 1.35rem; margin: 0 0 .4rem; }
-.lecteur-etape [data-texte] { margin: 0; color: #cdd3f2; min-height: 4.9em; }
+.lecteur-etape [data-texte] { margin: 0; color: var(--scene-etape); min-height: 4.9em; }
 
 .lecteur-barre { display: flex; gap: 5px; height: 26px; align-items: center; cursor: pointer; touch-action: none; margin-block: .9rem .7rem; }
 .lecteur-barre .seg { flex: 1; height: 8px; border-radius: 4px; background: var(--l); overflow: hidden; transition: height .15s; }
 .lecteur-barre:hover .seg { height: 12px; }
-.lecteur-barre .seg i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #5b8cff, #4dd0e1); border-radius: 4px; }
+.lecteur-barre .seg i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--scene-accent-2), var(--scene-accent)); border-radius: 4px; }
 
 .lecteur-commandes { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .lecteur-commandes button {
@@ -49,23 +51,58 @@
 .lecteur-commandes button:hover { background: var(--l); }
 .lecteur-commandes button:active { transform: scale(.94); }
 .lecteur-commandes [data-jouer] { background: var(--scene-texte); color: var(--scene); border-color: var(--scene-texte); width: 56px; height: 56px; }
-.lecteur-commandes [data-jouer]:hover { background: #fff; }
+.lecteur-commandes [data-jouer]:hover { background: color-mix(in srgb, var(--scene-texte) 86%, var(--scene-accent)); }
 .lecteur-commandes svg { width: 22px; height: 22px; fill: currentColor; }
 .lecteur .ico-pause, .lecteur.en-lecture .ico-lecture { display: none; }
 .lecteur.en-lecture .ico-pause { display: block; }
-.lecteur-commandes .appel { border-color: #4dd0e1; color: #4dd0e1; animation: appel 1.2s ease-in-out infinite; }
-@keyframes appel { 50% { box-shadow: 0 0 0 8px rgb(77 208 225 / .18); } }
+.lecteur-commandes .appel { border-color: var(--scene-accent); color: var(--scene-accent); animation: appel 1.2s ease-in-out infinite; }
+@keyframes appel { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--scene-accent) 18%, transparent); } }
 .lecteur-auto { margin-left: auto; display: inline-flex; align-items: center; gap: .5rem; font-size: .9rem; color: var(--scene-doux); cursor: pointer; min-height: 48px; }
-.lecteur-auto input { width: 1.1rem; height: 1.1rem; accent-color: #4dd0e1; }
+.lecteur-auto input { width: 1.1rem; height: 1.1rem; accent-color: var(--scene-accent); }
 
 .lecteur-params h4 { font: 600 .75rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--scene-doux); margin: 0 0 .9rem; }
 .lecteur-params .param { display: grid; grid-template-columns: 1fr auto; gap: .2rem .8rem; margin-bottom: 1rem; }
 .lecteur-params label { font-size: .95rem; }
-.lecteur-params output { font: 600 .95rem/1.4 var(--mono); color: #4dd0e1; font-variant-numeric: tabular-nums; }
-.lecteur-params input[type='range'] { grid-column: 1 / -1; width: 100%; accent-color: #4dd0e1; height: 28px; cursor: pointer; }
+.lecteur-params output { font: 600 .95rem/1.4 var(--mono); color: var(--scene-accent); font-variant-numeric: tabular-nums; }
+.lecteur-params input[type='range'] { grid-column: 1 / -1; width: 100%; accent-color: var(--scene-accent); height: 28px; cursor: pointer; }
+
+/* Vue 3D (scene3d.ts) : un canvas WebGL et un calque d'étiquettes remplacent le SVG de scène, qui garde la place. */
+.lecteur.en-3d .lecteur-scene { visibility: hidden; }
+.lecteur-3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.lecteur-3d:active { cursor: grabbing; }
+.lecteur-3d:focus-visible { outline: 2px solid var(--scene-accent); outline-offset: -3px; }
+.lecteur-calque { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.lecteur-calque .l3d {
+  position: absolute; left: 0; top: 0; font-family: var(--texte); font-weight: 600; line-height: 1.2; white-space: nowrap;
+  text-shadow: 0 0 3px var(--scene), 0 0 6px var(--scene), 0 0 10px var(--scene);
+}
+.lecteur-recentrer {
+  position: absolute; top: .6rem; right: .6rem; z-index: 2; width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: 50%; border: 1.5px solid var(--l); color: var(--scene-texte); cursor: pointer;
+  background: color-mix(in srgb, var(--scene) 82%, transparent); backdrop-filter: blur(6px); transition: border-color .15s;
+}
+.lecteur-recentrer:hover { border-color: var(--scene-accent); }
+.lecteur-recentrer svg, .lecteur-bascule svg { width: 20px; height: 20px; fill: currentColor; }
+.lecteur-commandes .lecteur-bascule { width: auto; height: 48px; border-radius: 24px; padding: 0 1.1rem 0 .9rem; display: inline-flex; gap: .45rem; font: 600 .9rem/1 var(--texte); }
+.lecteur-commandes .lecteur-bascule:disabled { cursor: progress; opacity: .7; }
+.lecteur .si-3d, .lecteur.en-3d .si-2d, .lecteur:not(.en-3d) .lecteur-recentrer, .lecteur:not(.en-3d) .lecteur-aide3d { display: none; }
+.lecteur.en-3d .si-3d { display: inline; }
+.lecteur.en-3d .lecteur-bascule { border-color: var(--scene-accent); color: var(--scene-accent); }
+.lecteur-aide3d { position: absolute; right: .8rem; bottom: .5rem; z-index: 2; margin: 0; font: 500 .75rem/1.2 var(--texte); color: var(--scene-doux); pointer-events: none; }
+.lecteur-msg3d { margin: .8rem 0 0; padding: .6rem .8rem; border-radius: var(--rayon); border: 1.5px solid var(--scene-erreur); font-size: .9rem; }
+.lecteur-msg3d:empty { display: none; }
+.lecteur-calque .l3d-panneau {
+  position: absolute; display: flex; flex-direction: column; gap: .3rem; padding: .55rem .75rem; border-radius: var(--rayon);
+  background: color-mix(in srgb, var(--scene) 84%, transparent); border: 1px solid var(--l); font: 600 13px/1.3 var(--texte); color: var(--scene-texte);
+}
+/* Petit écran : la légende ne garde que l'essentiel (les flèches portent déjà leur nom). */
+@media (max-width: 600px) {
+  .lecteur-aide3d, .lecteur-calque .l3d-large { display: none !important; }
+  .lecteur-calque .l3d-panneau { padding: .35rem .5rem; gap: .15rem; }
+}
 
 /* Modes réduits : démo (accueil) et affiche (vignette de carte). */
 .lecteur[data-mode='demo'] .lecteur-pied, .lecteur[data-mode='demo'] .lecteur-mesures { display: none; }
 .lecteur[data-mode='affiche'] { border: 0; border-radius: 0; box-shadow: none; }
 .lecteur[data-mode='affiche'] .lecteur-ecran { display: block; }
-.lecteur[data-erreur]::after { content: 'Animation indisponible : ' attr(data-erreur); display: block; padding: 1rem; color: #ff6b6b; font: 500 .85rem var(--mono); }
+.lecteur[data-erreur]::after { content: 'Animation indisponible : ' attr(data-erreur); display: block; padding: 1rem; color: var(--scene-erreur); font: 500 .85rem var(--mono); }

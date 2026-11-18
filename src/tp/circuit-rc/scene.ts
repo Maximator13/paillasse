@@ -1,6 +1,6 @@
 import { L, avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, texte, trace } from '../../lib/anim';
 import { etiquette, fleche } from '../../lib/labkit';
-import { C, MONO, TRAIT } from '../../lib/palette';
+import { C, MONO, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { courbe, etat, tau, type CircuitRC } from './model';
 
@@ -36,30 +36,32 @@ export default definirScene({
   affiche: { etape: 2, t: 0.3 },
 
   monter({ scene, graphique }) {
-    const fil = { fill: 'none', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' } as const;
+    const fil = { fill: 'none', stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' } as const;
 
     // Fils du circuit (tracés à l'étape 1).
     const fils = el('path', { d: 'M205 92H90V370H500V258M500 222V110H390M310 110H250M205 128V370', ...fil }, scene);
 
     // Générateur idéal de tension.
     const gGen = el('g', {}, scene);
-    el('circle', { cx: 90, cy: 231, r: 22, fill: C.fond, stroke: C.verre, 'stroke-width': TRAIT }, gGen);
-    el('line', { x1: 90, x2: 90, y1: 209, y2: 253, stroke: C.verre, 'stroke-width': TRAIT }, gGen);
+    el('circle', { cx: 92, cy: 234, r: 23, fill: C.ombre, opacity: 0.12 }, gGen); // ombre portée, comme la verrerie
+    el('circle', { cx: 90, cy: 231, r: 22, fill: C.panneau, stroke: C.trait, 'stroke-width': TRAIT }, gGen);
+    el('line', { x1: 90, x2: 90, y1: 209, y2: 253, stroke: C.trait, 'stroke-width': TRAIT }, gGen);
     etiquette(gGen, { x: 104, y: 200, texte: '+', couleur: C.corail, taille: 17 });
     fleche(gGen, { x1: 46, y1: 262, x2: 46, y2: 200, couleur: C.menthe });
-    const etiqE = etiquette(gGen, { x: 122, y: 236, texte: '', mono: true, taille: 14, couleur: C.menthe });
+    const etiqE = etiquette(gGen, { x: 120, y: 236, texte: '', mono: true, taille: 13, couleur: C.menthe });
 
     // Inverseur K.
     const gK = el('g', {}, scene);
     const levier = el('line', { x1: 250, y1: 110, x2: 201.5, y2: 110, stroke: C.orange, 'stroke-width': 4, 'stroke-linecap': 'round' }, gK);
-    for (const [x, y] of [[205, 92], [205, 128], [250, 110]]) el('circle', { cx: x, cy: y, r: 4.5, fill: C.fond, stroke: C.verre, 'stroke-width': 2 }, gK);
+    for (const [x, y] of [[205, 92], [205, 128], [250, 110]]) el('circle', { cx: x, cy: y, r: 4.5, fill: C.fond, stroke: C.trait, 'stroke-width': 2 }, gK);
     etiquette(gK, { x: 252, y: 92, texte: 'K', couleur: C.orange });
     etiquette(gK, { x: 192, y: 80, texte: '1', taille: 14, couleur: C.discret });
     etiquette(gK, { x: 220, y: 150, texte: '2', taille: 14, couleur: C.discret });
 
     // Conducteur ohmique.
     const gR = el('g', {}, scene);
-    el('rect', { x: 310, y: 98, width: 80, height: 24, rx: 3, fill: C.fond, stroke: C.verre, 'stroke-width': TRAIT }, gR);
+    el('rect', { x: 312, y: 101, width: 80, height: 24, rx: 3, fill: C.ombre, opacity: 0.12 }, gR);
+    el('rect', { x: 310, y: 98, width: 80, height: 24, rx: 3, fill: C.panneau, stroke: C.trait, 'stroke-width': TRAIT }, gR);
     const etiqR = etiquette(gR, { x: 350, y: 84, texte: '', ancre: 'middle', mono: true, taille: 14 });
 
     // Condensateur : armatures, champ, charges.
@@ -160,12 +162,13 @@ export default definirScene({
       const plein = Math.sqrt(q / 6e-3) * N_SIGNES; // 6 mC : charge maximale sur la plage des curseurs
       plus.forEach((s, j) => { s.style.opacity = String(clamp(plein - j)); });
       moins.forEach((s, j) => { s.style.opacity = String(clamp(plein - j)); });
-      champ.setAttribute('opacity', String(0.4 * (uC / 6)));
-      armHaut.setAttribute('stroke', mix(C.verre, C.corail, uC / 6));
-      armBas.setAttribute('stroke', mix(C.verre, C.bleu, uC / 6));
+      champ.setAttribute('opacity', String((themeSombre() ? 0.4 : 0.2) * (uC / 6))); // le jaune clair est foncé : aplat plus léger sur blanc
+      armHaut.setAttribute('stroke', mix(C.trait, C.corail, uC / 6));
+      armBas.setAttribute('stroke', mix(C.trait, C.bleu, uC / 6));
 
       // Flèches i (sens conventionnel, vers l'armature du haut quand i > 0) et uC.
-      const li = 70 * Math.sqrt(Math.abs(i) / 6e-3) * Math.sign(i);
+      const li0 = 70 * Math.sqrt(Math.abs(i) / 6e-3) * Math.sign(i);
+      const li = Math.abs(li0) < 6 ? 0 : li0; // trop courte, la flèche ne serait qu'un point parasite
       flecheI.maj(436 - li / 2, 134, 436 + li / 2, 134);
       etiqI.textContent = `i = ${iTexte} mA`;
       const lu = 90 * (uC / U_MAX);
@@ -186,14 +189,14 @@ export default definirScene({
         graphique.courbe('uc', a1 > 0 ? [...pts.filter(([x]) => x < t), [t, uC]] : [], { couleur: C.cyan, epaisseur: 3 });
         if (a2 > 0) graphique.verticale('bascule', T_BASCULE, { couleur: C.orange });
         else graphique.effacer('bascule');
-        if (a1 > 0 && a2 < 1) graphique.repere('mesure', t, uC, { couleur: C.blanc, rayon: 4 });
+        if (a1 > 0 && a2 < 1) graphique.repere('mesure', t, uC, { couleur: C.texte, rayon: 4 });
         else graphique.effacer('mesure');
 
         // Tangente à l'origine, prolongée jusqu'à l'asymptote, puis lecture de tau.
         const pt = seg(a3, 0.05, 0.4);
         graphique.courbe('tangente', a3 > 0 ? [[0, 0], [tc * pt, k.e * pt]] : [], { couleur: C.rose, epaisseur: 2, pointille: true });
         if (a3 > 0.4) {
-          graphique.verticale('tau', tc, { couleur: C.jaune, label: tc < 1 ? 'τ' : `τ = ${fmt(tc, 2)} s` }); // étiquette courte près de l'axe vertical
+          graphique.verticale('tau', tc, { couleur: C.jaune, label: tc < 1 || tc > 3.6 ? 'τ' : `τ = ${fmt(tc, 2)} s` }); // étiquette courte près de l'axe vertical ou du repère de bascule
           graphique.opacite('tau', seg(a3, 0.4, 0.6));
           graphique.repere('p63', tc, u63, { couleur: C.jaune, label: tc < 3.4 ? L('0,63·E', '0.63·E') : undefined }); // sinon l'étiquette chevauche le repère de bascule
           graphique.opacite('p63', seg(a3, 0.6, 0.8));

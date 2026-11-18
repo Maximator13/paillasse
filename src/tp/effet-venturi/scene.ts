@@ -1,6 +1,6 @@
-import { avancement, clamp, ease, el, fmt, L, lerp, rng, seg, set, show, uid } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, mix, rng, seg, set, show, uid } from '../../lib/anim';
 import { etiquette, fleche, paillasse } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { G, TUBE, debitSI, debitVenturi, diametre, ecartPression, hauteur, positionAuTemps, pressionRelative, section, tempsParcours, vitesse, volumes } from './model';
 
@@ -42,26 +42,48 @@ export default definirScene({
 
   monter({ scene, graphique }) {
     paillasse(scene);
-    const verre = { fill: 'none', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
-    const voile = 'rgba(223,230,255,.06)';
+    const selon = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
+    const verre = { fill: 'none', stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+    const voile = { fill: C.verre, 'fill-opacity': selon(0.08, 0.3) };
+    const defs = el('defs', {}, scene);
+    /** Dégradé à identifiant unique : arrêts [position, couleur, opacité]. */
+    const degrade = (type: 'linearGradient' | 'radialGradient', attrs: Record<string, string | number>, arrets: [number, string, number][]) => {
+      const id = uid('venturi-dg');
+      const gr = el(type, { id, ...attrs }, defs);
+      for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+      return `url(#${id})`;
+    };
+    const vertical = { x1: 0, y1: 0, x2: 0, y2: 1 };
+    const metal = degrade('linearGradient', {}, [[0, mix(C.metal, C.ombre, 0.1), 1], [0.3, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1]]);
+    const metalV = degrade('linearGradient', vertical, [[0, mix(C.metal, C.blanc, 0.3), 1], [1, mix(C.metal, C.ombre, 0.35), 1]]);
+    const ombrePortee = degrade('radialGradient', {}, [[0, C.ombre, selon(0.6, 0.22)], [0.6, C.ombre, selon(0.32, 0.1)], [1, C.ombre, 0]]);
+    // Volume du verre cylindrique : bord ombré, liseré de lumière, bord opposé plus sombre (comme le kit).
+    const arretsReflet: [number, string, number][] = [
+      [0, C.ombre, selon(0.32, 0.1)], [0.1, C.ombre, 0], [0.15, C.blanc, 0], [0.22, C.blanc, selon(0.2, 0.55)],
+      [0.3, C.blanc, 0], [0.78, C.ombre, 0], [1, C.ombre, selon(0.38, 0.14)],
+    ];
 
     // Supports posés sur la paillasse.
     const gSupports = el('g', {}, scene);
     for (const x of [215, 467]) {
-      el('rect', { x: x - 26, y: 432, width: 52, height: 8, rx: 3, fill: C.metal }, gSupports);
-      el('rect', { x: x - 3, y: 377, width: 6, height: 57, fill: C.metal }, gSupports);
+      el('ellipse', { cx: x + 2, cy: 438, rx: 34, ry: 5, fill: ombrePortee }, gSupports);
+      el('rect', { x: x - 26, y: 432, width: 52, height: 8, rx: 3, fill: metalV }, gSupports);
+      el('rect', { x: x - 3, y: 377, width: 6, height: 57, fill: metal }, gSupports);
       el('path', { d: `M${x - 16} 365V375H${x + 16}V365`, fill: 'none', stroke: C.metal, 'stroke-width': 4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, gSupports);
     }
 
     // Tube de Venturi : verre, eau, traceurs, tubes manométriques, raccords.
     const gTube = el('g', {}, scene);
-    const corps = el('path', { fill: voile }, gTube);
-    const fondsManos = PRISES.map((x) => el('rect', { x: X(x) - DEMI, width: 2 * DEMI, fill: voile }, gTube));
+    const corps = el('path', voile, gTube);
+    const fondsManos = PRISES.map((x) => el('rect', { x: X(x) - DEMI, width: 2 * DEMI, ...voile }, gTube));
     const idClip = uid('venturi');
     const clip = el('path', {}, el('clipPath', { id: idClip }, gTube));
     const gEau = el('g', { 'clip-path': `url(#${idClip})`, opacity: 0.5 }, gTube);
     const eauCorps = el('rect', { x: X0, width: ECH_X * TUBE.L, fill: C.bleu }, gEau);
     const eauManos = PRISES.map((x) => el('rect', { x: X(x) - DEMI, width: 2 * DEMI, fill: C.bleu }, gEau));
+    // Reflets par-dessus l'eau : tube horizontal éclairé par le haut, tubes manométriques éclairés par la gauche.
+    const refletCorps = el('path', { fill: degrade('linearGradient', { gradientUnits: 'userSpaceOnUse', x1: 0, x2: 0, y1: AX - 36, y2: AX + 36 }, arretsReflet) }, gTube);
+    const refletsManos = PRISES.map((x) => el('rect', { x: X(x) - DEMI, width: 2 * DEMI, fill: degrade('linearGradient', { gradientUnits: 'userSpaceOnUse', x1: X(x) - DEMI, x2: X(x) + DEMI, y1: 0, y2: 0 }, arretsReflet) }, gTube));
     const gLignes = el('g', {}, gTube);
     const lignes = [-0.66, -0.33, 0, 0.33, 0.66].map((k) => ({ k, n: el('path', { fill: 'none', stroke: C.blanc, 'stroke-width': 1.2 }, gLignes) }));
     const alea = rng(11);
@@ -76,15 +98,16 @@ export default definirScene({
     const surfaces = PRISES.map((x) => el('rect', { x: X(x) - DEMI, width: 2 * DEMI, height: 2.5, fill: C.blanc }, gTube));
     const gGrad = PRISES.map((x) => {
       const g = el('g', {}, gTube);
-      for (let h = 5; h <= 35; h += 5) el('line', { x1: X(x) + DEMI - (h % 10 ? 4 : 7), x2: X(x) + DEMI, y1: AX - ECH_H * h / 100, y2: AX - ECH_H * h / 100, stroke: C.verre, 'stroke-width': 1, opacity: 0.55 }, g);
+      for (let h = 5; h <= 35; h += 5) el('line', { x1: X(x) + DEMI - (h % 10 ? 4 : 7), x2: X(x) + DEMI, y1: AX - ECH_H * h / 100, y2: AX - ECH_H * h / 100, stroke: C.trait, 'stroke-width': 1, opacity: 0.55 }, g);
       return g;
     });
     const paroiHaut = el('path', verre, gTube), paroiBas = el('path', verre, gTube);
     const manos = PRISES.map(() => el('path', verre, gTube));
     const bouchons = PRISES.map(() => el('line', verre, gTube));
-    for (const x of [16, 594]) el('rect', { x, y: AX - 36, width: 30, height: 72, rx: 6, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, gTube);
-    el('rect', { x: 606, y: AX - 50, width: 6, height: 14, fill: C.metal }, gTube);
-    const poignee = el('rect', { x: 596, y: AX - 56, width: 26, height: 6, rx: 3, fill: C.orange }, gTube);
+    const raccord = degrade('linearGradient', vertical, [[0, mix(C.panneau, C.blanc, selon(0.06, 0.6)), 1], [0.25, C.panneau, 1], [1, mix(C.panneau, C.ombre, selon(0.3, 0.1)), 1]]);
+    for (const x of [16, 594]) el('rect', { x, y: AX - 36, width: 30, height: 72, rx: 6, fill: raccord, stroke: C.metal, 'stroke-width': 2 }, gTube);
+    el('rect', { x: 606, y: AX - 50, width: 6, height: 14, fill: metal }, gTube);
+    const poignee = el('rect', { x: 596, y: AX - 56, width: 26, height: 6, rx: 3, fill: degrade('linearGradient', vertical, [[0, mix(C.orange, C.blanc, 0.35), 1], [0.5, C.orange, 1], [1, mix(C.orange, C.ombre, 0.3), 1]]) }, gTube);
 
     // Repères et annotations.
     const gRepos = el('g', {}, scene);
@@ -147,6 +170,7 @@ export default definirScene({
           contour += `L${dessus[i]}`;
         }
         corps.setAttribute('d', `M${dessus.join('L')}L${dessous}Z`);
+        refletCorps.setAttribute('d', `M${dessus.join('L')}L${dessous}Z`);
         clip.setAttribute('d', `${contour}L${dessous}Z`);
         paroiHaut.setAttribute('d', paroi);
         paroiBas.setAttribute('d', `M${dessous}`);
@@ -163,6 +187,7 @@ export default definirScene({
         const e = seg(a1, 0.28 + 0.07 * i, 0.46 + 0.07 * i, ease.out), sommet = lerp(bases[i], HAUT, e);
         manos[i].setAttribute('d', `M${X(x) - DEMI} ${bases[i]}V${sommet}M${X(x) + DEMI} ${bases[i]}V${sommet}`);
         set(fondsManos[i], { y: sommet, height: bases[i] - sommet });
+        set(refletsManos[i], { y: sommet, height: bases[i] - sommet });
         set(bouchons[i], { x1: X(x) - DEMI, x2: X(x) + DEMI, y1: bases[i], y2: bases[i], opacity: e > 0.02 ? 0 : 1 });
         gGrad[i].childNodes.forEach((n) => ((n as SVGElement).style.opacity = Number((n as SVGElement).getAttribute('y1')) > sommet + 4 && Number((n as SVGElement).getAttribute('y1')) < bases[i] - 3 ? '' : '0'));
         show(noms[i], seg(a1, 0.4 + 0.07 * i, 0.52 + 0.07 * i));
@@ -209,7 +234,8 @@ export default definirScene({
       etiqH[1].textContent = `h2 = ${fmt(h2 * 100, 1)} cm`;
       const debuts = [0.1, 0.4, 0.25]; // ordre de lecture : amont, aval, col
       etiqH.forEach((n, i) => {
-        n.setAttribute('y', String(niveaux[i] + (i === 1 ? 17 : 4)));
+        // h2 sous le niveau du col, mais jamais sur la paroi du divergent quand le niveau descend très bas.
+        n.setAttribute('y', String(i === 1 ? Math.min(niveaux[1] + 17, AX - rayon(X(PRISES[1]) + 112, d) - 6) : niveaux[i] + 4));
         show(n, seg(a3, debuts[i], debuts[i] + 0.12), 8);
       });
       denivele.maj(292, niveaux[0], 292, lerp(niveaux[0], niveaux[1], seg(a3, 0.55, 0.78, ease.out)));
@@ -223,7 +249,7 @@ export default definirScene({
         set(barres[i], { y: haut, height: Math.max(0, niveaux[i] - haut - 1.5) });
       });
       etiqEc.setAttribute('y', String(Math.min((yRepos + niveaux[1]) / 2 + 4, niveaux[1] - 6)));
-      show(etiqEc, seg(a4, 0.26, 0.38) * clamp((niveaux[1] - yRepos - 12) / 8), 8); // masquée si la barre verte est trop courte pour la porter
+      show(etiqEc, seg(a4, 0.26, 0.38) * clamp((niveaux[1] - yRepos - 12) / 2), 8); // masquée si la barre verte est trop courte pour la porter
       const xP = positionAuTemps(seg(a4, 0.36, 0.76, ease.lin) * tTot, dv, vol);
       const opP = seg(a4, 0.3, 0.36) * (1 - seg(a4, 0.76, 0.84));
       set(sondeP, { transform: `translate(${X(xP)} ${AX})`, opacity: opP });
@@ -260,7 +286,7 @@ export default definirScene({
         if (a4 > 0.36) graphique.courbe('p', [...xs.filter((x) => x < xP).map((x) => [x * 100, pEn(x)] as [number, number]), [xP * 100, pEn(xP)]], { couleur: C.cyan, epaisseur: 3 });
         else graphique.effacer('p');
         if (opP > 0.01) {
-          graphique.repere('sonde', xP * 100, pEn(xP), { couleur: C.blanc, rayon: 4 });
+          graphique.repere('sonde', xP * 100, pEn(xP), { couleur: C.texte, rayon: 4 });
           graphique.opacite('sonde', opP);
         } else graphique.effacer('sonde');
         if (a4 > 0.76) {

@@ -1,5 +1,6 @@
 // Capture d'écran d'une page du serveur de développement, avec le Chrome installé.
 // Usage : node scripts/capture.mjs <chemin> [sortie.png] [--mobile] [--el <selecteur>] [--bandeau] [--sombre] [--port 4321] [--base paillasse]
+// --sombre : thème sombre forcé (réglage de l'appareil et choix mémorisé) ; sans lui, thème clair.
 // --base (ou la variable BASE_PATH) : sous-chemin du serveur quand il est lancé avec BASE_PATH ; inutile sinon.
 // Exemples :
 //   node scripts/capture.mjs "dev/planche/titrage-ph-metrique/?lang=en"                planche en anglais
@@ -7,6 +8,7 @@
 //   node scripts/capture.mjs /dev/planche/titrage-ph-metrique/                       planche de toutes les étapes
 //   node scripts/capture.mjs "/terminale/tp/titrage-ph-metrique/?etape=3&t=0.6" --el .lecteur   image figée du lecteur
 //   node scripts/capture.mjs /terminale/cours/titrages/ --mobile                       page entière en largeur mobile
+//   node scripts/capture.mjs "terminale/tp/satellite-kepler/?vue=3d&etape=3&t=0.6" --el .lecteur   vue 3D figée
 import { chromium } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -22,9 +24,11 @@ const chemin = propre(args[0]);
 const base = propre(baseOpt).replace(/\/+$/, '');
 const sortie = args[1] ?? `.captures/${chemin.replace(/[^a-z0-9]+/gi, '_')}${mobile ? '_mobile' : ''}.png`;
 
-const nav = await chromium.launch({ channel: 'chrome' });
+// WebGL sans affichage (vue 3D, ?vue=3d) : rendu logiciel SwiftShader autorisé si le GPU n'est pas accessible.
+const nav = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await nav.newPage({ viewport: mobile ? { width: 390, height: 844 } : { width: 1360, height: 900 }, deviceScaleFactor: mobile ? 2 : 1, colorScheme: sombre ? 'dark' : 'light' });
 // Sans --bandeau, un refus de mesure d'audience est mémorisé avant le chargement : le bandeau ne masque pas le contenu.
+await page.addInitScript((t) => { try { localStorage.setItem('paillasse-theme', t); } catch {} }, sombre ? 'dark' : 'light');
 if (!bandeau) await page.addInitScript(() => { try { localStorage.setItem('paillasse-consentement', 'refuse'); } catch {} });
 const erreurs = [];
 page.on('console', (m) => m.type() === 'error' && erreurs.push(m.text()));

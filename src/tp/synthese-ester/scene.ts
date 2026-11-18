@@ -1,6 +1,6 @@
 import { L, avancement, clamp, ease, el, fmt, lerp, mix, remap, rng, seg, set, show, uid } from '../../lib/anim';
 import { bulles, eprouvette, etiquette, fleche, gouttes, paillasse, potence, recipient } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { ACIDE, ALCOOL, K_ESTER, avancementA, avancementEquilibre, cinetique, constanteVitesse, quotient, volume, type Melange } from './model';
 
@@ -8,7 +8,6 @@ const N_ALCOOL = 0.2; // mol, réactif limitant
 const T_MAX = 60; // min, durée du chauffage
 const X0 = 230; // axe du montage
 const PAIRES = 9, EXTRA = 18; // particules dans le ballon
-const COUL = { acide: C.corail, alcool: C.cyan, ester: C.jaune, eau: C.bleu };
 
 export default definirScene({
   etapes: [
@@ -31,12 +30,22 @@ export default definirScene({
   affiche: { etape: 2, t: 0.6 },
 
   monter({ scene, graphique }) {
+    const COUL = { acide: C.corail, alcool: C.cyan, ester: C.jaune, eau: C.bleu };
+    const sombre = themeSombre();
+    // Dégradé linéaire à identifiant unique (volume des objets dessinés ici, accordé au kit).
+    const degrade = (attrs: Record<string, number | string>, arrets: [number, string, number][]) => {
+      const id = uid('ester');
+      const gr = el('linearGradient', { id, ...attrs }, el('defs', {}, scene));
+      for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+      return `url(#${id})`;
+    };
     paillasse(scene);
 
     // Chauffe-ballon (derrière le ballon pour laisser voir le liquide).
     const chauffe = el('g', {}, scene);
-    el('rect', { x: X0 - 72, y: 400, width: 144, height: 40, rx: 9, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, chauffe);
-    el('rect', { x: X0 - 58, y: 394, width: 116, height: 8, rx: 4, fill: C.metal }, chauffe);
+    el('ellipse', { cx: X0 + 4, cy: 438, rx: 84, ry: 6, fill: C.ombre, opacity: sombre ? 0.4 : 0.12 }, chauffe);
+    el('rect', { x: X0 - 72, y: 400, width: 144, height: 40, rx: 9, fill: degrade({ x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, mix(C.panneau, C.metal, sombre ? 0.22 : 0.14), 1], [1, mix(C.panneau, C.ombre, sombre ? 0.3 : 0.06), 1]]), stroke: C.metal, 'stroke-width': 2 }, chauffe);
+    el('rect', { x: X0 - 58, y: 394, width: 116, height: 8, rx: 4, fill: degrade({ x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, mix(C.metal, C.blanc, 0.35), 1], [1, mix(C.metal, C.ombre, 0.3), 1]]) }, chauffe);
     const lueur = el('ellipse', { cx: X0, cy: 402, rx: 54, ry: 13, fill: C.orange }, chauffe);
     const led = el('circle', { cx: X0 - 56, cy: 422, r: 4 }, chauffe);
     el('circle', { cx: X0 + 54, cy: 422, r: 7, fill: C.fond, stroke: C.metal, 'stroke-width': 2 }, chauffe);
@@ -56,12 +65,18 @@ export default definirScene({
     const idEau = uid('eau');
     el('rect', { x: X0 - 24, y: 100, width: 48, height: 168, rx: 12 }, el('clipPath', { id: idEau }, refr));
     const eau = el('rect', { x: X0 - 24, width: 48, y: 268, height: 0, fill: C.bleu, opacity: 0.42, 'clip-path': `url(#${idEau})` }, refr);
-    el('rect', { x: X0 - 24, y: 100, width: 48, height: 168, rx: 12, fill: 'rgba(223,230,255,.05)', stroke: C.verre, 'stroke-width': TRAIT }, refr);
-    el('path', { d: `M${X0 - 8} 72V284M${X0 + 8} 72V284`, stroke: C.verre, 'stroke-width': 2, 'stroke-linecap': 'round' }, refr);
+    // Manchon : aplat de verre, volume (bord gauche ombré, liseré de lumière, bord droit plus sombre), contour net.
+    el('rect', { x: X0 - 24, y: 100, width: 48, height: 168, rx: 12, fill: C.verre, 'fill-opacity': sombre ? 0.06 : 0.25 }, refr);
+    el('rect', { x: X0 - 24, y: 100, width: 48, height: 168, rx: 12, fill: degrade({ gradientUnits: 'userSpaceOnUse', x1: X0 - 24, x2: X0 + 24, y1: 0, y2: 0 }, [
+      [0, C.ombre, sombre ? 0.32 : 0.1], [0.1, C.ombre, 0], [0.15, C.blanc, 0], [0.22, C.blanc, sombre ? 0.2 : 0.55], [0.3, C.blanc, 0], [0.78, C.ombre, 0], [1, C.ombre, sombre ? 0.38 : 0.14],
+    ]), stroke: C.trait, 'stroke-width': TRAIT }, refr);
+    el('path', { d: `M${X0 - 8} 72V284M${X0 + 8} 72V284`, stroke: C.trait, 'stroke-width': 2, 'stroke-linecap': 'round' }, refr);
     const BOULES = [124, 156, 188, 220, 252];
-    for (const cy of BOULES) el('circle', { cx: X0, cy, r: 14.5, fill: C.fond, stroke: C.verre, 'stroke-width': 2 }, refr);
+    for (const cy of BOULES) el('circle', { cx: X0, cy, r: 14.5, fill: C.fond, stroke: C.trait, 'stroke-width': 2 }, refr);
     el('rect', { x: X0 - 7, y: 73, width: 14, height: 211, fill: C.fond }, refr);
-    el('rect', { x: X0 - 13, y: 282, width: 26, height: 12, rx: 3, fill: C.verre, opacity: 0.55 }, refr);
+    // Reflet vertical dans le tube intérieur et les boules.
+    el('path', { d: `M${X0 - 4} 76V280`, stroke: C.verre, 'stroke-width': 2, opacity: sombre ? 0.25 : 0.8, 'stroke-linecap': 'round' }, refr);
+    el('rect', { x: X0 - 13, y: 282, width: 26, height: 12, rx: 3, fill: degrade({ x1: 0, y1: 0, x2: 1, y2: 0 }, [[0, C.verre, 0.4], [0.3, C.verre, 0.85], [1, C.verre, 0.45]]), stroke: C.trait, 'stroke-width': 1.2 }, refr);
     const tuyaux = el('g', {}, refr);
     el('path', { d: `M${X0 + 24} 246H${X0 + 46}M${X0 + 24} 122H${X0 + 46}`, stroke: C.bleu, 'stroke-width': 6, 'stroke-linecap': 'round' }, tuyaux);
     const flux = el('path', { d: `M${X0 + 46} 246H${X0 + 24}M${X0 + 24} 122H${X0 + 46}`, stroke: C.blanc, 'stroke-width': 2, 'stroke-dasharray': '4 7', opacity: 0.8 }, tuyaux);
@@ -74,6 +89,8 @@ export default definirScene({
 
     // Vapeurs qui montent puis gouttes de condensat qui retombent.
     const gVap = el('g', {}, scene);
+    // Vapeur : blanche sur fond nuit, gris bleuté sur fond blanc.
+    const coulVap = sombre ? C.blanc : C.metal, opVap = sombre ? 1 : 0.75;
     const vap = Array.from({ length: 16 }, () => ({ v: 0.1 + r() * 0.07, ph: r(), h: r(), cote: r() < 0.5 ? -1 : 1, n: el('ellipse', {}, gVap) }));
 
     // Éprouvettes verseuses et compte-gouttes (étape 1).
@@ -97,8 +114,8 @@ export default definirScene({
     };
     const vAlcool = verseuse(COUL.alcool, L('Alcool', 'Alcohol')), vAcide = verseuse(COUL.acide, L('Acide', 'Acid'));
     const pip = el('g', {}, scene);
-    el('ellipse', { cx: X0, cy: 226, rx: 8, ry: 13, fill: C.corail, stroke: C.verre, 'stroke-width': 1.5 }, pip);
-    el('path', { d: `M${X0 - 4} 238V268L${X0 - 1.5} 284H${X0 + 1.5}L${X0 + 4} 268V238Z`, fill: C.jaune, 'fill-opacity': 0.45, stroke: C.verre, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, pip);
+    el('ellipse', { cx: X0, cy: 226, rx: 8, ry: 13, fill: C.corail, stroke: C.trait, 'stroke-width': 1.5 }, pip);
+    el('path', { d: `M${X0 - 4} 238V268L${X0 - 1.5} 284H${X0 + 1.5}L${X0 + 4} 268V238Z`, fill: C.jaune, 'fill-opacity': 0.45, stroke: C.trait, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, pip);
     const gtt = gouttes(scene, { x: X0, y1: 284, y2: 372, couleur: C.jaune });
     const labCata = etiquette(scene, { x: X0 + 26, y: 250, texte: '', mono: true, taille: 13, couleur: C.jaune });
 
@@ -157,7 +174,8 @@ export default definirScene({
       pip.style.opacity = cata && d > 0 && d < 1 ? '1' : '0';
       pip.style.transform = `translateY(${-300 * (1 - seg(d, 0, 0.25, ease.out)) - 300 * seg(d, 0.82, 1, ease.in)}px)`;
       gtt.maj(T, cata && d > 0.28 && d < 0.8 ? 0.5 : 0);
-      labCata.textContent = cata ? L(`H2SO4 : ${Math.round(p.gouttes * seg(d, 0.28, 0.8, ease.lin))} gouttes`, `H2SO4: ${Math.round(p.gouttes * seg(d, 0.28, 0.8, ease.lin))} drops`) : L('sans catalyseur', 'no catalyst');
+      const nG = Math.round(p.gouttes * seg(d, 0.28, 0.8, ease.lin));
+      labCata.textContent = cata ? L(`H2SO4 : ${nG} goutte${nG > 1 ? 's' : ''}`, `H2SO4: ${nG} drop${nG === 1 ? '' : 's'}`) : L('sans catalyseur', 'no catalyst');
       show(labCata, seg(d, 0.15, 0.3) - seg(a1, 0, 0.12));
 
       // Étape 2 : le réfrigérant descend, l'eau circule.
@@ -176,7 +194,7 @@ export default definirScene({
       const x = avancementA(tMin, m, k), x60 = avancementA(T_MAX, m, k);
       const taux = x / N_ALCOOL;
       set(lueur, { opacity: chauffage * (0.55 + 0.12 * Math.sin(T * 5)) });
-      led.setAttribute('fill', chauffage > 0.05 ? C.orange : C.grille);
+      led.setAttribute('fill', chauffage > 0.05 ? C.orange : C.metal);
       tAff.textContent = `${fmt(lerp(20, p.theta, seg(a2, 0, 0.06) * (1 - 0.5 * seg(a4, 0, 1))), 0)} °C`;
       bal.liquide(niveau, mix(C.metal, C.jaune, 0.35 * taux));
       ebul.maj(T, chauffage * remap(p.theta, 95, 120, 0, 1)); // pas d'ébullition franche loin de la température d'ébullition
@@ -202,7 +220,7 @@ export default definirScene({
         const yHaut = sommet + o.h * 34;
         if (c < 0.6) {
           const q = c / 0.6;
-          set(o.n, { cx: X0 + Math.sin(T * 3 + i * 1.7) * 4.5, cy: lerp(yS - 4, yHaut, ease.out(q)), rx: 2.5 + 3 * q, ry: 2.5 + 3 * q, fill: C.blanc, opacity: actif ? 0.6 * Math.sin(Math.PI * Math.min(1, q * 1.15)) + 0.12 : 0 });
+          set(o.n, { cx: X0 + Math.sin(T * 3 + i * 1.7) * 4.5, cy: lerp(yS - 4, yHaut, ease.out(q)), rx: 2.5 + 3 * q, ry: 2.5 + 3 * q, fill: coulVap, opacity: actif ? opVap * (0.6 * Math.sin(Math.PI * Math.min(1, q * 1.15)) + 0.12) : 0 });
         } else {
           const q = (c - 0.6) / 0.4;
           set(o.n, { cx: X0 + o.cote * 5, cy: lerp(yHaut, yS, q * q), rx: 2.4, ry: 4, fill: C.cyan, opacity: actif ? Math.min(1, q * 6) * (q > 0.96 ? 0 : 1) : 0 });
@@ -224,7 +242,7 @@ export default definirScene({
 
       if (graphique) {
         graphique.courbe('x', a2 > 0 ? pts.filter(([t]) => t <= tMin) : [], { couleur: C.jaune, epaisseur: 3 });
-        if (a2 > 0 && a2 < 1) graphique.repere('mesure', tMin, x, { couleur: C.blanc, rayon: 4 });
+        if (a2 > 0 && a2 < 1) graphique.repere('mesure', tMin, x, { couleur: C.texte, rayon: 4 });
         else graphique.effacer('mesure');
         if (a3 > 0.08) {
           const pc = (v: number) => (a4 > 0.3 ? L(` (${fmt(100 * v / N_ALCOOL, 0)} %)`, ` (${fmt(100 * v / N_ALCOOL, 0)}%)`) : '');

@@ -1,6 +1,6 @@
-import { L as txt, avancement, clamp, ease, el, fmt, lerp, seg, set, show, texte, uid } from '../../lib/anim';
+import { L as txt, avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, texte, uid } from '../../lib/anim';
 import { etiquette } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { angle, couleurLaser, intensite, largeurTache, longueurOnde, pente, serie } from './model';
 
@@ -69,10 +69,26 @@ export default definirScene({
   monter({ scene, graphique }) {
     const defs = el('defs', {}, scene);
     const url = (id: string) => `url(#${id})`;
+    // Relief accordé au kit de verrerie : boîtiers éclairés par le haut, pièces métalliques, ombres décalées sans flou.
+    const sombre = themeSombre();
+    const selon = (s: number, c: number) => (sombre ? s : c);
+    const relief = (attrs: Record<string, number | string>, arrets: [number, string, number][]) => {
+      const id = uid('relief');
+      const gr = el('linearGradient', { id, ...attrs }, defs);
+      for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+      return url(id);
+    };
+    const vertical = { x1: 0, y1: 0, x2: 0, y2: 1 };
+    const boitier = relief(vertical, [[0, mix(C.panneau, C.metal, selon(0.22, 0.14)), 1], [1, C.panneau, 1]]);
+    const acier = (attrs: Record<string, number>) =>
+      relief(attrs, [[0, mix(C.metal, C.ombre, 0.1), 1], [0.3, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1]]);
+    const ombrePortee = (g: Element, x: number, y: number, width: number, height: number, rx: number) =>
+      el('rect', { x: x + 2, y: y + 4, width, height, rx, fill: C.ombre, opacity: selon(0.35, 0.1) }, g);
 
     // Banc gradué tous les 10 cm.
     const banc = el('g', {}, scene);
-    el('rect', { x: 20, y: YC - 8, width: 600, height: 16, rx: 4, fill: C.panneau, stroke: C.grille, 'stroke-width': 2 }, banc);
+    ombrePortee(banc, 20, YC - 8, 600, 16, 4);
+    el('rect', { x: 20, y: YC - 8, width: 600, height: 16, rx: 4, fill: boitier, stroke: C.metal, 'stroke-width': 1.5 }, banc);
     for (let i = -10; i <= 26; i++) {
       const x = X_FENTE + (i * PX_M) / 10;
       el('line', { x1: x, x2: x, y1: YC + (i % 5 ? 3 : -2), y2: YC + 7, stroke: C.discret, 'stroke-width': 1, opacity: 0.7 }, banc);
@@ -94,21 +110,25 @@ export default definirScene({
 
     // Laser.
     const laser = el('g', {}, scene);
-    el('rect', { x: 100, y: YC - 9, width: 9, height: 18, rx: 2, fill: C.metal }, laser);
-    el('rect', { x: 28, y: YC - 22, width: 74, height: 44, rx: 8, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, laser);
+    el('rect', { x: 100, y: YC - 9, width: 9, height: 18, rx: 2, fill: acier(vertical) }, laser);
+    ombrePortee(laser, 28, YC - 22, 74, 44, 8);
+    el('rect', { x: 28, y: YC - 22, width: 74, height: 44, rx: 8, fill: boitier, stroke: C.trait, 'stroke-width': TRAIT }, laser);
+    el('path', { d: `M38 ${YC - 19.5}H92`, stroke: C.blanc, 'stroke-width': 1.5, opacity: selon(0.18, 0.9), 'stroke-linecap': 'round' }, laser);
     texte(laser, 75, YC + 5, 'LASER', { fill: C.discret, 'font-family': POLICE, 'font-size': 13, 'font-weight': 600, 'letter-spacing': '.06em', 'text-anchor': 'middle' });
     const led = el('circle', { cx: 42, cy: YC, r: 4.5 }, laser);
     const etiqLambda = etiquette(laser, { x: 28, y: YC - 32, texte: '', mono: true, taille: 13 });
 
     // Fente réglable : deux mâchoires dans une monture.
     const fente = el('g', {}, scene);
-    for (const y of [YC - 57, YC + 51]) el('rect', { x: X_FENTE - 9, y, width: 18, height: 6, rx: 3, fill: C.metal }, fente);
-    const machoires = [0, 1].map(() => el('rect', { x: X_FENTE - 3, width: 6, rx: 1.5, fill: C.verre }, fente));
+    for (const y of [YC - 57, YC + 51]) el('rect', { x: X_FENTE - 9, y, width: 18, height: 6, rx: 3, fill: acier(vertical) }, fente);
+    const mors = acier({});
+    const machoires = [0, 1].map(() => el('rect', { x: X_FENTE - 3, width: 6, rx: 1.5, fill: mors, stroke: mix(C.metal, C.ombre, 0.35), 'stroke-width': 0.8 }, fente));
     const etiqA = etiquette(fente, { x: X_FENTE, y: YC - 68, texte: '', ancre: 'middle', mono: true, taille: 13 });
 
     // Écran (vu de dessus), repéré par rapport à sa face éclairée.
     const ecran = el('g', {}, scene);
-    el('rect', { x: 0, y: YC - H_ECRAN - 4, width: 6, height: 2 * H_ECRAN + 8, rx: 3, fill: C.verre }, ecran);
+    el('rect', { x: 2, y: YC - H_ECRAN, width: 6, height: 2 * H_ECRAN + 8, rx: 3, fill: C.ombre, opacity: selon(0.35, 0.1) }, ecran);
+    el('rect', { x: 0, y: YC - H_ECRAN - 4, width: 6, height: 2 * H_ECRAN + 8, rx: 3, fill: relief({}, [[0, C.verre, 1], [0.35, mix(C.verre, C.blanc, 0.5), 1], [1, mix(C.verre, C.ombre, selon(0.25, 0.15)), 1]]), stroke: C.trait, 'stroke-width': selon(0, 1) }, ecran);
     etiquette(ecran, { x: 8, y: YC - H_ECRAN - 14, texte: txt('Écran', 'Screen'), ancre: 'end' });
     const coteD = cote(scene, C.discret);
 
@@ -131,15 +151,18 @@ export default definirScene({
     el('rect', { x: 28, y: YF - 32, width: 584, height: 64, fill: url(idFondu) }, el('mask', { id: idHalo, maskUnits: 'userSpaceOnUse', x: 28, y: YF - 32, width: 584, height: 64 }, defs));
     const face = el('g', {}, scene);
     etiquette(face, { x: 24, y: YF - 43, texte: txt('Écran vu de face', 'Screen, front view'), taille: 13, couleur: C.discret });
-    el('rect', { x: 24, y: YF - 35, width: 592, height: 70, rx: 10, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, face);
+    ombrePortee(face, 24, YF - 35, 592, 70, 10);
+    el('rect', { x: 24, y: YF - 35, width: 592, height: 70, rx: 10, fill: C.panneau, stroke: C.trait, 'stroke-width': TRAIT }, face);
+    el('path', { d: `M34 ${YF - 31}H606`, stroke: C.ombre, 'stroke-width': 2, opacity: selon(0.5, 0.12), 'stroke-linecap': 'round' }, face);
     const figure = el('rect', { x: 28, y: YF - 32, width: 584, height: 64, fill: url(idFigure), mask: url(idHalo) }, face);
 
     // Règle graduée en millimètres, puis mesure de L.
     const regle = el('g', {}, scene);
-    el('rect', { x: 28, y: YF + 41, width: 584, height: 28, rx: 5, fill: C.panneau, stroke: C.metal, 'stroke-width': 1.5 }, regle);
+    ombrePortee(regle, 28, YF + 41, 584, 28, 5);
+    el('rect', { x: 28, y: YF + 41, width: 584, height: 28, rx: 5, fill: boitier, stroke: C.metal, 'stroke-width': 1.5 }, regle);
     for (let mm = -64; mm <= 64; mm++) {
       const x = XF + K_FACE * mm;
-      el('line', { x1: x, x2: x, y1: YF + 41, y2: YF + 41 + (mm % 10 === 0 ? 11 : mm % 5 === 0 ? 8 : 5), stroke: C.verre, 'stroke-width': 1, opacity: 0.7 }, regle);
+      el('line', { x1: x, x2: x, y1: YF + 41, y2: YF + 41 + (mm % 10 === 0 ? 11 : mm % 5 === 0 ? 8 : 5), stroke: C.trait, 'stroke-width': 1, opacity: 0.7 }, regle);
       if (mm % 20 === 0) texte(regle, x, YF + 65, String(mm), { fill: C.texte, 'font-family': MONO, 'font-size': 13, 'text-anchor': 'middle' });
     }
     const mesure = el('g', {}, scene);
@@ -148,6 +171,7 @@ export default definirScene({
 
     // Encart de résultat (étape 6).
     const encart = el('g', {}, scene);
+    ombrePortee(encart, 24, 186, 156, 76, 12);
     el('rect', { x: 24, y: 186, width: 156, height: 76, rx: 12, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 36, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
@@ -172,6 +196,10 @@ export default definirScene({
 
       const rvb = couleurLaser(p.lambda);
       const teinte = (blanc: number) => `rgb(${rvb.map((c) => Math.round(lerp(c, 255, blanc))).join(',')})`;
+      // Sur fond blanc, une teinte éclaircie disparaît : texte et courbe prennent la couleur du laser assombrie, d'autant plus qu'elle est claire.
+      const luminance = rvb.reduce((s, c, i) => s + [0.2126, 0.7152, 0.0722][i] * (c / 255) ** 2.2, 0);
+      const hexLaser = `#${rvb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+      const lisible = (blanc: number) => (sombre ? teinte(blanc) : mix(hexLaser, C.texte, 0.25 + 0.4 * luminance));
       const xe = X_FENTE + PX_M * D, jeu = ouverture(a), w0 = Math.min(jeu, FAISCEAU) / 2;
       const bord = w0 + (K_HAUT * L) / 2; // bord de la tache centrale sur l'écran vu de dessus (px depuis l'axe)
 
@@ -192,7 +220,7 @@ export default definirScene({
         });
         stops.forEach((s, i) => {
           const v = profil((28 + 2 * i - XF) / K_FACE);
-          set(s, { 'stop-color': teinte(0.1 + 0.8 * v ** 2), 'stop-opacity': (v ** 0.45).toFixed(3) });
+          set(s, { 'stop-color': teinte(sombre ? 0.1 + 0.8 * v ** 2 : 0.15 * v ** 2), 'stop-opacity': (v ** 0.45).toFixed(3) });
         });
       }
 
@@ -208,7 +236,7 @@ export default definirScene({
       coteD.g.style.opacity = String(seg(a1, 0.8, 0.9));
       coteD.maj(X_FENTE, lerp(X_FENTE + 90, xe, seg(a1, 0.8, 1)), YC + H_ECRAN + 16, `D = ${fmt(D, 2)} m`, YC + H_ECRAN + 33);
       etiqLambda.textContent = `λ = ${fmt(p.lambda, 0)} nm`;
-      etiqLambda.setAttribute('fill', teinte(0.35));
+      etiqLambda.setAttribute('fill', lisible(0.35));
       etiqA.textContent = a3 > 0.1 ? `a = ${fmt(a, 0)} µm` : txt('Fente ouverte', 'Slit open');
       set(machoires[0], { y: YC - 52, height: 52 - jeu / 2 });
       set(machoires[1], { y: YC + jeu / 2, height: 52 - jeu / 2 });
@@ -271,7 +299,7 @@ export default definirScene({
         if (mode === 'profil') {
           const pts: [number, number][] = [];
           if (surEcran > 0) for (let x = -60; x <= 60; x += 0.25) pts.push([x, profil(x)]);
-          graphique.courbe('profil', pts, { couleur: teinte(0.3), epaisseur: 3 });
+          graphique.courbe('profil', pts, { couleur: lisible(0.3), epaisseur: 3 });
           graphique.opacite('profil', surEcran);
           if (ecart > 0) {
             graphique.verticale('gauche', -ecart, { couleur: C.jaune });
@@ -288,10 +316,15 @@ export default definirScene({
           if (etape === 4 && n > 0 && a5 < 0.93) {
             graphique.repere('dernier', ...points[n - 1], { couleur: C.jaune, label: txt(`a = ${SERIE[n - 1]} µm : L = ${fmt(points[n - 1][1], 0)} mm`, `a = ${SERIE[n - 1]} µm: L = ${fmt(points[n - 1][1], 0)} mm`) });
           } else graphique.effacer('dernier');
+          // Le libellé du point réglé est porté en haut d'une verticale : à côté du point, il croiserait la droite et les mesures.
           if (a6 > 0.5) {
-            graphique.repere('curseur', 1000 / p.a, L, { couleur: C.blanc, label: `a = ${fmt(p.a, 0)} µm` });
-            graphique.opacite('curseur', seg(a6, 0.5, 0.7));
-          } else graphique.effacer('curseur');
+            graphique.verticale('repereA', 1000 / p.a, { couleur: C.discret, label: `a = ${fmt(p.a, 0)} µm` });
+            graphique.repere('curseur', 1000 / p.a, L, { couleur: C.texte });
+            for (const id of ['repereA', 'curseur']) graphique.opacite(id, seg(a6, 0.5, 0.7));
+          } else {
+            graphique.effacer('repereA');
+            graphique.effacer('curseur');
+          }
         }
       }
 

@@ -1,6 +1,6 @@
-import { L, avancement, clamp, ease, el, fmt, lerp, seg, set, show, texte, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, texte, uid } from '../../lib/anim';
 import { etiquette } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { couleur, courbe, differenceMarche, intensite, interfrange, longueurOnde, nature, type Young } from './model';
 
@@ -21,7 +21,8 @@ const N_ARCS = 54, KX = 4;
 const XS = 536, WS = 54; // écran vu de face
 const YB = 364; // haut du bandeau d'explication
 const PROFIL = Array.from({ length: 9 }, (_, j) => Math.cos((Math.PI * j) / 16) ** 2); // cos² sur une demi-période
-const FOND = [1, 3, 5].map((q) => parseInt(C.fond.slice(q, q + 2), 16));
+const rvbDe = (h: string) => [1, 3, 5].map((q) => parseInt(h.slice(q, q + 2), 16));
+const rgb = (v: number[]) => `rgb(${v.map(Math.round).join(',')})`;
 
 export default definirScene({
   etapes: [
@@ -44,16 +45,25 @@ export default definirScene({
   affiche: { etape: 2, t: 1 },
 
   monter({ scene, graphique }) {
+    const sombre = themeSombre();
+    const selon = (s: number, c: number) => (sombre ? s : c);
+    // L'écran est dans le noir hors des franges brillantes : fond de nuit dans les deux thèmes.
+    const NUIT = sombre ? rvbDe(C.fond) : rvbDe(C.ombre).map((v, q) => lerp(v, rvbDe(C.fond)[q], 0.06));
     const defs = el('defs', {}, scene);
-    const idFr = uid('franges'), idVig = uid('vignette'), idClip = uid('ondes');
+    const idFr = uid('franges'), idVig = uid('vignette'), idClip = uid('ondes'), idMetal = uid('metal'), idBoitier = uid('boitier'), idRail = uid('rail');
     // Franges : un seul dégradé périodique, partagé par l'écran vu de dessus et l'écran vu de face.
     const gradFr = el('linearGradient', { id: idFr, gradientUnits: 'userSpaceOnUse', spreadMethod: 'reflect', x1: 0, x2: 0, y1: Y0, y2: Y0 + 20 }, defs);
     const stops = PROFIL.map((_, j) => el('stop', { offset: j / (PROFIL.length - 1) }, gradFr));
     const gradVig = el('linearGradient', { id: idVig }, defs);
-    [[0, 0.8], [0.32, 0], [0.68, 0], [1, 0.8]].forEach(([o, a]) => el('stop', { offset: o, 'stop-color': C.fond, 'stop-opacity': a }, gradVig));
+    [[0, 0.8], [0.32, 0], [0.68, 0], [1, 0.8]].forEach(([o, a]) => el('stop', { offset: o, 'stop-color': rgb(NUIT), 'stop-opacity': a }, gradVig));
     const clipOndes = el('polygon', {}, el('clipPath', { id: idClip }, defs));
+    // Relief accordé au kit : métal éclairé à gauche, boîtier et rail éclairés par le dessus.
+    const arrets = (g: Element, a: [number, string][]) => a.forEach(([offset, c]) => el('stop', { offset, 'stop-color': c }, g));
+    arrets(el('linearGradient', { id: idMetal }, defs), [[0, mix(C.metal, C.ombre, 0.1)], [0.3, mix(C.metal, C.blanc, 0.4)], [1, mix(C.metal, C.ombre, 0.35)]]);
+    arrets(el('linearGradient', { id: idBoitier, x1: 0, y1: 0, x2: 0, y2: 1 }, defs), [[0, mix(C.panneau, C.metal, selon(0.22, 0.14))], [1, C.panneau]]);
+    arrets(el('linearGradient', { id: idRail, x1: 0, y1: 0, x2: 0, y2: 1 }, defs), [[0, C.panneau], [1, mix(C.panneau, C.ombre, selon(0.3, 0.08))]]);
 
-    const rail = el('rect', { x: 16, y: Y0 - 6, height: 12, rx: 3, fill: C.panneau, stroke: C.grille, 'stroke-width': 1.5 }, scene);
+    const rail = el('rect', { x: 16, y: Y0 - 6, height: 12, rx: 3, fill: `url(#${idRail})`, stroke: sombre ? C.grille : mix(C.grille, C.metal, 0.4), 'stroke-width': 1.5 }, scene);
 
     // Faisceau incident et ses plans d'onde.
     const faisceau = el('polygon', { 'fill-opacity': 0.2 }, scene);
@@ -67,21 +77,22 @@ export default definirScene({
     const renforts = Array.from({ length: 2 * KX + 1 }, () => el('line', { x1: XF, y1: Y0, 'stroke-width': 2.6, 'stroke-linecap': 'round' }, gLignes));
 
     const gLaser = el('g', {}, scene);
-    el('rect', { x: 22, y: Y0 - 22, width: 76, height: 44, rx: 8, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, gLaser);
-    el('rect', { x: 98, y: Y0 - 7, width: 8, height: 14, rx: 2, fill: C.metal }, gLaser);
+    el('rect', { x: 24, y: Y0 - 18, width: 76, height: 44, rx: 8, fill: C.ombre, opacity: selon(0.35, 0.1) }, gLaser);
+    el('rect', { x: 22, y: Y0 - 22, width: 76, height: 44, rx: 8, fill: `url(#${idBoitier})`, stroke: C.trait, 'stroke-width': TRAIT }, gLaser);
+    el('rect', { x: 98, y: Y0 - 7, width: 8, height: 14, rx: 2, fill: `url(#${idMetal})` }, gLaser);
     for (let k = 0; k < 3; k++) el('line', { x1: 58 + 10 * k, x2: 58 + 10 * k, y1: Y0 - 10, y2: Y0 + 10, stroke: C.metal, 'stroke-width': 2, 'stroke-linecap': 'round' }, gLaser);
     const led = el('circle', { cx: 38, cy: Y0, r: 5, fill: C.grille }, gLaser);
     etiquette(gLaser, { x: 60, y: Y0 + 44, texte: 'Laser', ancre: 'middle' });
     const etiqLambda = etiquette(gLaser, { x: 60, y: Y0 + 62, texte: '', ancre: 'middle', mono: true, taille: 13 });
 
     const gPlaque = el('g', {}, scene);
-    const morceaux = [0, 1, 2].map(() => el('rect', { x: XF - 3, width: 6, rx: 1.5, fill: C.metal, stroke: C.verre, 'stroke-width': 1 }, gPlaque));
+    const morceaux = [0, 1, 2].map(() => el('rect', { x: XF - 3, width: 6, rx: 1.5, fill: `url(#${idMetal})`, stroke: mix(C.metal, C.ombre, 0.3), 'stroke-width': 1 }, gPlaque));
     etiquette(gPlaque, { x: XF - 4, y: Y0 + HP + 22, texte: L('Bifente', 'Double slit'), ancre: 'end' });
     const etiqB = etiquette(gPlaque, { x: XF - 4, y: Y0 + HP + 40, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
 
     const gEcran = el('g', {}, scene);
     const lueur = el('rect', { width: 7, fill: `url(#${idFr})` }, gEcran);
-    const barre = el('rect', { y: Y0 - DEMI - 4, width: 5, height: 2 * DEMI + 8, rx: 2, fill: C.verre }, gEcran);
+    const barre = el('rect', { y: Y0 - DEMI - 4, width: 5, height: 2 * DEMI + 8, rx: 2, fill: C.verre, stroke: C.trait, 'stroke-width': selon(0, 1) }, gEcran);
     const etiqEcran = etiquette(gEcran, { x: 0, y: Y0 - DEMI - 12, texte: L('Écran', 'Screen'), ancre: 'middle' });
 
     const gCote = el('g', {}, scene);
@@ -92,10 +103,11 @@ export default definirScene({
     const proj = Array.from({ length: 7 }, () => el('line', { 'stroke-width': 1, 'stroke-dasharray': '3 4' }, scene));
     const gFace = el('g', {}, scene);
     const cadre = { x: XS, y: Y0 - DEMI, width: WS, height: 2 * DEMI };
-    el('rect', { ...cadre, fill: C.fond }, gFace);
+    el('rect', { ...cadre, x: XS + 2, y: cadre.y + 4, rx: 3, fill: C.ombre, opacity: selon(0.35, 0.1) }, gFace);
+    el('rect', { ...cadre, fill: rgb(NUIT) }, gFace);
     const franges = el('rect', { x: XS, width: WS, fill: `url(#${idFr})` }, gFace);
     el('rect', { ...cadre, fill: `url(#${idVig})` }, gFace);
-    el('rect', { ...cadre, rx: 3, fill: 'none', stroke: C.verre, 'stroke-width': 2 }, gFace);
+    el('rect', { ...cadre, rx: 3, fill: 'none', stroke: sombre ? C.verre : C.trait, 'stroke-width': 2 }, gFace);
     for (let mm = -X_MAX; mm <= X_MAX; mm += 5) {
       const yy = Y0 - mm * PX_MM, long = mm % 10 === 0;
       el('line', { x1: XS + WS + 1, x2: XS + WS + (long ? 7 : 4), y1: yy, y2: yy, stroke: C.discret, 'stroke-width': 1.5 }, gFace);
@@ -108,16 +120,16 @@ export default definirScene({
     const gMarche = el('g', {}, scene);
     const rayon1 = el('line', { x1: XF, stroke: C.cyan, 'stroke-width': 2.2, 'stroke-linecap': 'round' }, gMarche);
     const rayon2 = el('line', { x1: XF, stroke: C.rose, 'stroke-width': 2.2, 'stroke-linecap': 'round' }, gMarche);
-    const perp = el('line', { x1: XF, stroke: C.blanc, 'stroke-width': 1.2, 'stroke-dasharray': '3 3' }, gMarche);
+    const perp = el('line', { x1: XF, stroke: C.texte, 'stroke-width': 1.2, 'stroke-dasharray': '3 3' }, gMarche);
     const surlong = el('line', { x1: XF, stroke: C.jaune, 'stroke-width': 5, 'stroke-linecap': 'round' }, gMarche);
     const etiqS1 = etiquette(gMarche, { x: XF - 7, y: 0, texte: 'S1', ancre: 'end', mono: true, taille: 13, couleur: C.cyan });
     const etiqS2 = etiquette(gMarche, { x: XF - 7, y: 0, texte: 'S2', ancre: 'end', mono: true, taille: 13, couleur: C.rose });
     const etiqDelta = etiquette(gMarche, { x: XF + 14, y: 0, texte: 'δ', taille: 17, couleur: C.jaune });
     const gM = el('g', {}, gMarche);
-    const haloM = el('circle', { r: 10, fill: C.blanc, opacity: 0.25 }, gM);
-    const ptM = el('circle', { r: 5, fill: C.blanc, stroke: C.fond, 'stroke-width': 1.5 }, gM);
+    const haloM = el('circle', { r: 10, fill: C.texte, opacity: selon(0.25, 0.15) }, gM);
+    const ptM = el('circle', { r: 5, fill: C.texte, stroke: C.fond, 'stroke-width': 1.5 }, gM);
     const etiqM = etiquette(gM, { x: 0, y: 0, texte: 'M' });
-    const pointeur = el('polygon', { fill: C.blanc }, gM);
+    const pointeur = el('polygon', { fill: C.texte }, gM);
 
     // Mesure de plusieurs interfranges (étape 5).
     const gPied = el('g', {}, scene);
@@ -146,7 +158,7 @@ export default definirScene({
     const YC = YB + 61, AMP = 13, PERIODE = 72;
     for (const [x0, L] of [[28, 220], [270, 196]]) el('line', { x1: x0, x2: x0 + L, y1: YC, y2: YC, stroke: C.grille, 'stroke-width': 1 }, gSinus);
     const courbeOnde = (couleurTrait: string, ep: number) => el('polyline', { fill: 'none', stroke: couleurTrait, 'stroke-width': ep, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, gSinus);
-    const onde1 = courbeOnde(C.cyan, 2.2), onde2 = courbeOnde(C.rose, 2.2), somme = courbeOnde(C.blanc, 2.6);
+    const onde1 = courbeOnde(C.cyan, 2.2), onde2 = courbeOnde(C.rose, 2.2), somme = courbeOnde(C.texte, 2.6);
     const tDelta = ecrit(gSinus, 486, YB + 34, 15, C.jaune);
     const tEtat = ecrit(gSinus, 486, YB + 59, 13, C.texte, POLICE);
     const tFrange = ecrit(gSinus, 486, YB + 80, 13, C.texte, POLICE);
@@ -169,18 +181,21 @@ export default definirScene({
       const i = interfrange(y), iPx = i * PX_MM, lam = K_L * p.lambda, sep = K_B * p.b, xE = XF + K_D * p.D;
       const yS1 = Y0 - sep / 2, yS2 = Y0 + sep / 2;
       const n = clamp(Math.floor(18 / i), 1, 5); // interfranges mesurés de part et d'autre du centre
-      const rvb = couleur(p.lambda).map((c) => Math.round(c + (255 - c) * 0.22)); // éclairci pour rester lisible sur fond sombre
-      const teinte = `rgb(${rvb.join(',')})`;
+      // Couleur du laser : éclaircie sur l'écran dans le noir (et sur fond nuit), assombrie pour les traits et le texte sur fond blanc.
+      const vrai = couleur(p.lambda), rvb = vrai.map((c) => c + (255 - c) * 0.22);
+      const teinte = sombre ? rgb(rvb) : rgb(vrai.map((c) => c * 0.75));
+      const teinteTexte = sombre ? teinte : rgb(vrai.map((c) => c * 0.55));
       const [a1, a2, a3, a4, a5, a6] = [0, 1, 2, 3, 4, 5].map((k) => avancement({ etape, t }, k));
 
       // Géométrie et textes qui ne dépendent que des curseurs.
       if (cle !== `${p.lambda}|${p.b}|${p.D}`) {
         cle = `${p.lambda}|${p.b}|${p.D}`;
         pts = courbe(y, X_MAX, 400);
-        stops.forEach((s, j) => s.setAttribute('stop-color', `rgb(${rvb.map((c, q) => Math.round(lerp(FOND[q], c, PROFIL[j]))).join(',')})`));
+        stops.forEach((s, j) => s.setAttribute('stop-color', rgb(rvb.map((c, q) => lerp(NUIT[q], c, PROFIL[j])))));
         set(gradFr, { y2: Y0 + iPx / 2 });
         clipOndes.setAttribute('points', `${XF + 3},${Y0 - HP} ${xE},${Y0 - DEMI} ${xE},${Y0 + DEMI} ${XF + 3},${Y0 + HP}`);
-        for (const n of [faisceau, etiqLambda]) n.setAttribute('fill', teinte);
+        faisceau.setAttribute('fill', teinte);
+        etiqLambda.setAttribute('fill', teinteTexte);
         for (const n of [...cretes, ...arcs.flat(), ...renforts, ...proj, echRenfort]) n.setAttribute('stroke', teinte);
         set(morceaux[0], { y: Y0 - HP, height: HP - sep / 2 - 3 });
         set(morceaux[1], { y: yS1 + 3, height: sep - 6 });
@@ -204,7 +219,8 @@ export default definirScene({
       }
 
       // Étape 1 : le banc se met en place, puis le laser s'allume.
-      set(rail, { width: 480 * seg(a1, 0, 0.22, ease.out) });
+      // Le rail s'arrête sous l'écran le plus lointain (D = 2,2 m) pour laisser place à la cote « n i » de l'étape 5.
+      set(rail, { width: 460 * seg(a1, 0, 0.22, ease.out) });
       gLaser.style.opacity = String(seg(a1, 0.08, 0.2));
       gLaser.style.transform = `translateX(${-90 * (1 - seg(a1, 0.08, 0.34, ease.out))}px)`;
       gPlaque.style.opacity = String(seg(a1, 0.26, 0.36));
@@ -320,10 +336,10 @@ export default definirScene({
       if (graphique) {
         const xr = X_MAX * revele;
         graphique.courbe('I', revele > 0 ? pts.filter(([x]) => Math.abs(x) <= xr + 1e-6) : [], { couleur: teinte, epaisseur: 2.5 });
-        if (revele > 0 && revele < 1) graphique.repere('trace', xr, intensite(xr, y), { couleur: C.blanc, rayon: 4 });
+        if (revele > 0 && revele < 1) graphique.repere('trace', xr, intensite(xr, y), { couleur: C.texte, rayon: 4 });
         else graphique.effacer('trace');
         if (vis4 > 0 && tir > 0.9) {
-          graphique.repere('M', xM, iM, { couleur: C.blanc, label: `δ = ${fmt(ordreM, 2)} λ` });
+          graphique.repere('M', xM, iM, { couleur: C.texte, label: `δ = ${fmt(ordreM, 2)} λ` });
           graphique.opacite('M', vis4);
         } else graphique.effacer('M');
         if (a5 > 0.12) {

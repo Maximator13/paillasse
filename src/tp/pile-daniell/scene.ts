@@ -1,6 +1,6 @@
-import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte, uid } from '../../lib/anim';
 import { appareil, becher, etiquette, fleche, paillasse, type Recipient } from '../../lib/labkit';
-import { C, MONO, POLICE } from '../../lib/palette';
+import { C, MONO, POLICE, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { E_VIDE, capacite, charge, concentrationCuivre, dureeVie, intensite, masseCuivre, masseZinc, quantiteElectrons, tension, type Pile } from './model';
 
@@ -9,7 +9,6 @@ const C0 = 0.1; // mol/L, concentration initiale des deux solutions
 const R_INT = 10; // ohm, résistance interne (pont salin)
 const M_REF = 400; // mg, échelle commune du graphique et de l'usure des lames
 const NIVEAU = 0.72;
-const ZINC = mix(C.metal, C.verre, 0.62), DEPOT = mix(C.orange, C.corail, 0.5);
 const XZ = 98, XC = 352, Y_LAME = 236, Y_FOND = 426; // lames de zinc et de cuivre
 const X0 = 436, W0 = 188; // colonne de droite : appareils et encarts
 const N = 8; // points de relief par flanc de lame
@@ -76,6 +75,20 @@ export default definirScene({
   affiche: { etape: 4, t: 0.7 },
 
   monter({ scene, graphique }) {
+    // Couleurs lues au montage : le lecteur remonte la scène au changement de thème.
+    const sombre = themeSombre(), selon = (s: number, c: number) => (sombre ? s : c);
+    const ZINC = mix(C.metal, C.verre, 0.62), DEPOT = mix(C.orange, C.corail, 0.5);
+    const zincTexte = sombre ? ZINC : C.discret; // le zinc clair ne se lit pas sur fond blanc
+    const incolore = sombre ? C.discret : C.verre; // solution de sulfate de zinc, incolore
+    /** Dégradé horizontal (volume d'une lame) : bord ombré, reflet, teinte, bord sombre. mix() ne prend que des hexadécimales. */
+    const volume = (x: number, teinte: string, ref: string) => {
+      const id = uid('pile'), gr = el('linearGradient', { id, gradientUnits: 'userSpaceOnUse', x1: x - 11, x2: x + 11, y1: 0, y2: 0 }, el('defs', {}, scene));
+      ([[0, mix(ref, C.ombre, 0.2)], [0.3, mix(ref, C.blanc, 0.45)], [0.55, teinte], [1, mix(ref, C.ombre, 0.35)]] as const).forEach(([offset, c]) => el('stop', { offset, 'stop-color': c }, gr));
+      return `url(#${id})`;
+    };
+    /** Ombre portée douce sous un encart, comme celle des appareils du kit. */
+    const ombrePortee = (g: Element, x: number, y: number, w: number, h: number, rx: number) =>
+      el('rect', { x: x + 2, y: y + 4, width: w, height: h, rx, fill: C.ombre, opacity: selon(0.35, 0.1) }, g);
     paillasse(scene);
     const bZn = becher(scene, { x: 132, y: 440, w: 136, h: 150 });
     const bCu = becher(scene, { x: 318, y: 440, w: 136, h: 150 });
@@ -91,15 +104,15 @@ export default definirScene({
     const halo = (x: number) => el('rect', { x: x - 19, y: YS + 2, width: 38, height: Y_FOND - YS + 4, rx: 9, fill: C.jaune, 'fill-opacity': 0.12, stroke: C.jaune, 'stroke-width': 2 }, scene);
     const haloZn = halo(XZ), haloCu = halo(XC);
     const gZn = el('g', {}, scene);
-    const fantome = el('rect', { x: XZ - 11, y: YS - 2, width: 22, height: Y_FOND - YS + 2, rx: 3, fill: 'none', stroke: C.verre, 'stroke-width': 1.2, 'stroke-dasharray': '3 4' }, gZn);
-    const lameZn = el('path', { fill: ZINC, stroke: C.blanc, 'stroke-width': 2, 'stroke-linejoin': 'round' }, gZn);
+    const fantome = el('rect', { x: XZ - 11, y: YS - 2, width: 22, height: Y_FOND - YS + 2, rx: 3, fill: 'none', stroke: C.trait, 'stroke-width': 1.2, 'stroke-dasharray': '3 4' }, gZn);
+    const lameZn = el('path', { fill: volume(XZ, ZINC, C.metal), stroke: sombre ? C.blanc : mix(C.metal, C.ombre, 0.3), 'stroke-width': selon(2, 1.5), 'stroke-linejoin': 'round' }, gZn);
     const gCu = el('g', {}, scene);
     const depot = el('path', { fill: DEPOT, stroke: DEPOT, 'stroke-linejoin': 'round' }, gCu);
-    el('path', { d: lame(XC, YS), fill: C.orange, stroke: mix(C.orange, C.blanc, 0.55), 'stroke-width': 2, 'stroke-linejoin': 'round' }, gCu);
+    el('path', { d: lame(XC, YS), fill: volume(XC, C.orange, C.orange), stroke: sombre ? mix(C.orange, C.blanc, 0.55) : mix(C.orange, C.ombre, 0.3), 'stroke-width': selon(2, 1.5), 'stroke-linejoin': 'round' }, gCu);
     const gIonsZn = el('g', {}, scene), gIonsCu = el('g', {}, scene);
     const ions = (g: SVGGElement, couleur: string, bord: string) =>
       Array.from({ length: 7 }, (_, i) => ({ y: lerp(YS + 18, 410, (i + alea()) / 7), dx: alea(), ph: alea(), v: 0.2 + alea() * 0.12, n: el('circle', { r: 4.5, fill: couleur, stroke: bord, 'stroke-width': 1.2 }, g) }));
-    const ionsZn = ions(gIonsZn, C.verre, C.fond), ionsCu = ions(gIonsCu, C.cyan, C.blanc);
+    const ionsZn = sombre ? ions(gIonsZn, C.verre, C.fond) : ions(gIonsZn, C.blanc, C.trait), ionsCu = ions(gIonsCu, C.cyan, C.blanc);
     const etqIonZn = etiquette(scene, { x: 140, y: 433, texte: 'Zn²⁺', ancre: 'middle', taille: 13 });
     const etqIonCu = etiquette(scene, { x: 308, y: 433, texte: 'Cu²⁺', ancre: 'middle', taille: 13, couleur: C.cyan });
 
@@ -107,8 +120,10 @@ export default definirScene({
     const cPont = chemin([[172, 398], [172, 282], ...coin([172, 282], [172, 258], [196, 258]), [254, 258], ...coin([254, 258], [278, 258], [278, 282]), [278, 398]]);
     const gPont = el('g', {}, scene);
     const tube = { d: cPont.d, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+    el('path', { ...tube, stroke: C.trait, 'stroke-width': 21, opacity: selon(0.35, 0.8) }, gPont);
     el('path', { ...tube, stroke: C.verre, 'stroke-width': 19 }, gPont);
     el('path', { ...tube, stroke: mix(C.panneau, C.jaune, 0.3), 'stroke-width': 14 }, gPont);
+    el('path', { ...tube, stroke: C.blanc, 'stroke-width': 3, opacity: selon(0.18, 0.55) }, gPont); // reflet : volume du tube
     const gIonsPont = el('g', {}, gPont);
     const ionsPont = Array.from({ length: 10 }, (_, i) => el('circle', { r: 2.8, fill: i % 2 ? C.menthe : C.violet }, gIonsPont));
     const etqPont = etiquette(scene, { x: 225, y: 222, texte: L('pont salin', 'salt bridge'), ancre: 'middle', taille: 13, couleur: C.discret });
@@ -127,14 +142,15 @@ export default definirScene({
     const gElec = el('g', {}, scene);
     const electrons = Array.from({ length: 22 }, () => {
       const g = el('g', {}, gElec);
-      el('circle', { r: 6.5, fill: C.jaune, opacity: 0.22 }, g);
+      el('circle', { r: 6.5, fill: C.jaune, opacity: selon(0.22, 0.14) }, g);
       el('circle', { r: 3.2, fill: C.jaune, stroke: C.fond, 'stroke-width': 1 }, g);
       return g;
     });
     const pCom = pince(92, C.bleu), pV = pince(XC + 6, C.corail), pB1 = pince(xa, C.metal), pB2 = pince(xb, C.metal);
     const xr = (XZ + XC) / 2;
     const gRes = el('g', {}, scene);
-    el('rect', { x: xr - 42, y: 120, width: 84, height: 24, rx: 6, fill: C.panneau, stroke: C.verre, 'stroke-width': 2.5 }, gRes);
+    ombrePortee(gRes, xr - 42, 120, 84, 24, 6);
+    el('rect', { x: xr - 42, y: 120, width: 84, height: 24, rx: 6, fill: C.panneau, stroke: sombre ? C.verre : C.metal, 'stroke-width': 2.5 }, gRes);
     [[-26, C.jaune], [-14, C.violet], [16, C.orange]].forEach(([dx, c]) => el('rect', { x: xr + (dx as number), y: 121.5, width: 6, height: 21, fill: c, opacity: 0.9 }, gRes));
     const etqR = etiquette(gRes, { x: xr, y: 108, texte: '', ancre: 'middle', taille: 13, mono: true });
     const gE = el('g', {}, scene), gI = el('g', {}, scene);
@@ -156,7 +172,7 @@ export default definirScene({
     const moins = borne(50, '−', C.bleu), plus = borne(400, '+', C.corail);
     const etqZn = etiquette(scene, { x: 50, y: 258, texte: 'Zn', ancre: 'middle' });
     const etqCu = etiquette(scene, { x: 400, y: 258, texte: 'Cu', ancre: 'middle', couleur: C.orange });
-    const etqDmZn = etiquette(scene, { x: 50, y: 277, texte: '', ancre: 'middle', taille: 13, mono: true, couleur: ZINC });
+    const etqDmZn = etiquette(scene, { x: 50, y: 277, texte: '', ancre: 'middle', taille: 13, mono: true, couleur: zincTexte });
     const etqDmCu = etiquette(scene, { x: 400, y: 277, texte: '', ancre: 'middle', taille: 13, mono: true, couleur: C.orange });
 
     // Colonne de droite : voltmètre, demi-équations, bilan, chronomètre.
@@ -164,6 +180,7 @@ export default definirScene({
     const chrono = appareil(scene, { x: X0, y: 372, w: W0, h: 68, titre: L('CHRONO (ACCÉLÉRÉ)', 'TIMER (SPEEDED UP)'), couleur: C.jaune });
     const carte = (y: number, h: number, bord: string) => {
       const g = el('g', {}, scene);
+      ombrePortee(g, X0, y, W0, h, 12);
       el('rect', { x: X0, y, width: W0, height: h, rx: 12, fill: C.panneau, stroke: bord, 'stroke-width': 1.5 }, g);
       return g;
     };
@@ -174,7 +191,7 @@ export default definirScene({
     ligne(cAnode, 137, 'Zn → Zn²⁺ + 2 e⁻', C.texte, 14);
     ligne(cCathode, 171, L('Cathode (+) : réduction', 'Cathode (+): reduction'), C.corail, 13, POLICE);
     ligne(cCathode, 191, 'Cu²⁺ + 2 e⁻ → Cu', C.texte, 14);
-    const bilan = [ligne(cBilan, 229, '', C.discret, 13, POLICE), ligne(cBilan, 251, '', C.texte), ligne(cBilan, 271, '', C.texte), ligne(cBilan, 295, '', ZINC, 15), ligne(cBilan, 316, '', C.orange, 15), ligne(cBilan, 338, '', C.discret, 13, POLICE)];
+    const bilan = [ligne(cBilan, 229, '', C.discret, 13, POLICE), ligne(cBilan, 251, '', C.texte), ligne(cBilan, 271, '', C.texte), ligne(cBilan, 295, '', zincTexte, 15), ligne(cBilan, 316, '', C.orange, 15), ligne(cBilan, 338, '', C.discret, 13, POLICE)];
     el('rect', { x: X0 + 14, y: 345, width: W0 - 28, height: 9, rx: 4.5, fill: C.fond, stroke: C.metal, 'stroke-width': 1.2 }, cBilan);
     const jauge = el('rect', { x: X0 + 14, y: 345, height: 9, rx: 4.5 }, cBilan);
 
@@ -190,7 +207,7 @@ export default definirScene({
       const usee = ts >= vie;
       const vigueur = clamp(1 - (ts - vie) / (0.03 * duree)); // 1 tant que la pile débite, 0 une fois usée
       const mZn = masseZinc(q) * 1000, mCu = masseCuivre(q) * 1000; // mg
-      const teinte = mix(C.discret, C.bleu, concentrationCuivre(q, pile) / C0);
+      const teinte = mix(incolore, C.bleu, concentrationCuivre(q, pile) / C0);
 
       // Étape 1 : on verse les solutions, puis les lames descendent.
       const verser = (debut: number, rec: Recipient, f: SVGLineElement, couleur: string) => {
@@ -199,7 +216,7 @@ export default definirScene({
         set(f, { y1: lerp(-10, y, seg(r, 0.86, 1, ease.in)), y2: lerp(-10, y, seg(r, 0, 0.14, ease.in)), stroke: couleur });
         f.style.opacity = r > 0 && r < 1 ? '0.85' : '0';
       };
-      verser(0.04, bZn, filetZn, C.discret);
+      verser(0.04, bZn, filetZn, incolore);
       verser(0.18, bCu, filetCu, teinte);
       show(etqSolZn, seg(a1, 0.36, 0.46));
       show(etqSolCu, seg(a1, 0.5, 0.6));
@@ -244,7 +261,7 @@ export default definirScene({
         const f = (T * 0.072 * debit + k / electrons.length) % 1, pt = cElec.en(f);
         set(n, { transform: `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`, opacity: seg(f, 0, 0.07) * (1 - seg(f, 0.93, 1)) });
       });
-      show(gE, seg(a3, 0.44, 0.56));
+      show(gE, seg(a3, 0.44, 0.56) * vigueur); // plus de flèche d'électrons quand la pile est usée
       show(gI, seg(a3, 0.56, 0.68));
       etqI.textContent = `I = ${fmt(i * 1000, 1)} mA`;
       gIonsPont.style.opacity = String(seg(a3, 0.7, 0.82) * vigueur);
@@ -253,8 +270,8 @@ export default definirScene({
         const pt = cPont.en(sens > 0 ? f : 1 - f);
         set(n, { cx: pt.x - pt.ty * 3.3 * sens, cy: pt.y + pt.tx * 3.3 * sens, opacity: Math.sin(Math.PI * f) ** 0.5 });
       });
-      show(etqNO3, seg(a3, 0.76, 0.88));
-      show(etqK, seg(a3, 0.84, 0.96));
+      show(etqNO3, seg(a3, 0.76, 0.88) * vigueur);
+      show(etqK, seg(a3, 0.84, 0.96) * vigueur);
       show(etqUsee, usee ? 1 - vigueur : 0);
 
       // Étape 4 : à l'anode le zinc passe en solution, à la cathode les ions cuivre se déposent.
@@ -302,13 +319,13 @@ export default definirScene({
         if (a5 > 0) {
           const h = ts / 3600, coude = Math.min(h, vie / 3600), cap = masseCuivre(qMax) * 1000;
           const fin = a6 > 0.1, lisible = mZn + mCu > 48; // au-dessous, les deux étiquettes se chevaucheraient
-          graphique.courbe('zn', [[0, 0], [coude, -mZn], [h, -mZn]], { couleur: ZINC, epaisseur: 3 });
+          graphique.courbe('zn', [[0, 0], [coude, -mZn], [h, -mZn]], { couleur: zincTexte, epaisseur: 3 });
           graphique.courbe('cu', [[0, 0], [coude, mCu], [h, mCu]], { couleur: C.orange, epaisseur: 3 });
           graphique.horizontale('cap', cap, { couleur: C.discret });
           graphique.horizontale('capTexte', cap, { couleur: C.discret, epaisseur: 0, label: L('Cu²⁺ épuisé', 'Cu²⁺ used up') });
           graphique.opacite('cap', seg(a5, 0, 0.08));
           graphique.opacite('capTexte', seg(a5, 0, 0.08) * clamp((cap - mCu - 60) / 40)); // s'efface quand la courbe du cuivre l'atteint
-          graphique.repere('pz', h, -mZn, { couleur: ZINC, rayon: 4, label: !lisible ? undefined : fin ? L(`Zn : −${fmt(mZn, 0)} mg`, `Zn: −${fmt(mZn, 0)} mg`) : 'Zn' });
+          graphique.repere('pz', h, -mZn, { couleur: zincTexte, rayon: 4, label: !lisible ? undefined : fin ? L(`Zn : −${fmt(mZn, 0)} mg`, `Zn: −${fmt(mZn, 0)} mg`) : 'Zn' });
           graphique.repere('pc', h, mCu, { couleur: C.orange, rayon: 4, label: !lisible ? undefined : fin ? L(`Cu : +${fmt(mCu, 0)} mg`, `Cu: +${fmt(mCu, 0)} mg`) : 'Cu' });
           if (usee) {
             graphique.verticale('vie', vie / 3600, { couleur: C.corail });

@@ -69,19 +69,30 @@ Règles de `dessiner({ etape, t, T, p })` :
 
 Qualité visuelle attendue (c'est une vitrine de motion design) :
 
-- Repère de la scène : `viewBox 0 0 640 480`, fond sombre fourni. Paillasse à `y = 440`. Garder 16 px de marge, ne rien faire déborder.
-- Couleurs uniquement depuis `C` (`src/lib/palette.ts`), polices `POLICE` et `MONO`, trait `TRAIT`.
-- Matériel de chimie : réutiliser `src/lib/labkit.ts` (bécher, erlenmeyer, fiole, éprouvette, tube à essai, burette, potence, agitateur, barreau, appareil de mesure, sonde, gouttes, bulles, thermomètre, étiquette, flèche, paillasse). Dessiner soi-même, dans le même style (contour clair de 2,5 px, aplats lumineux, coins arrondis), ce qui manque.
+- Repère de la scène : `viewBox 0 0 640 480`, fond fourni par le lecteur (blanc en thème clair, nuit en thème sombre, voir « Couleurs des scènes »). Paillasse à `y = 440`. Garder 16 px de marge, ne rien faire déborder.
+- Couleurs uniquement depuis `C` (`src/lib/palette.ts`), polices `POLICE` et `MONO`, trait `TRAIT`. Règles détaillées ci-dessous.
+- Matériel de chimie : réutiliser `src/lib/labkit.ts` (bécher, erlenmeyer, fiole, éprouvette, tube à essai, burette, potence, agitateur, barreau, appareil de mesure, sonde, gouttes, bulles, thermomètre, étiquette, flèche, paillasse). Dessiner soi-même, dans le même style (contour `C.trait` de 2,5 px, aplats francs, coins arrondis), ce qui manque.
 - Mouvements avec easing (`ease.inOut`, `ease.out`, `ease.backOut`, `ease.bounceOut`), entrées décalées, jamais de téléportation : un objet entre, agit, se range.
 - Montrer le **phénomène**, pas seulement le matériel : particules, ions, vecteurs, fronts d'onde, rayons, changement de couleur, niveau qui monte. Le lien entre ce qui se passe sur la paillasse et la courbe doit sauter aux yeux.
-- Texte dans la scène : taille 13 minimum, via `etiquette()` (lisible sur fond sombre), jamais de chevauchement avec un objet. Indices en texte simple (`VE`, `CB`) dans le SVG.
+- Texte dans la scène : taille 13 minimum, via `etiquette()` (lisible sur les deux fonds), jamais de chevauchement avec un objet. Indices en texte simple (`VE`, `CB`) dans le SVG.
 - Le graphique s'utilise via l'objet `graphique` (`courbe`, `nuage`, `repere`, `verticale`, `horizontale`, `opacite`, `effacer`, `axes`), voir `src/lib/graphique.ts`.
+
+### Couleurs des scènes (thèmes clair et sombre)
+
+Le site a deux thèmes : réglage de l'appareil par défaut, bouton soleil/lune dans l'en-tête (choix mémorisé). Une scène doit être juste dans les deux.
+
+- `C.xxx` renvoie la couleur du **thème courant au moment de la lecture**. Lire `C` dans `monter()` ou `dessiner()`, **jamais dans une constante de module** (`const ACIDE = C.corail` en tête de fichier fige le thème du chargement). Au changement de thème, le lecteur remonte la scène (`monter()` rappelé) et redessine la même image.
+- **Aucune couleur en dur** (`'#8fc4ff'`, `'rgba(223,230,255,.06)'`, `'white'`) : tout passe par `C`, éventuellement via `mix()` ou une opacité (`fill-opacity`, `opacity`). Une teinte qui manque s'ajoute dans `palette.ts`, avec ses deux valeurs.
+- Sens des clés : `fond` (fond de scène ; sert aussi à évider un cercle ou détourer un point), `panneau` (encart, cadran), `grille` (graduations discrètes), `verre` (teinte du verre et des liquides incolores, en aplat), `trait` (contour de la verrerie et des objets), `metal`, `texte` (texte principal et repère qui doit trancher au maximum sur le fond), `discret` (texte secondaire), `blanc` (lumière et reflets : blanc dans les deux thèmes, à poser sur un objet coloré, jamais seul sur le fond), `ombre` (avec faible opacité), puis les couleurs vives `cyan`, `menthe`, `jaune`, `orange`, `corail`, `rose`, `violet`, `bleu`.
+- Contrastes garantis par la palette : `texte`, `discret` et toutes les couleurs vives au moins 4,5:1 sur `fond` (utilisables en étiquette), 3:1 sur `panneau` ; `trait` et `metal` au moins 3:1 sur `fond`.
+- Contrôle : `node scripts/contrastes.mjs` (sortie 0 exigée) après toute retouche de `palette.ts` ou des jetons de `src/styles/global.css` ; planche dans les deux thèmes avec `?theme=light` et `?theme=dark` (combinables avec `?lang=en`) ; page avec `node scripts/capture.mjs <chemin> <sortie.png>` (thème clair) puis la même commande avec `--sombre`.
 
 ### Vérification obligatoire d'une scène
 
 1. `node --test src/tp/<slug>/model.test.ts` : tout vert.
-2. Planche de contrôle (toutes les étapes à t = 0,05 / 0,5 / 1) :
-   `node scripts/capture.mjs dev/planche/<slug>/ .captures/<slug>-planche.png`
+2. Planche de contrôle (toutes les étapes à t = 0,05 / 0,5 / 1), dans les deux thèmes :
+   `node scripts/capture.mjs "dev/planche/<slug>/?theme=light" .captures/<slug>-planche.png`
+   `node scripts/capture.mjs "dev/planche/<slug>/?theme=dark" .captures/<slug>-planche-sombre.png`
    puis **ouvrir l'image avec l'outil de lecture de fichier et la regarder** : pas de chevauchement, pas de débordement, progression claire, graphique cohérent. Pour tester un curseur : ajouter `?<id>=<valeur>` au chemin.
 3. Page réelle, bureau puis mobile :
    `node scripts/capture.mjs "terminale/tp/<slug>/?etape=3&t=0.6" .captures/<slug>-page.png`
@@ -90,6 +101,70 @@ Qualité visuelle attendue (c'est une vitrine de motion design) :
 5. Itérer au moins deux fois sur le rendu : une scène correcte mais terne n'est pas terminée.
 
 Note : donner les chemins au script **sans barre oblique initiale** (Git Bash la réécrit).
+
+## Vue 3D (facultative) : `src/tp/<slug>/scene3d.ts`
+
+Un TP peut proposer une vraie vue 3D (WebGL, three.js) **en plus** de sa vue normale. Il suffit que le fichier `src/tp/<slug>/scene3d.ts` existe : le lecteur affiche alors le bouton « Vue 3D » / « Vue normale » à côté des commandes. Modèle complet : `src/tp/satellite-kepler/scene3d.ts`.
+
+### Principe
+
+- La vue normale reste la vue par défaut. La vue 3D réutilise **les mêmes** étapes, textes, curseurs, mesures et graphique : seule la zone de scène change (un canvas remplace le SVG, qui reste monté et masqué).
+- Les **mesures** et le **graphique** viennent toujours de `scene.ts`. `scene3d.ts` ne fait que dessiner : il n'a ni étapes, ni curseurs, ni mesures à déclarer.
+- La physique vient de `model.ts` (mêmes fonctions, mêmes formules que `scene.ts`) : 2D et 3D montrent exactement les mêmes positions et valeurs. Constantes ou petites fonctions de `scene.ts` utiles en 3D : les exporter depuis `scene.ts` sans changer son comportement (`export const ...`), ne jamais les recopier avec d'autres valeurs.
+- three.js et `scene3d.ts` ne sont chargés qu'à l'ouverture de la vue 3D (import dynamique) : aucun poids ajouté aux pages tant que l'élève ne clique pas.
+
+### API
+
+```ts
+import * as THREE from 'three';
+import { L, avancement, seg } from '../../lib/anim';
+import { cercle, definirScene3d, fleche } from '../../lib/kit3d';
+import { C } from '../../lib/palette';
+
+export default definirScene3d({
+  // Vue initiale (et bouton Recentrer) : position de la caméra, point visé, distances de zoom permises.
+  camera: { position: [0, 13.5, 23.4], cible: [0, 0, 0], min: 3.2, max: 60 },
+  monter({ scene, camera, calque, etiquette }) {
+    // Construire une fois : géométries, matériaux, lumières, étiquettes. Lire C ici.
+    return ({ etape, t, T, p }) => {
+      // Fonction PURE de l'image, comme en 2D : positions, opacités, échelles, textes.
+    };
+  },
+});
+```
+
+Types dans `src/lib/kit3d.ts` (`Scene3d`, `Contexte3d`, `Etiquette3d`). Le moteur (`src/lib/vue3d.ts`) fournit le rendu, la caméra orbitale, le redimensionnement et la libération : la scène ne s'en occupe pas.
+
+- `scene` : `THREE.Scene` à remplir, fond déjà réglé sur `C.fond`.
+- `camera` : caméra perspective (champ 40°), pilotée par l'élève. Ne pas la déplacer dans `dessiner()`.
+- `etiquette(texte, { couleur, taille })` : étiquette HTML accrochée à un point 3D (`e.pos`), nette à tout zoom, avec un halo de la couleur du fond. Dans `dessiner()` : `e.pos.set(...)`, `e.opacite = ...` (0 la masque), `e.el.textContent = ...` si le texte change.
+- `calque` : élément HTML posé sur le canvas, sans clic, pour les légendes et encarts fixes (classe `l3d-panneau` pour l'habillage standard, positionnement par `style`).
+- Outils de `kit3d.ts` : `cercle(couleur, { epaisseur, tirets })` (cercle unité du plan horizontal en trait épais d'épaisseur constante à l'écran ; `scale.set(a, 1, b)` en fait une ellipse, `geometry.instanceCount` n'en trace qu'un arc), `fleche(couleur, rayon)` (vecteur plein, `maj(origine, vecteur, opacite)`).
+
+### Règles
+
+1. **Même contrat de dessin qu'en 2D** : fonction pure de `{ etape, t, T, p }`, `avancement()` et `seg()` pour séquencer, rien d'accumulé, pas de `setTimeout`, `requestAnimationFrame`, `Math.random()` (utiliser `rng(graine)`) ni d'écouteur : le lecteur et le moteur pilotent tout.
+2. **Palette** : toutes les couleurs viennent de `C` (`new THREE.Color(C.cyan)` ou directement `color: C.cyan`), lues dans `monter()`. Au changement de thème, le moteur vide la scène et rappelle `monter()` (caméra conservée). Lumières de couleur `C.blanc`. Les objets qui portent une information (vecteurs, trajectoires, repères) en `MeshBasicMaterial` ou `LineMaterial` pour garder la couleur exacte de la palette ; `MeshStandardMaterial` pour les objets « réels » (astre, satellite, verrerie). Juger le rendu dans les deux thèmes (`themeSombre()` permet d'ajuster une intensité ou une opacité).
+3. **Bilingue** : tout texte affiché passe par `L('...', '...')` et les nombres par `fmt()`, comme en 2D.
+4. **Performance** : construire une fois dans `monter()` ; dans `dessiner()`, seulement modifier positions, échelles, opacités, `visible` et attributs existants (`attr.setXYZ(...)`, `needsUpdate = true`). Ne jamais créer de géométrie, de matériau ni de texture par image. Textures procédurales (canvas 2D) de 512 × 256 au plus, aucune image téléchargée. Rester sous 200 objets et quelques centaines de milliers de triangles.
+5. **Libération** : tout ce qui est ajouté à `scene` (géométries, matériaux et leurs textures) est libéré par le moteur au retour en vue normale et au changement de thème. Un objet three.js créé mais non ajouté à la scène doit l'être, ou être libéré à la main.
+6. **Lisibilité** : étiquettes de 13 px au moins, jamais sur un objet ni sur une autre étiquette ; vue initiale cadrée pour que toute la scène soit visible à toutes les étapes et pour toutes les valeurs des curseurs ; légende du calque compacte (sous 600 px de large, la classe `l3d-large` masque une ligne secondaire).
+7. **Mouvements réduits** : rien à faire dans la scène. Le lecteur gèle l'horloge `T` et le moteur coupe l'inertie de la caméra et l'animation du recentrage.
+
+Interaction fournie par le moteur : glisser pour tourner, molette ou pincement pour zoomer, flèches du clavier pour tourner et touches `+` `-` pour zoomer (canvas focalisable), `0` ou bouton pour recentrer. Netteté : `devicePixelRatio` plafonné à 2. Sans WebGL 2 (ou contexte perdu), un message bilingue s'affiche et le lecteur revient à la vue normale.
+
+### Contrôle visuel
+
+L'URL accepte `?vue=3d` en plus de `etape`, `t` et des curseurs ; `data-pret` n'est posé qu'après la première image 3D, et `scripts/capture.mjs` lance Chrome avec le rendu WebGL logiciel autorisé.
+
+1. Étapes clés dans les deux thèmes, par exemple :
+   `node scripts/capture.mjs "terminale/tp/<slug>/?vue=3d&etape=3&t=0.6" .captures/<slug>-3d.png --el .lecteur-ecran`
+   `node scripts/capture.mjs "terminale/tp/<slug>/?vue=3d&etape=3&t=0.6" .captures/<slug>-3d-sombre.png --el .lecteur-ecran --sombre`
+   puis **ouvrir chaque image et la regarder**, à chaque étape et aux bornes des curseurs (`&<id>=<valeur>`).
+2. Mobile : même commande avec `--mobile` (la légende du calque ne doit pas masquer la scène).
+3. Anglais : `en/terminale/tp/<slug>/?vue=3d&...` ; aucun texte français ne doit rester.
+4. Vue normale intacte : `node scripts/capture.mjs "terminale/tp/<slug>/?etape=3&t=0.6" .captures/<slug>-page.png --el .lecteur-ecran`.
+5. `ERREURS CONSOLE` (code 2) interdit, comme en 2D. Une scène 3D qui lève une erreur au montage la signale en console et le lecteur revient à la vue normale.
 
 ## Version anglaise d'un contenu
 
@@ -114,6 +189,8 @@ Le site est bilingue : français à la racine, anglais sous `/en/` avec les mêm
 | `src/lib/labkit.ts` | Matériel de laboratoire en SVG |
 | `src/lib/graphique.ts` | Graphique partagé |
 | `src/lib/palette.ts` | Couleurs et polices des scènes |
+| `src/lib/kit3d.ts` | Contrat et outils des vues 3D (`definirScene3d`, `cercle`, `fleche`) |
+| `src/tp/satellite-kepler/scene3d.ts` | Vue 3D de référence |
 | `src/tp/titrage-ph-metrique/` | Scène, modèle et test de référence |
 | `src/content/tp/terminale/titrage-ph-metrique.md` | Fiche de TP de référence |
 | `src/content/cours/terminale/titrages.md` | Fiche de cours de référence |

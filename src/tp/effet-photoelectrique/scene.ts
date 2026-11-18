@@ -1,6 +1,6 @@
-import { EN, L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, trace } from '../../lib/anim';
+import { EN, L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, trace, uid } from '../../lib/anim';
 import { appareil, etiquette, paillasse } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { courant, droite, ecMax, energiePhoton, frequenceSeuil, longueurOnde, metal, vitesseMax } from './model';
 
@@ -15,9 +15,13 @@ const EXPOSANTS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 /** Exposant d'une puissance de dix en caractères supérieurs : "-34" devient "⁻³⁴". */
 const exposant = (e: string) => [...e].map((ch) => (ch === '-' ? '⁻' : ch === '+' ? '' : EXPOSANTS[Number(ch)])).join('');
 
-// Teinte de la lumière selon la fréquence (10^14 Hz), du rouge à l'ultraviolet.
-const SPECTRE: [number, string][] = [[4, C.corail], [4.9, C.orange], [5.2, C.jaune], [5.7, C.menthe], [6.3, C.cyan], [6.9, C.bleu], [7.7, C.violet], [13, C.verre]];
+// Teinte de la lumière selon la fréquence (10^14 Hz), du rouge à l'ultraviolet. Lue à chaque appel : le thème suit.
+// L'ultraviolet, invisible, est rendu par un violet éteint lisible sur les deux fonds.
+// mix() n'accepte que des couleurs hexadécimales : l'ultraviolet se calcule à part.
+const spectre = (): [number, string][] => [[4, C.corail], [4.9, C.orange], [5.2, C.jaune], [5.7, C.menthe], [6.3, C.cyan], [6.9, C.bleu], [7.7, C.violet]];
 function teinte(nu: number) {
+  if (nu > 7.7) return mix(C.violet, C.trait, 0.45 * clamp((nu - 7.7) / (13 - 7.7)));
+  const SPECTRE = spectre();
   let i = 0;
   while (i < SPECTRE.length - 2 && nu > SPECTRE[i + 1][0]) i++;
   const [a, ca] = SPECTRE[i], [b, cb] = SPECTRE[i + 1];
@@ -57,6 +61,19 @@ export default definirScene({
 
   monter({ scene, graphique }) {
     paillasse(scene);
+    const sombre = themeSombre();
+    const selon = (s: number, c: number) => (sombre ? s : c);
+    /** Dégradé linéaire vertical (ou horizontal) à identifiant unique, accordé au relief du kit. */
+    const degrade = (arrets: [number, string, number][], horizontal = false) => {
+      const id = uid('photo');
+      const gr = el('linearGradient', { id, x1: 0, y1: 0, x2: horizontal ? 1 : 0, y2: horizontal ? 0 : 1 }, el('defs', {}, scene));
+      for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+      return `url(#${id})`;
+    };
+    const metalV = () => degrade([[0, mix(C.metal, C.blanc, 0.4), 1], [0.45, C.metal, 1], [1, mix(C.metal, C.ombre, 0.35), 1]]);
+    const metalH = () => degrade([[0, mix(C.metal, C.ombre, 0.1), 1], [0.35, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1]], true);
+    // Éclat d'impact et sillage : blancs sur la nuit, cyan sur le blanc.
+    const eclat = sombre ? C.blanc : C.cyan;
 
     // Circuit : anode, microampèremètre, cathode.
     const fil = el('path', { d: `M${X_ANODE} 290V403H212V304`, fill: 'none', stroke: C.metal, 'stroke-width': TRAIT, 'stroke-linejoin': 'round' }, scene);
@@ -66,14 +83,19 @@ export default definirScene({
 
     // Ampoule à vide, cathode incurvée, anode en tige.
     const ampoule = el('g', {}, scene);
-    el('rect', { x: 150, y: 150, width: 400, height: 180, rx: 78, fill: 'rgba(223,230,255,.05)', stroke: C.verre, 'stroke-width': TRAIT }, ampoule);
-    el('path', { d: 'M196 172Q260 158 330 158', fill: 'none', stroke: C.blanc, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.35 }, ampoule);
+    // Verre en volume : voile léger, haut éclairé, bas ombré, liseré de lumière.
+    const volume = degrade([[0, C.blanc, selon(0.06, 0.5)], [0.25, C.verre, selon(0.04, 0.12)], [0.8, C.verre, selon(0.06, 0.2)], [1, C.ombre, selon(0.3, 0.08)]]);
+    el('rect', { x: 150, y: 150, width: 400, height: 180, rx: 78, fill: C.verre, 'fill-opacity': selon(0.05, 0.16) }, ampoule);
+    el('rect', { x: 150, y: 150, width: 400, height: 180, rx: 78, fill: volume, stroke: C.trait, 'stroke-width': TRAIT }, ampoule);
+    el('path', { d: 'M196 172Q260 158 330 158', fill: 'none', stroke: C.blanc, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: selon(0.35, 0.95) }, ampoule);
+    el('path', { d: 'M520 300Q500 318 450 322', fill: 'none', stroke: C.ombre, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: selon(0.2, 0.12) }, ampoule);
     const cathode = el('g', {}, scene);
-    el('path', { d: 'M214 178Q190 240 214 302', fill: 'none', stroke: C.metal, 'stroke-width': 8, 'stroke-linecap': 'round' }, cathode);
+    el('path', { d: 'M214 178Q190 240 214 302', fill: 'none', stroke: metalH(), 'stroke-width': 8, 'stroke-linecap': 'round' }, cathode);
+    el('path', { d: 'M211 186Q195 240 211 294', fill: 'none', stroke: C.blanc, 'stroke-width': 1.2, 'stroke-linecap': 'round', opacity: selon(0.3, 0.6) }, cathode);
     etiquette(cathode, { x: 140, y: 236, texte: 'Cathode', ancre: 'end' });
     const etiqMetal = etiquette(cathode, { x: 140, y: 255, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
     const anode = el('g', {}, scene);
-    el('line', { x1: X_ANODE, x2: X_ANODE, y1: 188, y2: 292, stroke: C.verre, 'stroke-width': 5, 'stroke-linecap': 'round' }, anode);
+    el('rect', { x: X_ANODE - 2.5, y: 186, width: 5, height: 108, rx: 2.5, fill: metalH() }, anode);
     etiquette(anode, { x: 562, y: 245, texte: 'Anode' });
 
     // Faisceau, photons, impacts, électrons.
@@ -89,8 +111,8 @@ export default definirScene({
         angle: (Math.atan2(cible.y - SRC.y, cible.x - SRC.x) * 180) / Math.PI,
         photon: el('path', { fill: 'none', 'stroke-width': 2.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, scene),
         impact: el('circle', { cx: cible.x, cy: cible.y, fill: 'none', 'stroke-width': 2 }, scene),
-        sillage: el('line', { stroke: C.blanc, 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: 0.35 }, scene),
-        electron: el('circle', { r: 4.5, fill: C.blanc, stroke: C.cyan, 'stroke-width': 2 }, scene),
+        sillage: el('line', { stroke: eclat, 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: 0.35 }, scene),
+        electron: el('circle', { r: 4.5, fill: sombre ? C.blanc : mix(C.cyan, C.blanc, 0.6), stroke: C.cyan, 'stroke-width': 2 }, scene),
       };
     });
     const etat = etiquette(scene, { x: 355, y: 319, texte: '', ancre: 'middle', taille: 13 });
@@ -98,14 +120,16 @@ export default definirScene({
     // Lampe orientée vers la cathode.
     const lampe = el('g', {}, scene);
     const corps = el('g', { transform: `translate(${SRC.x + 2} ${SRC.y - 1}) rotate(150)` }, lampe);
-    el('rect', { x: -56, y: -18, width: 50, height: 36, rx: 8, fill: C.panneau, stroke: C.metal, 'stroke-width': TRAIT }, corps);
-    el('rect', { x: -66, y: -8, width: 10, height: 16, rx: 3, fill: C.metal }, corps);
-    const lentille = el('rect', { x: -8, y: -14, width: 9, height: 28, rx: 4, fill: C.grille, stroke: C.verre, 'stroke-width': 1.5 }, corps);
+    el('rect', { x: -56, y: -18, width: 50, height: 36, rx: 8, fill: degrade([[0, mix(C.panneau, C.metal, selon(0.3, 0.2)), 1], [0.4, C.panneau, 1], [1, mix(C.panneau, C.ombre, selon(0.3, 0.12)), 1]]), stroke: C.metal, 'stroke-width': TRAIT }, corps);
+    el('rect', { x: -66, y: -8, width: 10, height: 16, rx: 3, fill: metalV() }, corps);
+    const lentille = el('rect', { x: -8, y: -14, width: 9, height: 28, rx: 4, fill: C.grille, stroke: C.metal, 'stroke-width': 1.5 }, corps);
+    el('rect', { x: -6, y: -10, width: 2, height: 16, rx: 1, fill: C.blanc, opacity: selon(0.35, 0.7) }, corps);
     const etiqLampe = etiquette(scene, { x: 624, y: 112, texte: L('Lampe', 'Lamp'), ancre: 'end' });
     const etiqLambda = etiquette(scene, { x: 624, y: 131, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
 
     // Encart de résultat (dernière étape).
     const encart = el('g', {}, scene);
+    el('rect', { x: 18, y: 26, width: 238, height: 116, rx: 14, fill: C.ombre, opacity: selon(0.35, 0.1) }, encart);
     el('rect', { x: 16, y: 22, width: 238, height: 116, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 32, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
@@ -158,7 +182,7 @@ export default definirScene({
           set(g.photon, { d, stroke: coul, opacity: on * Math.min(1, vol * 8), transform: `translate(${lerp(SRC.x, g.cible.x, vol).toFixed(1)} ${lerp(SRC.y + g.dy, g.cible.y, vol).toFixed(1)}) rotate(${g.angle.toFixed(1)})` });
         } else g.photon.setAttribute('opacity', '0');
         const f = (c - VOL) / 0.09;
-        set(g.impact, { r: 3 + 11 * clamp(f), stroke: emet ? C.blanc : coul, opacity: actif && f >= 0 && f < 1 ? 0.8 * (1 - f) : 0 });
+        set(g.impact, { r: 3 + 11 * clamp(f), stroke: emet ? eclat : coul, opacity: actif && f >= 0 && f < 1 ? 0.8 * (1 - f) : 0 });
         const tau = (c - VOL) * CYCLE, x = g.cible.x + 6 + vPx * tau;
         const visible = actif && emet && tau >= 0 && x < X_ANODE - 5;
         set(g.electron, { cx: x, cy: g.cible.y, opacity: visible ? 1 - seg(c, 0.94, 1) : 0 });
@@ -187,8 +211,9 @@ export default definirScene({
         const pts: [number, number][] = [];
         if (a2 > 0) for (let x = NU_ROUGE; x <= lerp(NU_ROUGE, NU_MAX, seg(a2, 0.08, 0.95, ease.lin)) + 1e-9; x += 0.05) pts.push([x, ecMax(x * U, w)]);
         graphique.courbe('ec', pts, { couleur: C.cyan, epaisseur: 3 });
-        graphique.nuage('points', a2 > 0 ? mesures.filter(([x]) => x <= (a2 >= 1 ? NU_MAX : nu) + 1e-9) : [], { couleur: C.jaune, rayon: 4 });
-        if (on > 0) graphique.repere('mesure', nu, ec, { couleur: C.blanc, rayon: 4, label: img.etape === 1 ? `Ec max = ${fmt(ec, 2)} eV` : undefined });
+        // Sous le seuil, aucun électron : pas de point de mesure.
+        graphique.nuage('points', a2 > 0 ? mesures.filter(([x, y]) => y > 0 && x <= (a2 >= 1 ? NU_MAX : nu) + 1e-9) : [], { couleur: C.jaune, rayon: 4 });
+        if (on > 0) graphique.repere('mesure', nu, ec, { couleur: C.texte, rayon: 4, label: img.etape === 1 ? `Ec max = ${fmt(ec, 2)} eV` : undefined });
         else graphique.effacer('mesure');
         if (img.etape === 3 && emet && a3 > 0.4) {
           graphique.horizontale('palier', ec, { couleur: C.menthe });

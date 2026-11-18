@@ -1,6 +1,6 @@
 import { L, avancement, clamp, ease, el, fmt, mix, seg, set, show, uid } from '../../lib/anim';
 import { eprouvette, etiquette, fleche, paillasse, potence } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { G, descentePour, flotte, forceDynamometre, fractionImmergee, hauteurImmergee, monteeNiveau, poids, poussee, resultantePression, type Montage } from './model';
 
@@ -33,6 +33,22 @@ export default definirScene({
   affiche: { etape: 3, t: 0.95 },
 
   monter({ scene, graphique }) {
+    const selon = (s: number, c: number) => (themeSombre() ? s : c);
+    // Dégradé discret pour donner du volume aux pièces dessinées ici, comme la verrerie du kit.
+    const defsVol = el('defs', {}, scene);
+    const degrade = (attrs: Record<string, number>, arrets: [number, string, number][]) => {
+      const id = uid('vol'), gr = el('linearGradient', { id, ...attrs }, defsVol);
+      for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+      return `url(#${id})`;
+    };
+    // Cylindre : bord gauche ombré, liseré de lumière, bord droit plus sombre.
+    const relief = degrade({ x1: 0, y1: 0, x2: 1, y2: 0 }, [
+      [0, C.ombre, selon(0.3, 0.16)], [0.12, C.ombre, 0], [0.2, C.blanc, 0], [0.28, C.blanc, selon(0.28, 0.4)],
+      [0.38, C.blanc, 0], [0.75, C.ombre, 0], [1, C.ombre, selon(0.4, 0.24)],
+    ]);
+    const metalV = degrade({ x1: 0, y1: 0, x2: 0, y2: 1 }, [
+      [0, mix(C.metal, C.ombre, 0.1), 1], [0.3, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1],
+    ]);
     paillasse(scene);
     potence(scene, { x: 90, y: 440, h: 424 });
     const epr = eprouvette(scene, { x: CX, y: 440, w: 91, h: 210 });
@@ -41,19 +57,22 @@ export default definirScene({
 
     // Équipage mobile : noix, bras, dynamomètre, fil, cylindre.
     const mobile = el('g', {}, scene);
-    el('rect', { x: 90, y: Y0 - 12, width: CX - 82, height: 6, rx: 3, fill: C.metal }, mobile);
-    el('rect', { x: 81, y: Y0 - 18, width: 18, height: 18, rx: 4, fill: C.discret }, mobile);
+    el('rect', { x: 90, y: Y0 - 12, width: CX - 82, height: 6, rx: 3, fill: metalV }, mobile);
+    el('rect', { x: 81, y: Y0 - 18, width: 18, height: 18, rx: 4, fill: mix(C.discret, C.ombre, 0.15) }, mobile);
+    el('rect', { x: 81, y: Y0 - 18, width: 18, height: 6, rx: 3, fill: mix(C.discret, C.blanc, selon(0.25, 0.3)) }, mobile);
     el('circle', { cx: CX, cy: Y0 - 4, r: 5, fill: 'none', stroke: C.metal, 'stroke-width': 2.5 }, mobile);
     const ressort = el('path', { fill: 'none', stroke: C.metal, 'stroke-width': 2, 'stroke-linejoin': 'round' }, mobile);
-    el('rect', { x: CX - 11, y: Y0, width: 22, height: 70, rx: 7, fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': TRAIT }, mobile);
-    for (let i = 0; i <= 4; i++) el('line', { x1: CX + 12, x2: CX + (i % 2 ? 17 : 20), y1: Y0 + 12 + i * 12, y2: Y0 + 12 + i * 12, stroke: C.verre, 'stroke-width': 1.5, opacity: 0.7 }, mobile);
+    el('rect', { x: CX - 11, y: Y0, width: 22, height: 70, rx: 7, fill: C.verre, 'fill-opacity': selon(0.08, 0.3), stroke: C.trait, 'stroke-width': TRAIT }, mobile);
+    el('rect', { x: CX - 11, y: Y0, width: 22, height: 70, rx: 7, fill: relief }, mobile);
+    for (let i = 0; i <= 4; i++) el('line', { x1: CX + 12, x2: CX + (i % 2 ? 17 : 20), y1: Y0 + 12 + i * 12, y2: Y0 + 12 + i * 12, stroke: C.trait, 'stroke-width': 1.5, opacity: 0.7 }, mobile);
     const tige = el('g', {}, mobile);
     el('line', { x1: CX, x2: CX, y1: Y0 + 12, y2: Y0 + 76, stroke: C.metal, 'stroke-width': 3, 'stroke-linecap': 'round' }, tige);
     el('rect', { x: CX - 11, y: Y0 + 10.5, width: 22, height: 3, fill: C.corail }, tige);
     el('circle', { cx: CX, cy: Y0 + 79, r: 3, fill: 'none', stroke: C.metal, 'stroke-width': 2 }, tige);
     const pendu = el('g', {}, tige);
-    el('line', { x1: CX, x2: CX, y1: Y0 + 82, y2: Y0 + 126, stroke: C.verre, 'stroke-width': 1.5 }, pendu);
-    const cyl = el('rect', { x: CX - LC / 2, y: Y0 + 126, width: LC, height: HC, rx: 5, stroke: C.verre, 'stroke-width': TRAIT }, pendu);
+    el('line', { x1: CX, x2: CX, y1: Y0 + 82, y2: Y0 + 126, stroke: C.trait, 'stroke-width': 1.5 }, pendu);
+    const cyl = el('rect', { x: CX - LC / 2, y: Y0 + 126, width: LC, height: HC, rx: 5, stroke: C.trait, 'stroke-width': TRAIT }, pendu);
+    el('rect', { x: CX - LC / 2, y: Y0 + 126, width: LC, height: HC, rx: 5, fill: relief }, pendu);
     const lectureF = etiquette(mobile, { x: CX - 24, y: Y0 + 44, texte: '', ancre: 'end', mono: true, taille: 14, couleur: C.cyan });
 
     // Voile de liquide sur la partie immergée, puis vecteurs force.
@@ -80,7 +99,8 @@ export default definirScene({
     el('rect', { x: 382, y: 24, width: 242, height: 276, rx: 14, fill: C.panneau, stroke: C.grille, 'stroke-width': 1.5 }, zoom);
     const zEau = el('rect', { x: 382, width: 242, fill: `url(#${idGrad})`, 'clip-path': `url(#${idClip})` }, zoom);
     const zSurf = el('line', { x1: 383, x2: 623, stroke: C.blanc, 'stroke-width': 2, opacity: 0.4 }, zoom);
-    const zCyl = el('rect', { x: ZX - ZL / 2, y: ZT, width: ZL, height: ZH, rx: 7, stroke: C.verre, 'stroke-width': TRAIT }, zoom);
+    const zCyl = el('rect', { x: ZX - ZL / 2, y: ZT, width: ZL, height: ZH, rx: 7, stroke: C.trait, 'stroke-width': TRAIT }, zoom);
+    el('rect', { x: ZX - ZL / 2, y: ZT, width: ZL, height: ZH, rx: 7, fill: relief }, zoom);
     etiquette(zoom, { x: 396, y: 47, texte: L('Forces pressantes', 'Pressure forces'), taille: 13, couleur: C.discret });
     const gCotes = el('g', {}, zoom);
     const fl = (parent: Element) => fleche(parent, { x1: 0, y1: 0, x2: 0, y2: 0, couleur: C.violet, epaisseur: 2.5 });

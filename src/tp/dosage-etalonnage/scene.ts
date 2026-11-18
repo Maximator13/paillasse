@@ -1,6 +1,6 @@
 import { L, avancement, clamp, ease, el, fmt, lerp, mix, seg, set, show, uid } from '../../lib/anim';
 import { appareil, becher, etiquette, gouttes, paillasse, tubeEssai } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { GAMME, absorbance, epsilon, gamme, pente, transmittance } from './model';
 
@@ -19,6 +19,15 @@ const tirage = (i: number, n: number) => {
   const s = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453;
   return s - Math.floor(s);
 };
+/** Valeur selon le thème courant (opacités pensées différemment sur fond nuit et sur fond blanc). */
+const selon = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
+/** Dégradé linéaire à identifiant unique (vertical par défaut), renvoie la valeur de fill. */
+function degrade(g: Element, arrets: [number, string, number][], horizontal = false) {
+  const id = uid('dos');
+  const gr = el('linearGradient', { id, x1: 0, y1: 0, x2: horizontal ? 1 : 0, y2: horizontal ? 0 : 1 }, el('defs', {}, g));
+  for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+  return `url(#${id})`;
+}
 
 export default definirScene({
   etapes: [
@@ -44,8 +53,10 @@ export default definirScene({
     paillasse(scene);
 
     // Gamme étalon : portoir, cinq tubes, bécher de la solution inconnue.
-    el('rect', { x: 30, y: 386, width: 276, height: 7, rx: 3.5, fill: C.metal }, scene);
-    for (const x of [36, 300]) el('rect', { x: x - 3, y: 386, width: 6, height: 54, rx: 3, fill: C.metal }, scene);
+    const metal = (h: boolean) => degrade(scene, [[0, mix(C.metal, C.ombre, 0.1), 1], [0.3, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1]], h);
+    el('ellipse', { cx: 168, cy: 438, rx: 150, ry: 4, fill: C.ombre, opacity: selon(0.35, 0.1) }, scene);
+    el('rect', { x: 30, y: 386, width: 276, height: 7, rx: 3.5, fill: metal(false) }, scene);
+    for (const x of [36, 300]) el('rect', { x: x - 3, y: 386, width: 6, height: 54, rx: 3, fill: metal(true) }, scene);
     const tubes = XS.map((x) => tubeEssai(scene, { x, y: 432 }));
     const noms = XS.map((x, i) => etiquette(scene, { x, y: 312, texte: fmt(GAMME[i] * 1e6, 1), ancre: 'middle', mono: true, taille: 13 }));
     const legende = etiquette(scene, { x: 30, y: 290, texte: L('Gamme étalon (C en µmol/L)', 'Standards (C in µmol/L)'), taille: 13, couleur: C.discret });
@@ -54,22 +65,28 @@ export default definirScene({
 
     // Pipette de préparation (étape 1).
     const pip = el('g', {}, scene);
-    const corps = el('path', { d: 'M-5 -84V-6L0 8L5 -6V-84Z', 'fill-opacity': 0.8, stroke: C.verre, 'stroke-width': 2, 'stroke-linejoin': 'round' }, pip);
+    const corps = el('path', { d: 'M-5 -84V-6L0 8L5 -6V-84Z', 'fill-opacity': 0.8, stroke: C.trait, 'stroke-width': 2, 'stroke-linejoin': 'round' }, pip);
     const gtt = gouttes(scene, { x: 0, y1: 308, y2: 400 });
 
     // Spectrophotomètre (étape 2) : source, monochromateur, porte-cuve, capteur, afficheur.
     const spectro = el('g', {}, scene);
-    el('rect', { x: 30, y: 198, width: 580, height: 8, rx: 4, fill: C.panneau, stroke: C.metal, 'stroke-width': 1.5 }, spectro);
-    el('rect', { x: 256, y: 192, width: 88, height: 6, rx: 3, fill: C.metal }, spectro);
-    el('rect', { x: 40, y: 130, width: 60, height: 60, rx: 10, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, spectro);
+    const boitier = (x: number, y: number, w: number, h: number, rx: number) => {
+      el('rect', { x: x + 2, y: y + 3, width: w, height: h, rx, fill: C.ombre, opacity: selon(0.35, 0.1) }, spectro);
+      el('rect', { x, y, width: w, height: h, rx, fill: degrade(spectro, [[0, mix(C.panneau, C.metal, selon(0.22, 0.14)), 1], [1, C.panneau, 1]]), stroke: C.metal, 'stroke-width': 2 }, spectro);
+    };
+    el('rect', { x: 32, y: 203, width: 580, height: 8, rx: 4, fill: C.ombre, opacity: selon(0.35, 0.1) }, spectro);
+    el('rect', { x: 30, y: 198, width: 580, height: 8, rx: 4, fill: degrade(spectro, [[0, mix(C.panneau, C.metal, selon(0.22, 0.14)), 1], [1, C.panneau, 1]]), stroke: C.metal, 'stroke-width': 1.5 }, spectro);
+    el('rect', { x: 256, y: 192, width: 88, height: 6, rx: 3, fill: metal(false) }, spectro);
+    boitier(40, 130, 60, 60, 10);
     const halo = el('circle', { cx: 70, cy: Y_FAISCEAU, r: 24, fill: C.jaune, opacity: 0 }, spectro);
-    const lampe = el('circle', { cx: 70, cy: Y_FAISCEAU, r: 14, fill: C.grille, stroke: C.verre, 'stroke-width': 2 }, spectro);
+    const ampoule = degrade(spectro, [[0, C.blanc, 1], [0.4, mix(C.jaune, C.blanc, selon(0.3, 0.7)), 1], [1, mix(C.jaune, C.blanc, selon(0, 0.3)), 1]]);
+    const lampe = el('circle', { cx: 70, cy: Y_FAISCEAU, r: 14, fill: C.grille, stroke: C.trait, 'stroke-width': 2 }, spectro);
     etiquette(spectro, { x: 70, y: 226, texte: 'Source', ancre: 'middle', taille: 13, couleur: C.discret });
-    const blanc = el('rect', { x: 100, y: Y_FAISCEAU - 7, width: 14, height: 14, fill: C.blanc, opacity: 0 }, spectro);
-    el('rect', { x: 112, y: 136, width: 28, height: 48, rx: 6, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, spectro);
-    el('path', { d: 'M118 176L126 144L134 176Z', fill: 'rgba(223,230,255,.12)', stroke: C.verre, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, spectro);
+    const blanc = el('rect', { x: 100, y: Y_FAISCEAU - 7, width: 14, height: 14, fill: C.blanc, stroke: C.trait, 'stroke-width': 1, opacity: 0 }, spectro);
+    boitier(112, 136, 28, 48, 6);
+    el('path', { d: 'M118 176L126 144L134 176Z', fill: C.verre, 'fill-opacity': selon(0.12, 0.5), stroke: C.trait, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, spectro);
     const nomLambda = etiquette(spectro, { x: 126, y: 122, texte: '', ancre: 'middle', mono: true, taille: 13 });
-    el('rect', { x: X_CAPTEUR, y: 136, width: 40, height: 48, rx: 6, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, spectro);
+    boitier(X_CAPTEUR, 136, 40, 48, 6);
     el('rect', { x: X_CAPTEUR + 3, y: Y_FAISCEAU - 10, width: 6, height: 20, rx: 2, fill: C.verre, opacity: 0.8 }, spectro);
     el('path', { d: 'M540 136V102', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, spectro);
     etiquette(spectro, { x: 540, y: 226, texte: L('Capteur', 'Detector'), ancre: 'middle', taille: 13, couleur: C.discret });
@@ -80,21 +97,21 @@ export default definirScene({
     // Cuve mobile : liquide, puis faisceau par-dessus, puis contour.
     const cuve = el('g', {}, scene);
     const liq = el('rect', { y: -54, height: 53, opacity: 0.85 }, cuve);
-    const verre = el('path', { fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, cuve);
+    const verre = el('path', { fill: C.verre, 'fill-opacity': selon(0.08, 0.3), stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, cuve);
 
     const faisceau = el('g', {}, scene);
     const idG = uid('att');
-    const grad = el('linearGradient', { id: idG, gradientUnits: 'userSpaceOnUse', y1: 0, y2: 0 }, el('defs', {}, faisceau));
-    const stop0 = el('stop', { offset: 0 }, grad), stop1 = el('stop', { offset: 1 }, grad);
-    const fEntree = el('rect', { x: X_FAISCEAU, y: Y_FAISCEAU - 7, height: 14, opacity: 0.85 }, faisceau);
-    const fCuve = el('rect', { y: Y_FAISCEAU - 7, height: 14, fill: `url(#${idG})` }, faisceau);
-    const fSortie = el('rect', { y: Y_FAISCEAU - 7, height: 14 }, faisceau);
+    // Un seul rectangle (pas de jointure visible aux bords de la cuve) : intensité constante, atténuation dans la cuve, intensité constante.
+    const grad = el('linearGradient', { id: idG, gradientUnits: 'userSpaceOnUse', x1: X_FAISCEAU, x2: X_CAPTEUR, y1: 0, y2: 0 }, el('defs', {}, faisceau));
+    const arrets = [0, 0, 1, 1].map((offset) => el('stop', { offset }, grad));
+    el('rect', { x: X_FAISCEAU, y: Y_FAISCEAU - 7, width: X_CAPTEUR - X_FAISCEAU, height: 14, fill: `url(#${idG})` }, faisceau);
     const photons = Array.from({ length: N_PHOTONS }, () => el('circle', { r: 2.2, fill: C.blanc }, faisceau));
     const nomI0 = etiquette(faisceau, { x: 212, y: 142, texte: 'I0', ancre: 'middle', mono: true, taille: 14 });
     const nomI = etiquette(faisceau, { x: 432, y: 142, texte: 'I', ancre: 'middle', mono: true, taille: 14 });
 
     // Encart de la loi et du résultat (étapes 4 à 6).
     const encart = el('g', {}, scene);
+    el('rect', { x: 412, y: 304, width: 214, height: 126, rx: 14, fill: C.ombre, opacity: selon(0.35, 0.1) }, encart);
     const cadre = el('rect', { x: 410, y: 300, width: 214, height: 126, rx: 14, fill: C.panneau, stroke: C.cyan, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 426, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
@@ -136,8 +153,8 @@ export default definirScene({
       // Étape 2 : le spectrophotomètre s'installe, la lampe s'allume.
       show(spectro, seg(a1, 0, 0.25), 20);
       const allume = seg(a1, 0.3, 0.4);
-      lampe.setAttribute('fill', allume > 0 ? C.jaune : C.grille);
-      set(halo, { opacity: 0.22 * allume + 0.04 * allume * Math.sin(T * 4) });
+      lampe.setAttribute('fill', allume > 0 ? ampoule : C.grille);
+      set(halo, { opacity: selon(1, 0.6) * (0.22 * allume + 0.04 * allume * Math.sin(T * 4)) });
       set(blanc, { opacity: 0.8 * allume });
       faisceau.style.opacity = String(allume);
       nomLambda.textContent = `λ = ${fmt(p.lambda, 0)} nm`;
@@ -172,12 +189,9 @@ export default definirScene({
       nomL.textContent = `l = ${fmt(l, 2)} cm`;
 
       // Faisceau : intensité I0 avant la cuve, atténuée dans la cuve, I après.
-      set(fEntree, { width: x0 - X_FAISCEAU, fill: couleur });
-      set(grad, { x1: x0, x2: x1 });
-      set(stop0, { 'stop-color': couleur, 'stop-opacity': 0.85 });
-      set(stop1, { 'stop-color': couleur, 'stop-opacity': 0.85 * tr });
-      set(fCuve, { x: x0, width: w });
-      set(fSortie, { x: x1, width: X_CAPTEUR - x1, fill: couleur, opacity: 0.85 * tr });
+      const bord = (x: number) => (x - X_FAISCEAU) / (X_CAPTEUR - X_FAISCEAU);
+      [[0, 1], [bord(x0), 1], [bord(x1), tr], [1, tr]].forEach(([offset, o], i) =>
+        set(arrets[i], { offset, 'stop-color': couleur, 'stop-opacity': 0.85 * o }));
       photons.forEach((ph, i) => {
         const tour = T * 0.3 + i / N_PHOTONS, nTour = Math.floor(tour);
         const x = lerp(X_FAISCEAU + 2, X_CAPTEUR - 2, tour - nTour);
@@ -185,7 +199,8 @@ export default definirScene({
         const fin = aCuve > 0 ? x0 + (w * -Math.log10(tirage(i, nTour) + 1e-9)) / aCuve : Infinity;
         set(ph, { cx: x, cy: Y_FAISCEAU + ((i * 7) % 5 - 2) * 2.4, opacity: fin < x1 && x > fin ? 0 : 0.9 });
       });
-      nomI.style.opacity = String(0.35 + 0.65 * tr);
+      // Le faisceau porte l'atténuation ; l'étiquette reste lisible même quand presque tout est absorbé.
+      nomI.style.opacity = String(0.75 + 0.25 * tr);
       nomI0.style.opacity = '1';
       afficheur.affiche(allume < 1 ? '' : presence > 0.02 ? fmt(aCuve, 3) : L('-,---', '-.---'));
 
@@ -207,7 +222,7 @@ export default definirScene({
         const nuage: [number, number][] = [];
         if (a1 > 0.7) nuage.push([0, 0]);
         pts.forEach(([ce, ae], i) => { if (a2 >= (i + 0.55) / 5) nuage.push([ce * 1e6, ae]); });
-        graphique.nuage('points', nuage, { couleur: C.blanc, rayon: 4.5 });
+        graphique.nuage('points', nuage, { couleur: C.texte, rayon: 4.5 });
         if (a4 === 0 && n >= 0 && presence > 0) graphique.repere('mesure', GAMME[n] * 1e6, aCuve, { couleur: C.jaune, label: `A = ${fmt(aCuve, 3)}` });
         else graphique.effacer('mesure');
         const xd = 12 * seg(a3, 0.08, 0.6);

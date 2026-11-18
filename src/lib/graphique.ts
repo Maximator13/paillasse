@@ -128,7 +128,7 @@ export function creerGraphique(svg: SVGSVGElement, config: ConfigGraphique): Gra
       const g = obtenir(id, 'g', gReperes);
       g.replaceChildren();
       const c = o.couleur ?? C.discret;
-      el('line', { x1: X(x), x2: X(x), y1: M.h, y2: H - M.b, stroke: c, 'stroke-width': o.epaisseur ?? 1.5, 'stroke-dasharray': o.pointille === false ? 'none' : '5 5' }, g);
+      el('line', { x1: X(x), x2: X(x), y1: M.h + (o.label ? 20 : 0), y2: H - M.b, stroke: c, 'stroke-width': o.epaisseur ?? 1.5, 'stroke-dasharray': o.pointille === false ? 'none' : '5 5' }, g);
       if (o.label) texte(g, X(x), M.h + 14, o.label, {
         fill: c, 'font-family': MONO, 'font-size': 12.5, 'font-weight': 600, 'text-anchor': X(x) > W - 90 ? 'end' : 'middle',
         stroke: C.fond, 'stroke-width': 4, 'paint-order': 'stroke',

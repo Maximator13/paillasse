@@ -1,4 +1,4 @@
-import { L, avancement, clamp, ease, el, fmt, lerp, rng, seg, set, show, uid } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, uid } from '../../lib/anim';
 import { etiquette, fleche } from '../../lib/labkit';
 import { C, MONO, POLICE } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
@@ -6,23 +6,24 @@ import { JOUR_SIDERAL, M_TERRE, R_TERRE, anomalieExcentrique, champ, masseDepuis
 
 // Repère : la Terre au foyer (CX, CY), échelle K en pixels par mètre.
 const CX = 232, CY = 240;
-const R_MAX = R_TERRE + 36000e3; // plus grande orbite affichée (m)
+export const R_MAX = R_TERRE + 36000e3; // plus grande orbite affichée (m)
 const K = 190 / R_MAX;
 const RT = R_TERRE * K;
-const S = JOUR_SIDERAL / 24; // secondes réelles par seconde d'animation (étapes 4 et 5)
+export const S = JOUR_SIDERAL / 24; // secondes réelles par seconde d'animation (étapes 4 et 5)
 const COL = 444; // bord gauche de la colonne de légende
 const PI = Math.PI;
 
-const SATS = [
-  { nom: 'ISS', r: 6.78e6, couleur: C.rose, phase: 0.6 },
-  { nom: 'GPS', r: 26.56e6, couleur: C.orange, phase: 2.4 },
-  { nom: 'Galileo', r: 29.6e6, couleur: C.violet, phase: 4.1 },
-  { nom: L('Météosat', 'Meteosat'), r: 42.164e6, couleur: C.jaune, phase: 5.3 },
+// Couleur relue dans C à chaque accès, pour suivre le thème courant.
+export const SATS = [
+  { nom: 'ISS', r: 6.78e6, get couleur() { return C.rose; }, phase: 0.6 },
+  { nom: 'GPS', r: 26.56e6, get couleur() { return C.orange; }, phase: 2.4 },
+  { nom: 'Galileo', r: 29.6e6, get couleur() { return C.violet; }, phase: 4.1 },
+  { nom: L('Météosat', 'Meteosat'), r: 42.164e6, get couleur() { return C.jaune; }, phase: 5.3 },
 ];
 
 const EXP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 /** Écriture scientifique : 5,97 × 10²⁴. */
-const sci = (v: number, d = 2) => {
+export const sci = (v: number, d = 2) => {
   const e = Math.floor(Math.log10(v));
   return `${fmt(v / 10 ** e, d)} × 10${String(e).replace('-', '⁻').replace(/\d/g, (c) => EXP[+c])}`;
 };
@@ -49,8 +50,11 @@ export default definirScene({
   monter({ scene, graphique }) {
     // Ciel étoilé.
     const alea = rng(11);
-    const etoiles = Array.from({ length: 70 }, () =>
-      el('circle', { cx: alea() * 640, cy: alea() * 480, r: 0.5 + alea() * 1.1, fill: C.verre, opacity: 0.25 + alea() * 0.45 }, scene));
+    // Pas d'étoile derrière la colonne de légende (elles se confondraient avec le texte).
+    const etoiles = Array.from({ length: 70 }, () => {
+      const cx = alea() * 640, cy = alea() * 480, r = 0.5 + alea() * 1.1, o = 0.25 + alea() * 0.45;
+      return el('circle', { cx, cy, r, fill: C.verre, opacity: cx > COL - 14 && cy < 372 ? 0 : o }, scene);
+    });
 
     // Secteurs balayés (sous la Terre, qui en masque la pointe).
     const secteur = (couleur: string) =>
@@ -71,14 +75,16 @@ export default definirScene({
     const grad = el('radialGradient', { id: idG, cx: '35%', cy: '32%', r: '75%' }, defs);
     el('stop', { offset: 0, 'stop-color': C.cyan }, grad);
     el('stop', { offset: 0.55, 'stop-color': C.bleu }, grad);
-    el('stop', { offset: 1, 'stop-color': C.panneau }, grad);
+    el('stop', { offset: 1, 'stop-color': mix(C.bleu, C.ombre, 0.5) }, grad);
     el('circle', { cx: CX, cy: CY, r: RT }, el('clipPath', { id: idC }, defs));
     el('circle', { cx: CX, cy: CY, r: RT + 6, fill: C.cyan, opacity: 0.14 }, scene);
     el('circle', { cx: CX, cy: CY, r: RT, fill: `url(#${idG})` }, scene);
     const terres = el('g', { 'clip-path': `url(#${idC})` }, scene);
     const continents = [[0, -10, 11, 7], [38, 6, 9, 11], [74, -4, 13, 6], [20, 16, 7, 5]].map(([x, y, rx, ry]) =>
       ({ x, n: el('ellipse', { cy: CY + y, rx, ry, fill: C.menthe, opacity: 0.85 }, terres) }));
-    el('circle', { cx: CX, cy: CY, r: RT, fill: 'none', stroke: C.verre, 'stroke-width': 1.5 }, scene);
+    // Reflet discret côté lumière, puis contour.
+    el('ellipse', { cx: CX - RT * 0.35, cy: CY - RT * 0.4, rx: RT * 0.3, ry: RT * 0.2, fill: C.blanc, opacity: 0.22, transform: `rotate(-35 ${CX - RT * 0.35} ${CY - RT * 0.4})` }, scene);
+    el('circle', { cx: CX, cy: CY, r: RT, fill: 'none', stroke: C.trait, 'stroke-width': 1.5 }, scene);
 
     const points = refs.map((s) => el('circle', { r: 4.5, fill: s.couleur, stroke: C.fond, 'stroke-width': 1.5 }, scene));
 
@@ -89,8 +95,9 @@ export default definirScene({
     const nomV = etiquette(scene, { x: 0, y: 0, texte: 'v', ancre: 'middle', taille: 15, couleur: C.menthe });
     const sat = el('g', {}, scene);
     el('circle', { r: 10, fill: C.cyan, opacity: 0.22 }, sat);
-    el('path', { d: 'M-14 -3.5H-6V3.5H-14ZM6 -3.5H14V3.5H6Z', fill: C.bleu, stroke: C.verre, 'stroke-width': 1 }, sat);
-    el('rect', { x: -5.5, y: -5.5, width: 11, height: 11, rx: 2.5, fill: C.cyan, stroke: C.verre, 'stroke-width': 1.5 }, sat);
+    el('path', { d: 'M-14 -3.5H-6V3.5H-14ZM6 -3.5H14V3.5H6Z', fill: C.bleu, stroke: C.trait, 'stroke-width': 1 }, sat);
+    el('rect', { x: -5.5, y: -5.5, width: 11, height: 11, rx: 2.5, fill: C.cyan, stroke: C.trait, 'stroke-width': 1.5 }, sat);
+    el('rect', { x: -3.5, y: -3.5, width: 4, height: 3, rx: 1, fill: C.blanc, opacity: 0.45 }, sat);
 
     // Colonne de légende, à droite.
     const legF = el('g', {}, scene), legV = el('g', {}, scene);
@@ -117,6 +124,7 @@ export default definirScene({
     });
 
     const encart = el('g', {}, scene);
+    el('rect', { x: COL - 2, y: 235, width: 184, height: 122, rx: 14, fill: C.ombre, opacity: 0.12 }, encart);
     el('rect', { x: COL - 4, y: 232, width: 184, height: 122, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: COL + 10, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
@@ -164,7 +172,13 @@ export default definirScene({
       vF.maj(sx, sy, sx - ux * LF, sy + uy * LF);
       vV.maj(sx, sy, sx + tx * LV, sy - ty * LV);
       // Noms des vecteurs, au bout de chaque flèche.
-      set(nomF, { x: sx - ux * (LF + 11), y: sy + uy * (LF + 11) + 5, opacity: clamp(oF) });
+      // Sur une orbite basse, le nom de F tomberait sur la Terre : il passe à côté de la flèche, près du satellite, à l'opposé de v.
+      const surTerre = d * K - LF - 11 < RT + 10;
+      set(nomF, {
+        x: surTerre ? sx - ux * Math.min(LF, 10) - tx * 14 : sx - ux * (LF + 11),
+        y: (surTerre ? sy + uy * Math.min(LF, 10) + ty * 14 : sy + uy * (LF + 11)) + 5,
+        opacity: clamp(oF),
+      });
       set(nomV, { x: sx + tx * (LV + 11), y: sy - ty * (LV + 11) + 5, opacity: clamp(oV) });
       show(legF, seg(a1, 0.62, 0.78));
       show(legV, seg(a1, 0.78, 0.94));
@@ -221,7 +235,7 @@ export default definirScene({
 
       if (graphique) {
         const xd = 8 * seg(a5, 0.05, 0.5);
-        graphique.courbe('droite', a5 > 0 ? [[0, 0], [xd, kS * 1e13 * xd]] : [], { couleur: C.verre, epaisseur: 2 });
+        graphique.courbe('droite', a5 > 0 ? [[0, 0], [xd, kS * 1e13 * xd]] : [], { couleur: C.trait, epaisseur: 2 });
         refs.forEach((s, i) => {
           graphique.nuage(`sat${i}`, entree[i] > 0 ? [[donnees[i][0] / 1e22, donnees[i][1] / 1e9]] : [], { couleur: s.couleur, rayon: 5 });
           graphique.opacite(`sat${i}`, entree[i]);

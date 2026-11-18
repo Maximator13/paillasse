@@ -1,6 +1,6 @@
 import { avancement, clamp, ease, el, fmt, L, lerp, mix, remap, seg, set, show, texte, uid } from '../../lib/anim';
 import { becher, etiquette, fleche, paillasse, thermometre } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { C_EAU, courbe, flux, temperature, tempsCaracteristique, type Systeme } from './model';
 
@@ -11,7 +11,10 @@ const ACCELERATION = 400; // 90 min montrées en 13,5 s
 const NIVEAU = 0.66;
 const X0 = 170, X1 = 330, Y_FOND = 432; // parois et fond du bécher
 const XA = 68, XE = 296, XC = XE - 16; // thermomètre d'ambiance, thermomètre plongé dans l'eau, cotes de l'écart
-const verre = { fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+/** Paroi de verre dessinée à la main, accordée au kit : aplat léger, contour C.trait. Lue à l'appel pour suivre le thème. */
+const verre = () => ({ fill: C.verre, 'fill-opacity': themeSombre() ? 0.08 : 0.3, stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+/** Opacité d'ombre selon le thème (plus marquée sur fond nuit). */
+const opOmbre = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
 /** Ordonnée d'une température, commune aux deux thermomètres : 2,2 px par degré. */
 const yT = (temp: number) => 307 - 2.2 * temp;
 /** Remplissage d'un thermomètre du kit (base y, hauteur h) pour que sa colonne affleure yT(temp). */
@@ -49,10 +52,20 @@ export default definirScene({
     const halo = el('ellipse', { cx: 250, cy: 392, fill: `url(#${idHalo})` }, el('g', { 'clip-path': `url(#${idSol})` }, scene));
 
     paillasse(scene);
-    el('rect', { x: X0 - 14, y: Y_FOND, width: X1 - X0 + 28, height: 8, rx: 3, fill: mix(C.orange, C.panneau, 0.55) }, scene);
+    const liege = el('linearGradient', { id: uid('liege'), x1: 0, x2: 0, y1: 0, y2: 1 }, defs);
+    el('stop', { offset: 0, 'stop-color': mix(C.orange, C.panneau, 0.45) }, liege);
+    el('stop', { offset: 1, 'stop-color': mix(C.orange, C.panneau, 0.25) }, liege);
+    // Manchons de liège : même matière, éclairée de côté comme la verrerie du kit.
+    const liegeV = el('linearGradient', { id: uid('liege') }, defs);
+    for (const [offset, p] of [[0, 0.25], [0.35, 0.5], [1, 0.2]]) el('stop', { offset, 'stop-color': mix(C.orange, C.panneau, p) }, liegeV);
+    el('rect', { x: X0 - 14, y: Y_FOND, width: X1 - X0 + 28, height: 8, rx: 3, fill: `url(#${liege.id})` }, scene);
 
     // Thermomètre d'ambiance : le thermostat. Sa graduation sert d'échelle aux deux thermomètres.
-    el('rect', { x: 20, y: 60, width: 64, height: 290, rx: 10, fill: C.panneau, stroke: C.metal, 'stroke-width': 2 }, scene);
+    el('rect', { x: 22, y: 64, width: 64, height: 290, rx: 10, fill: C.ombre, opacity: opOmbre(0.35, 0.1) }, scene);
+    const relief = el('linearGradient', { id: uid('relief'), x1: 0, x2: 0, y1: 0, y2: 1 }, defs);
+    el('stop', { offset: 0, 'stop-color': mix(C.panneau, C.metal, opOmbre(0.22, 0.14)) }, relief);
+    el('stop', { offset: 1, 'stop-color': C.panneau }, relief);
+    el('rect', { x: 20, y: 60, width: 64, height: 290, rx: 10, fill: `url(#${relief.id})`, stroke: C.metal, 'stroke-width': 2 }, scene);
     for (let d = 0; d <= 100; d += 10) {
       el('line', { x1: d % 20 ? 56 : 53, x2: 60, y1: yT(d), y2: yT(d), stroke: C.discret, 'stroke-width': 1.4, 'stroke-linecap': 'round' }, scene);
       if (d % 20 === 0) texte(scene, 49, yT(d) + 4.5, String(d), { fill: C.discret, 'font-family': MONO, 'font-size': 13, 'text-anchor': 'end' });
@@ -64,8 +77,8 @@ export default definirScene({
     const etiqAir = etiquette(scene, { x: 92, y: 0, texte: '', taille: 13, mono: true, couleur: C.cyan });
 
     // Courant d'air (h élevé) et manchon de liège (h faible).
-    const vent = [0, 1, 2].map((i) => el('line', { y1: 314 + 14 * i, y2: 314 + 14 * i, stroke: C.verre, 'stroke-width': 2, 'stroke-linecap': 'round' }, scene));
-    const manchons = [-1, 1].map((cote) => ({ cote, n: el('rect', { y: 308, height: 122, rx: 4, fill: mix(C.orange, C.panneau, 0.4) }, scene) }));
+    const vent = [0, 1, 2].map((i) => el('line', { y1: 314 + 14 * i, y2: 314 + 14 * i, stroke: C.trait, 'stroke-width': 2, 'stroke-linecap': 'round' }, scene));
+    const manchons = [-1, 1].map((cote) => ({ cote, n: el('rect', { y: 308, height: 122, rx: 4, fill: `url(#${liegeV.id})`, stroke: mix(C.orange, C.ombre, 0.35), 'stroke-opacity': 0.5, 'stroke-width': 1 }, scene) }));
 
     const bec = becher(scene, { x: 250, y: Y_FOND, w: X1 - X0, h: 132 });
 
@@ -78,7 +91,7 @@ export default definirScene({
     // Thermomètre plongé dans l'eau (étape 2), gradué comme celui de la salle.
     const gEau = el('g', {}, scene);
     const thEau = thermometre(gEau, { x: XE, y: 426, h: 352 });
-    for (let d = 0; d <= 100; d += 10) el('line', { x1: XE + 6, x2: XE + (d % 50 ? 10 : 13), y1: yT(d), y2: yT(d), stroke: C.verre, 'stroke-width': 1.2, opacity: 0.55 }, gEau);
+    for (let d = 0; d <= 100; d += 10) el('line', { x1: XE + 6, x2: XE + (d % 50 ? 10 : 13), y1: yT(d), y2: yT(d), stroke: C.trait, 'stroke-width': 1.2, opacity: 0.55 }, gEau);
     const etiqEau = etiquette(scene, { x: XE + 19, y: 0, texte: '', taille: 14, mono: true });
     // Repère de T0 et cotes : écart restant avec l'air, écart déjà parcouru.
     const gT0 = el('g', {}, scene);
@@ -100,8 +113,9 @@ export default definirScene({
     const bouilloire = el('g', {}, scene);
     el('rect', { x: 36, y: 0, width: 84, height: 72, rx: 13 }, el('clipPath', { id: idReserve }, defs));
     const reserve = el('rect', { x: -80, width: 320, height: 200, opacity: 0.82 }, el('g', { 'clip-path': `url(#${idReserve})` }, bouilloire));
-    el('path', { d: 'M34 36L5 3Q1 -2 8 -3L34 10', ...verre }, bouilloire);
-    el('rect', { x: 32, y: -4, width: 92, height: 80, rx: 16, ...verre }, bouilloire);
+    el('path', { d: 'M34 36L5 3Q1 -2 8 -3L34 10', ...verre() }, bouilloire);
+    el('rect', { x: 32, y: -4, width: 92, height: 80, rx: 16, ...verre() }, bouilloire);
+    el('rect', { x: 42, y: 4, width: 7, height: 62, rx: 3.5, fill: C.blanc, opacity: opOmbre(0.18, 0.5) }, bouilloire);
     el('rect', { x: 54, y: -12, width: 48, height: 8, rx: 4, fill: C.metal }, bouilloire);
     el('circle', { cx: 78, cy: -16, r: 5, fill: C.metal }, bouilloire);
     el('path', { d: 'M124 10C160 10 160 62 124 62', fill: 'none', stroke: C.metal, 'stroke-width': 6, 'stroke-linecap': 'round' }, bouilloire);
@@ -111,10 +125,11 @@ export default definirScene({
     const chrono = el('g', {}, scene);
     el('rect', { x: -4, y: -38, width: 8, height: 11, rx: 2, fill: C.metal }, chrono);
     el('rect', { x: -3, y: -36, width: 6, height: 9, rx: 2, fill: C.metal, transform: 'rotate(40)' }, chrono);
-    el('circle', { r: 28, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, chrono);
+    el('circle', { cx: 1.5, cy: 3, r: 29, fill: C.ombre, opacity: opOmbre(0.35, 0.12) }, chrono);
+    el('circle', { r: 28, fill: `url(#${relief.id})`, stroke: C.trait, 'stroke-width': TRAIT }, chrono);
     for (let i = 0; i < 12; i++) el('line', { x1: 0, x2: 0, y1: i % 3 ? -22 : -19, y2: -24, stroke: C.discret, 'stroke-width': 1.5, 'stroke-linecap': 'round', transform: `rotate(${30 * i})` }, chrono);
     const aiguille = el('line', { x1: 0, x2: 0, y1: 5, y2: -19, stroke: C.orange, 'stroke-width': 3, 'stroke-linecap': 'round' }, chrono);
-    el('circle', { r: 3.5, fill: C.verre }, chrono);
+    el('circle', { r: 3.5, fill: C.trait }, chrono);
     const lecture = etiquette(chrono, { x: 0, y: 50, texte: '', ancre: 'middle', taille: 14, mono: true });
     const accel = el('g', {}, scene);
     const pastille = el('rect', { x: 514, y: 258, width: 96, height: 28, rx: 14, fill: C.panneau, 'stroke-width': 1.5 }, accel);
@@ -132,6 +147,7 @@ export default definirScene({
 
     // Encart de résultat (étapes 4 et 5).
     const encart = el('g', {}, scene);
+    const ombreCadre = el('rect', { x: 348, y: 28, width: 278, rx: 14, fill: C.ombre, opacity: opOmbre(0.35, 0.1) }, encart);
     const cadre = el('rect', { x: 346, y: 24, width: 278, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (parent: Element, y: number, taille: number, couleur: string, contenu = '', police = MONO) =>
       texte(parent, 362, y, contenu, { fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 });
@@ -245,7 +261,9 @@ export default definirScene({
       coteEcart.maj(yAir, yEau, lu ? 1 : 0, part > 0.5 ? L('37 %', '37%') : L('écart', 'gap'), couleurFlux);
       coteParcouru.maj(yEau, y0, part, L('63 %', '63%'));
       show(encart, seg(a4, 0.36, 0.5, ease.backOut), 16);
-      cadre.setAttribute('height', String(lerp(88, 140, seg(a5, 0.04, 0.24))));
+      const hCadre = String(lerp(88, 140, seg(a5, 0.04, 0.24)));
+      cadre.setAttribute('height', hCadre);
+      ombreCadre.setAttribute('height', hCadre);
       lTau.textContent = `τ = ${fmt(tauMin, 1)} min`;
       l63.style.opacity = String(part);
       show(modele, seg(a5, 0.14, 0.34));
@@ -279,7 +297,7 @@ export default definirScene({
           graphique.verticale('tau', tauMin, { couleur: C.jaune, label: `τ = ${fmt(tauMin, 1)} min` });
           graphique.opacite('tau', seg(a4, 0.34, 0.48));
         } else graphique.effacer('tau');
-        if (releve) graphique.repere('point', date / 60, temp, part > 0 ? { couleur: C.jaune, label: `${fmt(temp, 1)} °C` } : { couleur: C.blanc, rayon: 4 });
+        if (releve) graphique.repere('point', date / 60, temp, part > 0 ? { couleur: C.jaune, label: `${fmt(temp, 1)} °C` } : { couleur: C.texte, rayon: 4 });
         else graphique.effacer('point');
       }
 

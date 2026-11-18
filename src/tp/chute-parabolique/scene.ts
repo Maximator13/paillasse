@@ -1,11 +1,11 @@
-import { avancement, clamp, ease, el, fmt, L, lerp, seg, show } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, mix, seg, show, uid } from '../../lib/anim';
 import { etiquette, fleche, paillasse } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, themeSombre, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { dureeVol, intervalle, pointage, portee, position, sommet, trajectoire, vitesse, vitesseInitiale, vitessePointee, type Tir } from './model';
 
 const G = 9.81; // m/s²
-const X0 = 84, SOL = 440; // origine du repère, en pixels
+const X0 = 92, SOL = 440; // origine du repère, en pixels
 const ECH = 110; // pixels par mètre : échelle fixe, la trajectoire tient dans le cadre sur toute la plage des curseurs
 const VPX = 11; // pixels par m/s pour les vecteurs vitesse
 const APX = 34; // longueur du vecteur accélération (g), en pixels
@@ -36,6 +36,20 @@ export default definirScene({
   monter({ scene, graphique }) {
     paillasse(scene, SOL);
 
+    // Relief accordé au kit de verrerie : pièces métalliques éclairées, tube en volume, balle sphérique, ombres douces.
+    const defs = el('defs', {}, scene);
+    const selon = (s: number, c: number) => (themeSombre() ? s : c);
+    const degrade = (type: 'linearGradient' | 'radialGradient', attrs: Record<string, number | string>, arrets: [number, string, number][]) => {
+      const id = uid('relief');
+      const gr = el(type, { id, ...attrs }, defs);
+      for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+      return `url(#${id})`;
+    };
+    const vertical = { x1: 0, y1: 0, x2: 0, y2: 1 };
+    const acier = (attrs: Record<string, number>) =>
+      degrade('linearGradient', attrs, [[0, mix(C.metal, C.ombre, 0.1), 1], [0.3, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1]]);
+    const ombreSol = degrade('radialGradient', {}, [[0, C.ombre, selon(0.6, 0.22)], [0.6, C.ombre, selon(0.32, 0.1)], [1, C.ombre, 0]]);
+
     // Repère : axe (Ox) confondu avec le sol, axe (Oy) à la verticale du lanceur.
     const gAxes = el('g', {}, scene);
     el('line', { x1: X0, x2: X0, y1: SOL, y2: 122, stroke: C.discret, 'stroke-width': 1.5 }, gAxes);
@@ -51,8 +65,10 @@ export default definirScene({
     // Étalon de longueur : 1,00 m, bandes de 10 cm.
     const gEtalon = el('g', {}, scene);
     for (let i = 0; i < 10; i++) el('rect', { x: 24, y: SOL - (i + 1) * (ECH / 10), width: 8, height: ECH / 10, fill: i % 2 ? C.corail : C.blanc }, gEtalon);
-    el('rect', { x: 24, y: SOL - ECH, width: 8, height: ECH, fill: 'none', stroke: C.verre, 'stroke-width': 1.2 }, gEtalon);
-    etiquette(gEtalon, { x: 28, y: SOL - ECH - 8, texte: '1 m', ancre: 'middle', taille: 13, mono: true });
+    el('ellipse', { cx: 28, cy: SOL - 1, rx: 9, ry: 3, fill: ombreSol }, gEtalon);
+    el('rect', { x: 24, y: SOL - ECH, width: 8, height: ECH, fill: 'none', stroke: C.trait, 'stroke-width': 1.2 }, gEtalon);
+    // Légende sous le sol : au-dessus, le tube la masquerait pour un tir tendu lancé haut.
+    etiquette(gEtalon, { x: 28, y: SOL + 20, texte: '1 m', ancre: 'middle', taille: 13, mono: true });
 
     // Parabole modèle, flèche et portée (sous les points).
     const parabole = el('path', { fill: 'none', stroke: C.violet, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, scene);
@@ -70,21 +86,25 @@ export default definirScene({
     // Lanceur : pied, tube orientable, repère d'angle.
     const gAngle = el('g', {}, scene);
     const refAngle = el('line', { stroke: C.discret, 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, gAngle);
+    const dirTir = el('line', { stroke: C.discret, 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, gAngle);
     const arc = el('path', { fill: 'none', stroke: C.texte, 'stroke-width': 1.5 }, gAngle);
     const etiqAngle = etiquette(gAngle, { x: 0, y: 0, texte: '', taille: 13, mono: true });
     const gLanceur = el('g', {}, scene);
-    const pied = el('rect', { x: X0 - 3, width: 6, rx: 2, fill: C.metal }, gLanceur);
-    el('rect', { x: X0 - 24, y: SOL - 7, width: 48, height: 7, rx: 3, fill: C.metal }, gLanceur);
+    el('ellipse', { cx: X0 + 2, cy: SOL - 1, rx: 30, ry: 4, fill: ombreSol }, gLanceur);
+    const pied = el('rect', { x: X0 - 3, width: 6, rx: 2, fill: acier({ x1: 0, y1: 0, x2: 1, y2: 0 }) }, gLanceur);
+    el('rect', { x: X0 - 24, y: SOL - 7, width: 48, height: 7, rx: 3, fill: acier(vertical) }, gLanceur);
     const tube = el('g', {}, gLanceur);
-    el('rect', { x: -54, y: -6, width: 8, height: 12, rx: 2, fill: C.orange }, tube);
-    el('rect', { x: -48, y: -10, width: 44, height: 20, rx: 5, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, tube);
+    el('rect', { x: -54, y: -6, width: 8, height: 12, rx: 2, fill: degrade('linearGradient', vertical, [[0, mix(C.orange, C.blanc, 0.35), 1], [0.5, C.orange, 1], [1, mix(C.orange, C.ombre, 0.3), 1]]) }, tube);
+    el('rect', { x: -48, y: -10, width: 44, height: 20, rx: 5, fill: C.panneau, stroke: C.trait, 'stroke-width': TRAIT }, tube);
+    // Volume du tube : bord haut éclairé, bord bas ombré (le dégradé tourne avec le tube).
+    el('rect', { x: -48, y: -10, width: 44, height: 20, rx: 5, fill: degrade('linearGradient', vertical, [[0, C.ombre, selon(0.3, 0.08)], [0.25, C.blanc, selon(0.18, 0.7)], [0.45, C.blanc, 0], [1, C.ombre, selon(0.4, 0.16)]]) }, tube);
 
     // Balle en vol, vecteur vitesse et ses composantes.
     const gVol = el('g', {}, scene);
     const compX = el('line', { stroke: C.menthe, 'stroke-width': 2, 'stroke-dasharray': '4 4' }, gVol);
     const compY = el('line', { stroke: C.rose, 'stroke-width': 2, 'stroke-dasharray': '4 4' }, gVol);
     const flVol = fleche(gVol, { x1: 0, y1: 0, x2: 0, y2: 0, couleur: C.cyan });
-    const balle = el('circle', { fill: C.jaune, stroke: C.blanc, 'stroke-width': 2 }, scene);
+    const balle = el('circle', { fill: degrade('radialGradient', { cx: 0.35, cy: 0.32, r: 0.75 }, [[0, mix(C.jaune, C.blanc, 0.6), 1], [0.45, C.jaune, 1], [1, mix(C.jaune, C.ombre, 0.35), 1]]), stroke: mix(C.jaune, C.ombre, selon(0.2, 0.3)), 'stroke-width': 1.5 }, scene);
 
     // Sommet, annotations de mesure.
     const gSommet = el('g', {}, scene);
@@ -107,6 +127,7 @@ export default definirScene({
 
     // Encart de résultat (dernière étape).
     const encart = el('g', {}, scene);
+    el('rect', { x: 438, y: 104, width: 188, height: 92, rx: 14, fill: C.ombre, opacity: selon(0.35, 0.1) }, encart);
     el('rect', { x: 436, y: 100, width: 188, height: 92, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, couleur: string) => el('text', { x: 450, y, fill: couleur, 'font-family': MONO, 'font-size': 14, 'font-weight': 600 }, encart);
     const resFleche = ligne(126, C.orange), resPortee = ligne(150, C.orange), resDuree = ligne(176, C.texte);
@@ -132,6 +153,8 @@ export default definirScene({
       gAngle.style.opacity = String(seg(a0, 0.58, 0.8) * (1 - (1 - clamp((tir.alpha - 38) / 10)) * seg(a2, 0.45, 0.55)));
       refAngle.setAttribute('x1', String(X0)); refAngle.setAttribute('x2', String(X0 + 56));
       refAngle.setAttribute('y1', String(yL)); refAngle.setAttribute('y2', String(yL));
+      dirTir.setAttribute('x1', String(X0)); dirTir.setAttribute('x2', String(X0 + 56 * Math.cos(rad)));
+      dirTir.setAttribute('y1', String(yL)); dirTir.setAttribute('y2', String(yL - 56 * Math.sin(rad)));
       arc.setAttribute('d', `M${X0 + 36} ${yL}A36 36 0 0 0 ${X0 + 36 * Math.cos(rad)} ${yL - 36 * Math.sin(rad)}`);
       etiqAngle.textContent = `α = ${fmt(ang, 0)}°`;
       etiqAngle.setAttribute('x', String(X0 + 12)); etiqAngle.setAttribute('y', String(yL + 19));
@@ -169,7 +192,9 @@ export default definirScene({
         const px = X(pt.x), py = Y(pt.y);
         const pv = py - vp.vy * VPX > 432 ? 0 : seg(a2, 0.04 + k * 0.08, 0.2 + k * 0.08, ease.out);
         f.maj(px, py, px + vp.vx * VPX * pv, py - vp.vy * VPX * pv);
-        const pa = py + APX > 430 ? 0 : seg(a2, 0.5 + k * 0.07, 0.68 + k * 0.07, ease.backOut);
+        // Un vecteur accélération posé à l'aplomb de S masquerait la flèche : il se retire à l'étape 5.
+        const retrait = Math.abs(px - X(S.x)) < 8 ? 1 - seg(a4, 0, 0.05) : 1;
+        const pa = py + APX > 430 ? 0 : seg(a2, 0.5 + k * 0.07, 0.68 + k * 0.07, ease.backOut) * retrait;
         vecA[k].maj(px, py, px, py + APX * pa);
       });
 

@@ -1,6 +1,6 @@
-import { avancement, clamp, ease, el, fmt, L, lerp, rng, seg, set, show } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, mix, rng, seg, set, show, uid } from '../../lib/anim';
 import { etiquette, fleche, paillasse } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, themeSombre, TRAIT } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { angleEmergent, caracteristique, cercleOculaire, grossissement, imageIntermediaire, marche, propager, type Lunette } from './model';
 
@@ -38,11 +38,32 @@ const place = (n: SVGElement, x: number, y: number, opacite = 1) => {
   n.style.opacity = String(clamp(opacite));
 };
 const voir = (n: SVGElement, o: number) => { n.style.opacity = String(clamp(o)); };
+/** Valeur selon le thème courant : un même voile ne se voit pas pareil sur fond nuit et sur fond blanc. */
+const selon = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
+
+/** Dégradé à identifiant unique (arrêts : position, couleur, opacité), renvoie la valeur de fill. */
+function degrade(g: Element, type: 'linearGradient' | 'radialGradient', attrs: Record<string, number>, arrets: [number, string, number][]) {
+  const id = uid('lunette');
+  const gr = el(type, { id, ...attrs }, el('defs', {}, g));
+  for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+  return `url(#${id})`;
+}
+/** Métal éclairé à gauche (sens h, tige) ou par le dessus (sens v, rail et cavalier), comme le kit. base : couleur hexadécimale (mix). */
+const metal = (g: Element, sens: 'h' | 'v', base = C.metal) =>
+  degrade(g, 'linearGradient', sens === 'h' ? {} : { x2: 0, y2: 1 }, [
+    [0, mix(base, C.ombre, 0.1), 1], [0.3, mix(base, C.blanc, 0.4), 1], [1, mix(base, C.ombre, 0.35), 1],
+  ]);
+/** Ombre portée douce sur la paillasse. */
+const ombreSol = (g: Element, cx: number, rx: number) =>
+  el('ellipse', { cx, cy: 438, rx, ry: 5, fill: degrade(g, 'radialGradient', {}, [[0, C.ombre, selon(0.6, 0.22)], [0.6, C.ombre, selon(0.32, 0.1)], [1, C.ombre, 0]]) }, g);
+/** Ciel nocturne des médaillons : sombre dans les deux thèmes. */
+const ciel = () => mix(C.ombre, C.bleu, 0.15);
 
 /** Support de banc d'optique : tige et cavalier, dessinés autour de l'origine (centre optique). */
 function support(g: SVGGElement, yHaut: number) {
-  el('rect', { x: -2, y: yHaut, width: 4, height: RAIL - YA - yHaut - 6, fill: C.metal }, g);
-  el('rect', { x: -15, y: RAIL - YA - 8, width: 30, height: 14, rx: 4, fill: C.discret }, g);
+  el('rect', { x: -2, y: yHaut, width: 4, height: RAIL - YA - yHaut - 6, fill: metal(g, 'h') }, g);
+  el('rect', { x: -15, y: RAIL - YA - 8, width: 30, height: 14, rx: 4, fill: metal(g, 'v', C.discret) }, g);
+  el('path', { d: `M-11 ${RAIL - YA - 7}H11`, stroke: C.blanc, 'stroke-width': 1, opacity: selon(0.25, 0.5), 'stroke-linecap': 'round' }, g);
 }
 /** Lentille mince convergente : double flèche des manuels, sur son support. r = demi-diamètre en px. */
 function lentille(parent: Element, r: number, couleur: string, nom: string) {
@@ -71,20 +92,23 @@ function cote(parent: Element, couleur: string) {
 /** Lune gibbeuse de rayon 10, dissymétrique pour que le renversement se voie. */
 function lune(parent: Element) {
   const g = el('g', {}, parent);
-  el('circle', { r: 10, fill: C.grille }, g);
-  el('path', { d: 'M0 -10A10 10 0 0 1 0 10A3 10 0 0 1 0 -10Z', fill: C.verre }, g);
-  el('circle', { cx: 4.2, cy: -4.4, r: 1.7, fill: C.metal }, g);
-  el('circle', { cx: 5.8, cy: 3.4, r: 1.1, fill: C.metal }, g);
-  el('circle', { cx: 0.4, cy: 1.6, r: 1.3, fill: C.metal }, g);
+  // Teintes de la Lune posées sur le ciel nocturne : les mêmes dans les deux thèmes.
+  const sol = mix(C.blanc, C.metal, 0.12), cratere = mix(C.blanc, C.metal, 0.6);
+  el('circle', { r: 10, fill: mix(C.metal, C.ombre, 0.55) }, g);
+  el('path', { d: 'M0 -10A10 10 0 0 1 0 10A3 10 0 0 1 0 -10Z', fill: sol }, g);
+  el('circle', { cx: 4.2, cy: -4.4, r: 1.7, fill: cratere }, g);
+  el('circle', { cx: 5.8, cy: 3.4, r: 1.1, fill: cratere }, g);
+  el('circle', { cx: 0.4, cy: 1.6, r: 1.3, fill: cratere }, g);
   return g;
 }
 /** Médaillon : champ de vision circulaire sur fond de ciel. */
 function medaillon(parent: Element, cx: number, cy: number, couleur: string, graine: number) {
   const g = el('g', {}, parent), r = rng(graine);
-  el('circle', { cx, cy, r: 46, fill: C.fond, stroke: couleur, 'stroke-width': TRAIT }, g);
+  el('circle', { cx: cx + 2, cy: cy + 4, r: 47, fill: C.ombre, opacity: selon(0.35, 0.1) }, g);
+  el('circle', { cx, cy, r: 46, fill: ciel(), stroke: couleur, 'stroke-width': TRAIT }, g);
   for (let i = 0; i < 7; i++) {
     const a = r() * 6.283, d = 14 + r() * 26;
-    el('circle', { cx: cx + d * Math.cos(a), cy: cy + d * Math.sin(a), r: 0.7 + r() * 0.7, fill: C.verre, opacity: 0.55 }, g);
+    el('circle', { cx: cx + d * Math.cos(a), cy: cy + d * Math.sin(a), r: 0.7 + r() * 0.7, fill: C.blanc, opacity: 0.55 }, g);
   }
   const astre = lune(el('g', { transform: `translate(${cx} ${cy})` }, g));
   const legende = etiquette(g, { x: cx, y: cy - 56, texte: '', ancre: 'middle', taille: 13, couleur });
@@ -113,8 +137,12 @@ export default definirScene({
     paillasse(scene);
     // Banc d'optique gradué tous les 5 cm.
     const banc = el('g', {}, scene);
-    for (const x of [64, 576]) el('rect', { x: x - 18, y: RAIL + 8, width: 36, height: 440 - RAIL - 8, rx: 3, fill: C.metal, opacity: 0.7 }, banc);
-    el('rect', { x: 28, y: RAIL, width: 584, height: 10, rx: 3, fill: C.metal }, banc);
+    for (const x of [64, 576]) {
+      ombreSol(banc, x + 2, 26);
+      el('rect', { x: x - 18, y: RAIL + 8, width: 36, height: 440 - RAIL - 8, rx: 3, fill: metal(banc, 'v') }, banc);
+    }
+    el('rect', { x: 28, y: RAIL, width: 584, height: 10, rx: 3, fill: metal(banc, 'v') }, banc);
+    el('path', { d: `M32 ${RAIL + 1}H608`, stroke: C.blanc, 'stroke-width': 1, opacity: selon(0.25, 0.5), 'stroke-linecap': 'round' }, banc);
     for (let cm = -15; cm <= 85; cm += 5) el('line', { x1: X(cm), x2: X(cm), y1: RAIL + (cm % 10 ? 5 : 2), y2: RAIL + 10, stroke: C.fond, 'stroke-width': 1.2 }, banc);
     el('line', { x1: X0, x2: 624, y1: YA, y2: YA, stroke: C.discret, 'stroke-width': 1.2, 'stroke-dasharray': '10 5 2 5', opacity: 0.7 }, scene);
     etiquette(scene, { x: X0, y: 464, texte: L('Schéma dilaté 10 fois dans le sens vertical', 'Diagram stretched 10 times vertically'), taille: 13, couleur: C.discret });
@@ -126,7 +154,7 @@ export default definirScene({
     // Écran, objectif, oculaire.
     const ecran = el('g', {}, scene);
     support(ecran, 82);
-    el('rect', { x: -2.5, y: -76, width: 5, height: 158, rx: 2, fill: C.verre, opacity: 0.55 }, ecran);
+    el('rect', { x: -2.5, y: -76, width: 5, height: 158, rx: 2, fill: C.verre, 'fill-opacity': selon(0.55, 1), stroke: C.trait, 'stroke-width': 1, 'stroke-opacity': selon(0, 0.8) }, ecran);
     etiquette(ecran, { x: 0, y: -86, texte: L('Écran', 'Screen'), ancre: 'middle', taille: 13, couleur: C.discret });
     const objectif = lentille(scene, R1 * SY, C.cyan, L('Objectif L1', 'Objective L1'));
     const oculaire = lentille(scene, R2 * SY, C.rose, L('Oculaire L2', 'Eyepiece L2'));
@@ -140,13 +168,13 @@ export default definirScene({
       return {
         h,
         traits: [
-          el('polyline', { stroke: C.jaune, 'stroke-width': 8, opacity: 0.13 }, g),
+          el('polyline', { stroke: C.jaune, 'stroke-width': 8, opacity: selon(0.13, 0.07) }, g),
           el('polyline', { stroke: C.jaune, 'stroke-width': h ? 1.9 : 3, opacity: h ? 0.9 : 1 }, g),
         ],
         flux: el('polyline', { stroke: C.blanc, 'stroke-width': 2.4, 'stroke-dasharray': '1 47', opacity: 0.95 }, g),
       };
     });
-    const fictif = el('line', { stroke: C.verre, 'stroke-width': 2, 'stroke-dasharray': '7 6', 'stroke-linecap': 'round' }, scene);
+    const fictif = el('line', { stroke: C.trait, 'stroke-width': 2, 'stroke-dasharray': '7 6', 'stroke-linecap': 'round' }, scene);
 
     // Angles.
     const trait = { fill: 'none', 'stroke-width': TRAIT, 'stroke-linecap': 'round' };
@@ -164,7 +192,7 @@ export default definirScene({
       return g;
     };
     const f1img = foyer(C.cyan, 'F\'1', 'end'), f2obj = foyer(C.rose, 'F2', 'start');
-    const anneau = el('circle', { cy: YA, fill: 'none', stroke: C.blanc, 'stroke-width': 2 }, scene);
+    const anneau = el('circle', { cy: YA, fill: 'none', stroke: C.texte, 'stroke-width': 2 }, scene);
     const impact = el('circle', { fill: 'none', stroke: C.jaune, 'stroke-width': 2 }, scene);
     const image = fleche(scene, { x1: 0, y1: 0, x2: 0, y2: 0, couleur: C.menthe });
     const etiqB1 = etiquette(scene, { x: 0, y: 0, texte: 'B1', ancre: 'end', taille: 13, couleur: C.menthe, mono: true });
@@ -173,10 +201,11 @@ export default definirScene({
 
     // Œil, placé au cercle oculaire.
     const oeil = el('g', {}, scene);
-    el('circle', { cx: 27, r: 22, fill: 'rgba(223,230,255,.07)', stroke: C.verre, 'stroke-width': TRAIT }, oeil);
-    el('path', { d: 'M9 -12Q-3 0 9 12', fill: C.fond, stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round' }, oeil);
+    el('circle', { cx: 27, r: 22, fill: degrade(oeil, 'radialGradient', { cx: 0.38, cy: 0.35 }, [[0, C.verre, selon(0.04, 0.05)], [1, C.verre, selon(0.16, 0.45)]]), stroke: C.trait, 'stroke-width': TRAIT }, oeil);
+    el('path', { d: 'M9 -12Q-3 0 9 12', fill: C.fond, stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round' }, oeil);
     el('ellipse', { cx: 11, rx: 3.2, ry: 8.5, fill: C.bleu }, oeil);
-    el('ellipse', { cx: 9.6, rx: 1.6, ry: 4.4, fill: C.fond }, oeil);
+    el('ellipse', { cx: 9.6, rx: 1.6, ry: 4.4, fill: C.ombre }, oeil);
+    el('circle', { cx: 9.8, cy: -2.6, r: 0.9, fill: C.blanc, opacity: 0.8 }, oeil);
     etiquette(oeil, { x: 31, y: 43, texte: L('Œil', 'Eye'), ancre: 'middle', taille: 13, couleur: C.discret });
 
     // Encart des relations (étapes 3 et 4).
@@ -192,7 +221,8 @@ export default definirScene({
     const relG = ligne(102, 15, C.jaune);
 
     // Médaillons (étape 5).
-    const nu = medaillon(scene, 474, 100, C.metal, 7), vu = medaillon(scene, 574, 100, C.jaune, 11);
+    // Décalés vers la gauche : la légende « Telescope: ×10.0 » reste dans la marge de 16 px.
+    const nu = medaillon(scene, 464, 100, C.metal, 7), vu = medaillon(scene, 566, 100, C.jaune, 11);
     nu.legende.textContent = L('À l\'œil nu', 'Naked eye');
     nu.astre.setAttribute('transform', 'rotate(-20) scale(0.44)');
 
@@ -294,7 +324,7 @@ export default definirScene({
         graphique.courbe('nu', a3 > 0.2 ? [[0, 0], [trace, trace]] : [], { couleur: C.discret, epaisseur: 2, pointille: true });
         graphique.courbe('lunette', a3 > 0.2 ? caracteristique(l, trace, 24) : [], { couleur: C.jaune, epaisseur: 3 });
         if (a2 > 0.8) {
-          graphique.repere('pt', thDeg, thP, { couleur: fin ? C.jaune : C.blanc, rayon: fin ? 5 : 4, label: fin ? L(`pente G = ${fmt(G, 1)}`, `gradient G = ${fmt(G, 1)}`) : a3 > 0 ? undefined : `θ' = ${fmt(thP, 2)}°` });
+          graphique.repere('pt', thDeg, thP, { couleur: fin ? C.jaune : C.texte, rayon: fin ? 5 : 4, label: fin ? L(`pente G = ${fmt(G, 1)}`, `gradient G = ${fmt(G, 1)}`) : a3 > 0 ? undefined : `θ' = ${fmt(thP, 2)}°` });
           graphique.opacite('pt', seg(a2, 0.8, 0.92));
         } else graphique.effacer('pt');
         if (fin) {

@@ -1,13 +1,14 @@
 import { avancement, clamp, ease, el, fmt, L, lerp, mix, seg, show } from '../../lib/anim';
 import { agitateur, appareil, barreau, becher, burette, etiquette, gouttes, paillasse, potence, sonde } from '../../lib/labkit';
-import { C, MONO, POLICE } from '../../lib/palette';
+import { C, MONO, POLICE, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { courbe, derivee, pH, volumeEquivalent, type Titrage } from './model';
 
 const VA = 20; // mL, prise d'essai
 const CB = 0.1; // mol/L, soude
 const V_MAX = 25; // mL, capacité de la burette
-const INCOLORE = '#8fc4ff', ROSE = '#ff5fb8';
+/** rgb(r,g,b) renvoyé par mix() vers l'hexadécimal, pour pouvoir mélanger à nouveau. */
+const hexa = (c: string) => '#' + (c.match(/\d+/g) ?? []).map((n) => (+n).toString(16).padStart(2, '0')).join('');
 
 export default definirScene({
   etapes: [
@@ -28,6 +29,10 @@ export default definirScene({
   affiche: { etape: 2, t: 0.86 },
 
   monter({ scene, graphique }) {
+    const sombre = themeSombre();
+    // Solution incolore (léger bleuté du verre) et rose de la phénolphtaléine en milieu basique.
+    const incolore = hexa(mix(C.verre, C.bleu, sombre ? 0.35 : 0.15));
+    const rose = sombre ? C.rose : hexa(mix(C.rose, C.blanc, 0.2));
     paillasse(scene);
     const agit = agitateur(scene, { x: 290, y: 440, w: 160 });
     const bec = becher(scene, { x: 290, y: agit.yPlateau, w: 130, h: 118 });
@@ -36,9 +41,15 @@ export default definirScene({
 
     // Pipette jaugée (étape 1).
     const pip = el('g', {}, scene);
-    el('path', { d: 'M287 60V150M293 60V150M287 210V292L290 302L293 292V210', fill: 'none', stroke: C.verre, 'stroke-width': 2, 'stroke-linecap': 'round' }, pip);
-    const ventre = el('ellipse', { cx: 290, cy: 180, rx: 13, ry: 32, fill: INCOLORE, 'fill-opacity': 0.8, stroke: C.verre, 'stroke-width': 2 }, pip);
-    const filet = el('line', { x1: 290, x2: 290, y1: 302, y2: 380, stroke: INCOLORE, 'stroke-width': 3, 'stroke-linecap': 'round' }, scene);
+    // Aplat de verre sous le tube et le ventre, comme la verrerie du kit.
+    el('path', { d: 'M287 60V150H293V60ZM287 210V292L290 302L293 292V210Z', fill: C.verre, 'fill-opacity': sombre ? 0.08 : 0.3 }, pip);
+    el('ellipse', { cx: 290, cy: 180, rx: 13, ry: 32, fill: C.verre, 'fill-opacity': sombre ? 0.08 : 0.3 }, pip);
+    el('path', { d: 'M287 60V150M293 60V150M287 210V292L290 302L293 292V210', fill: 'none', stroke: C.trait, 'stroke-width': 1.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, pip);
+    const ventre = el('ellipse', { cx: 290, cy: 180, rx: 13, ry: 32, fill: incolore, 'fill-opacity': 0.8, stroke: C.trait, 'stroke-width': 1.6 }, pip);
+    // Reflet du ventre et ombre du bord droit.
+    el('path', { d: 'M282 160Q280 180 282 200', fill: 'none', stroke: C.blanc, 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: sombre ? 0.35 : 0.8 }, pip);
+    el('path', { d: 'M299 158Q302 180 299 202', fill: 'none', stroke: C.ombre, 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: sombre ? 0.3 : 0.1 }, pip);
+    const filet = el('line', { x1: 290, x2: 290, y1: 302, y2: 380, stroke: incolore, 'stroke-width': 3, 'stroke-linecap': 'round' }, scene);
     const etiqPrise = etiquette(scene, { x: 216, y: 320, texte: L('VA = 20,0 mL', 'VA = 20.0 mL'), ancre: 'end', mono: true, taille: 13, couleur: C.cyan });
 
     // Montage de titrage (étape 2).
@@ -101,7 +112,7 @@ export default definirScene({
       bur.liquide(remplissage * (1 - v / V_MAX), C.cyan);
       bur.robinet(a3 > 0 && a3 < 1 ? 1 : 0);
       gtt.maj(T, a3 > 0 && a3 < 1 ? 0.6 : 0);
-      const teinte = mix(INCOLORE, ROSE, clamp((ph - 8.2) / 1.5));
+      const teinte = mix(incolore, rose, clamp((ph - 8.2) / 1.5));
       bec.liquide(0.34 * vide + 0.34 * (v / V_MAX), teinte);
       phm.affiche(a2 > 0.85 ? fmt(ph, 2) : '');
 
@@ -113,7 +124,7 @@ export default definirScene({
 
       if (graphique) {
         graphique.courbe('ph', a3 > 0 ? pts.filter(([x]) => x <= v) : [], { couleur: C.cyan, epaisseur: 3 });
-        if (a3 > 0 && a3 < 1) graphique.repere('mesure', v, ph, { couleur: C.blanc, rayon: 4 });
+        if (a3 > 0 && a3 < 1) graphique.repere('mesure', v, ph, { couleur: C.texte, rayon: 4 });
         else graphique.effacer('mesure');
         const xd = V_MAX * seg(a4, 0.05, 0.6, ease.lin);
         graphique.courbe('derivee', a4 > 0 ? ptsD.filter(([x]) => x <= xd) : [], { couleur: C.rose, epaisseur: 2, pointille: true });

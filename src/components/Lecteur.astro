@@ -12,11 +12,23 @@ interface Props {
 }
 const { slug, titre, mode = 'complet', lang = 'fr' } = Astro.props;
 const u = UI[lang].lecteur;
+// Vue 3D proposée si le TP possède src/tp/<slug>/scene3d.ts (rien n'est chargé tant que l'élève ne l'ouvre pas).
+const avec3d = mode === 'complet' && Object.keys(import.meta.glob('../tp/*/scene3d.ts')).includes(`../tp/${slug}/scene3d.ts`);
 ---
 
 <div class="lecteur" data-lecteur data-slug={slug} data-mode={mode}>
   <div class="lecteur-ecran">
-    <svg class="lecteur-scene" data-scene role="img" aria-label={u.animation(titre)}></svg>
+    <div class="lecteur-cadre" data-cadre data-label3d={avec3d ? u.animation3d(titre) : undefined}>
+      <svg class="lecteur-scene" data-scene role="img" aria-label={u.animation(titre)}></svg>
+      {avec3d && (
+        <>
+          <button type="button" class="lecteur-recentrer" data-recentrer aria-label={u.recentrer}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm-8 7H2v5a2 2 0 0 0 2 2h5v-2H4zM4 4h5V2H4a2 2 0 0 0-2 2v5h2zm16-2h-5v2h5v5h2V4a2 2 0 0 0-2-2zm0 18h-5v2h5a2 2 0 0 0 2-2v-5h-2z"></path></svg>
+          </button>
+          <p class="lecteur-aide3d" aria-hidden="true">{u.aide3d}</p>
+        </>
+      )}
+    </div>
     {mode !== 'affiche' && <svg class="lecteur-graph" data-graph role="img" aria-label={u.graphique(titre)}></svg>}
   </div>
   {mode === 'complet' && (
@@ -44,8 +56,15 @@ const u = UI[lang].lecteur;
             <button type="button" data-rejouer aria-label={u.recommencer}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1.5L6.5 6 12 10.5V7a5.5 5.5 0 1 1-5.5 5.5h-2A7.5 7.5 0 1 0 12 5z"></path></svg>
             </button>
+            {avec3d && (
+              <button type="button" class="lecteur-bascule" data-vue3d>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8 3 7v10l9 5.2 9-5.2V7zm0 2.3 6.4 3.7L12 11.5 5.6 7.8zM5 9.5l6 3.5v6.9l-6-3.5zm8 10.4V13l6-3.5v6.9z"></path></svg>
+                <span class="si-2d">{u.vue3d}</span><span class="si-3d">{u.vueNormale}</span>
+              </button>
+            )}
             <label class="lecteur-auto"><input type="checkbox" data-auto /> {u.enchainer}</label>
           </div>
+          {avec3d && <p class="lecteur-msg3d" role="status" data-msg3d data-message={u.sans3d}></p>}
         </div>
         <div class="lecteur-params" data-bloc-params>
           <h4>{u.aVous}</h4>

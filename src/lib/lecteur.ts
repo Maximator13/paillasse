@@ -1,9 +1,14 @@
 // Lecteur de TP : étapes guidées, lecture/pause, barre de progression, curseurs de paramètres.
 import { L, clamp, fmt } from './anim';
 import { creerGraphique } from './graphique';
+import { themeSombre } from './palette';
+import type { Scene3d } from './kit3d';
 import type { Mesure, Scene } from './scene';
+import type { Vue3d } from './vue3d';
 
 const chargeurs = import.meta.glob<{ default: Scene }>('../tp/*/scene.ts');
+// Vues 3D facultatives : chargées (avec three.js) seulement quand l'élève les ouvre.
+const chargeurs3d = import.meta.glob<{ default: Scene3d }>('../tp/*/scene3d.ts');
 
 export const slugsScenes = () => Object.keys(chargeurs).map((k) => k.split('/')[2]);
 
@@ -24,6 +29,18 @@ export function instancier(scene: Scene, svgScene: SVGSVGElement, svgGraph: SVGS
 export const valeursDefaut = (scene: Scene) =>
   Object.fromEntries((scene.parametres ?? []).map((p) => [p.id, p.valeur]));
 
+/** Appelle f quand le thème effectif change (bouton de l'en-tête ou réglage de l'appareil). */
+export function surChangementTheme(f: () => void) {
+  let sombre = themeSombre();
+  const verifier = () => {
+    if (themeSombre() === sombre) return;
+    sombre = !sombre;
+    f();
+  };
+  new MutationObserver(verifier).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', verifier);
+}
+
 const decimalesDe = (pas: number) => Math.max(0, -Math.floor(Math.log10(pas) + 1e-9));
 
 async function initLecteur(root: HTMLElement) {
@@ -35,13 +52,16 @@ async function initLecteur(root: HTMLElement) {
     svgGraph?.remove();
     root.classList.add('sans-graph');
   }
-  const dessiner = instancier(scene, q<SVGSVGElement>('[data-scene]')!, scene.graphique ? svgGraph : null);
+  const svgScene = q<SVGSVGElement>('[data-scene]')!;
+  const monter = () => instancier(scene, svgScene, scene.graphique ? svgGraph : null);
+  let dessiner = monter();
   const p: Record<string, number> = valeursDefaut(scene);
   const n = scene.etapes.length;
 
   if (mode === 'affiche') {
     const a = scene.affiche ?? { etape: n - 1, t: 1 };
     dessiner({ etape: a.etape, t: a.t, T: 2, p });
+    surChangementTheme(() => monter()({ etape: a.etape, t: a.t, T: 2, p }));
     root.dataset.pret = '1';
     return;
   }
@@ -113,10 +133,48 @@ async function initLecteur(root: HTMLElement) {
     }
   }
 
-  const rendu = () => {
-    majInterface(dessiner({ etape, t, T, p }));
-    sale = false;
+  // Vue 3D : seule la zone de scène change. La scène 2D continue de tourner (masquée) pour les mesures et le graphique.
+  let vue3d: Vue3d | null = null, attente3d = url.get('vue') === '3d';
+  const bVue = q<HTMLButtonElement>('[data-vue3d]'), elMsg = q<HTMLElement>('[data-msg3d]');
+  async function basculer3d(ouvrir: boolean) {
+    if (elMsg) elMsg.textContent = '';
+    vue3d?.liberer();
+    vue3d = null;
+    root.classList.remove('en-3d');
+    if (ouvrir && bVue) {
+      bVue.disabled = true;
+      try {
+        const [{ creerVue3d }, mod] = await Promise.all([import('./vue3d'), chargeurs3d[`../tp/${root.dataset.slug}/scene3d.ts`]()]);
+        const cadre = q<HTMLElement>('[data-cadre]')!;
+        vue3d = creerVue3d(cadre, mod.default, cadre.dataset.label3d ?? '', () => {
+          basculer3d(false);
+          if (elMsg) elMsg.textContent = elMsg.dataset.message ?? '';
+        });
+        root.classList.add('en-3d');
+        vue3d.dessiner({ etape, t, T, p });
+      } catch (err) {
+        // WebGL absent : simple avertissement. Toute autre erreur (scène 3D boguée) remonte en console.
+        if (err instanceof Error && err.name === 'SansWebGL') console.warn(err);
+        else console.error(err);
+        vue3d?.liberer();
+        vue3d = null;
+        root.classList.remove('en-3d');
+        if (elMsg) elMsg.textContent = elMsg.dataset.message ?? '';
+      }
+      bVue.disabled = false;
+    }
+    attente3d = false;
     root.dataset.pret = '1';
+  }
+  bVue?.addEventListener('click', () => basculer3d(!vue3d));
+  q('[data-recentrer]')?.addEventListener('click', () => vue3d?.recentrer());
+
+  const rendu = () => {
+    const img = { etape, t, T, p };
+    majInterface(dessiner(img));
+    vue3d?.dessiner(img);
+    sale = false;
+    if (!attente3d) root.dataset.pret = '1';
   };
   const aller = (i: number, tt = 0, lecture = true) => {
     etape = clamp(i, 0, n - 1);
@@ -198,7 +256,15 @@ async function initLecteur(root: HTMLElement) {
     }
     requestAnimationFrame(boucle);
   }
+  // Nouvelle palette : la scène est remontée, l'image (étape, temps, curseurs) est redessinée telle quelle.
+  surChangementTheme(() => {
+    dessiner = monter();
+    vue3d?.theme();
+    rendu();
+  });
   rendu();
+  // ?vue=3d ouvre directement la vue 3D (captures) ; data-pret attend sa première image.
+  if (attente3d) basculer3d(true);
   requestAnimationFrame(boucle);
 }
 

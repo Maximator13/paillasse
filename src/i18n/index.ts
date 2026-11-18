@@ -31,6 +31,8 @@ const fr = {
   nav: { terminale: 'Terminale', tp: 'TP animés', college: 'Collège', prepa: 'Prépa' },
   /** Libellé du lien vers l'autre langue, écrit dans cette autre langue. */
   autreLangue: 'English version',
+  /** Bouton à bascule (aria-pressed) : enfoncé = thème sombre actif. */
+  themeSombre: 'Thème sombre',
   pied: { mentions: 'Mentions légales', confidentialite: 'Confidentialité', cgu: 'CGU', cookies: 'Gérer les cookies' },
   cookies: {
     titre: "Mesure d'audience",
@@ -50,6 +52,12 @@ const fr = {
     recommencer: 'Recommencer le TP',
     enchainer: 'Enchaîner les étapes',
     aVous: 'À vous de jouer',
+    vue3d: 'Vue 3D',
+    vueNormale: 'Vue normale',
+    recentrer: 'Recentrer la vue 3D',
+    animation3d: (titre: string) => `Vue 3D du TP : ${titre}. Glisser ou flèches du clavier pour tourner, molette, pincement ou touches + et - pour zoomer.`,
+    aide3d: 'Glisser pour tourner, molette pour zoomer',
+    sans3d: "Vue 3D indisponible sur cet appareil (WebGL inactif) : retour à la vue normale.",
   },
   cours: 'Cours',
   tpAnimes: 'TP animés',
@@ -72,6 +80,7 @@ const en: typeof fr = {
   navLabel: 'Main navigation',
   nav: { terminale: 'Terminale', tp: 'Animated practicals', college: 'Collège', prepa: 'Prépa' },
   autreLangue: 'Version française',
+  themeSombre: 'Dark theme',
   pied: { mentions: 'Legal notice', confidentialite: 'Privacy', cgu: 'Terms of use', cookies: 'Manage cookies' },
   cookies: {
     titre: 'Audience measurement',
@@ -91,6 +100,12 @@ const en: typeof fr = {
     recommencer: 'Restart the practical',
     enchainer: 'Play the steps in sequence',
     aVous: 'Your turn',
+    vue3d: '3D view',
+    vueNormale: 'Normal view',
+    recentrer: 'Reset the 3D view',
+    animation3d: (titre) => `3D view of the practical: ${titre}. Drag or use the arrow keys to rotate; scroll, pinch or press + and - to zoom.`,
+    aide3d: 'Drag to rotate, scroll to zoom',
+    sans3d: '3D view unavailable on this device (WebGL disabled): back to the normal view.',
   },
   cours: 'Lessons',
   tpAnimes: 'Animated practicals',

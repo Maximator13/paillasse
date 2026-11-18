@@ -1,6 +1,6 @@
-import { avancement, clamp, ease, el, fmt, L, lerp, seg, set, show, trace, uid } from '../../lib/anim';
+import { avancement, clamp, ease, el, fmt, L, lerp, mix, seg, set, show, trace, uid } from '../../lib/anim';
 import { appareil, etiquette, fleche } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { C_SON, courbePassage, frequencePercue, frontsOnde, longueurOnde, vitesseSource, type Passage } from './model';
 
@@ -32,36 +32,56 @@ export default definirScene({
 
   monter({ scene, graphique }) {
     const clip = uid('doppler');
-    el('rect', { x: 0, y: 0, width: 640, height: 480 }, el('clipPath', { id: clip }, el('defs', {}, scene)));
+    const defs = el('defs', {}, scene);
+    el('rect', { x: 0, y: 0, width: 640, height: 480 }, el('clipPath', { id: clip }, defs));
+    // Opacités des ombres et reflets : un même voile ne se voit pas pareil sur fond nuit et sur fond blanc.
+    const sombre = themeSombre();
+    const opOmbre = sombre ? 0.35 : 0.1, opReflet = sombre ? 0.25 : 0.9;
+    // Dégradé vertical éclairé par le haut, comme les boîtiers du kit.
+    const degrade = (haut: string, bas: string) => {
+      const id = uid('doppler-deg');
+      const gr = el('linearGradient', { id, x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+      el('stop', { offset: 0, 'stop-color': haut }, gr);
+      el('stop', { offset: 1, 'stop-color': bas }, gr);
+      return `url(#${id})`;
+    };
+    const boitier = degrade(mix(C.panneau, C.metal, sombre ? 0.22 : 0.14), C.panneau);
 
     // Voie rectiligne, vue de dessus.
     const voie = el('g', {}, scene);
     el('rect', { x: 0, y: ROUTE - 13, width: 640, height: 26, fill: C.panneau, opacity: 0.7 }, voie);
     for (const y of [ROUTE - 13, ROUTE + 13]) el('line', { x1: 0, x2: 640, y1: y, y2: y, stroke: C.grille, 'stroke-width': 2 }, voie);
     el('line', { x1: 0, x2: 640, y1: ROUTE, y2: ROUTE, stroke: C.metal, 'stroke-width': 1.5, 'stroke-dasharray': '14 12', opacity: 0.45 }, voie);
-    etiquette(voie, { x: 20, y: 34, texte: L('Vue de dessus', 'Top view'), taille: 13, couleur: C.discret });
-    const note = etiquette(scene, { x: 20, y: 54, texte: L(`Schéma : son ralenti ${RALENTI} fois`, `Diagram: sound slowed ${RALENTI} times`), taille: 13, couleur: C.discret });
 
     // Fronts d'onde et points d'émission.
     const gFronts = el('g', { 'clip-path': `url(#${clip})` }, scene);
     const cercles = Array.from({ length: NF }, () => el('circle', { cy: ROUTE, fill: 'none', stroke: C.cyan, 'stroke-width': 2 }, gFronts));
     const centres = Array.from({ length: NF }, () => el('circle', { cy: ROUTE, r: 2.2, fill: C.cyan }, gFronts));
 
+    // Titres au-dessus des fronts, pour qu'aucun cercle ne les barre.
+    const titre = etiquette(scene, { x: 20, y: 34, texte: L('Vue de dessus', 'Top view'), taille: 13, couleur: C.discret });
+    const note = etiquette(scene, { x: 20, y: 54, texte: L(`Schéma : son ralenti ${RALENTI} fois`, `Diagram: sound slowed ${RALENTI} times`), taille: 13, couleur: C.discret });
+
     // Micro, câble et fréquencemètre.
     const cable = el('path', { fill: 'none', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, scene);
     const gMicro = el('g', {}, scene);
     const ligneD = el('line', { x1: XM, x2: XM, y1: ROUTE, stroke: C.discret, 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, gMicro);
     const halo = el('circle', { cx: XM, r: 16, fill: C.menthe, opacity: 0 }, gMicro);
-    const micro = el('circle', { cx: XM, r: 7, fill: C.menthe, stroke: C.verre, 'stroke-width': TRAIT }, gMicro);
-    const etiqMicro = etiquette(gMicro, { x: XM + 20, y: 0, texte: L('Micro', 'Microphone'), taille: 13, couleur: C.menthe });
-    const etiqD = etiquette(scene, { x: XM - 20, y: 0, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
+    const ombreMicro = el('circle', { cx: XM + 1.5, r: 8, fill: C.ombre, opacity: opOmbre }, gMicro);
+    const micro = el('circle', { cx: XM, r: 7, fill: degrade(mix(C.menthe, C.blanc, 0.4), mix(C.menthe, C.ombre, 0.12)), stroke: C.trait, 'stroke-width': TRAIT }, gMicro);
+    const refletMicro = el('circle', { cx: XM - 2, r: 1.8, fill: C.blanc, opacity: 0.7 }, gMicro);
+    const etiqMicro = etiquette(gMicro, { x: XM + 24, y: 0, texte: L('Micro', 'Microphone'), taille: 13, couleur: C.menthe });
+    const etiqD = etiquette(scene, { x: XM - 24, y: 0, texte: '', ancre: 'end', mono: true, taille: 13, couleur: C.discret });
     const gApp = el('g', {}, scene);
     const freq = appareil(gApp, { x: 24, y: 372, w: 156, h: 76, titre: L('FRÉQUENCE (Hz)', 'FREQUENCY (Hz)') });
 
     // Source : chariot portant un haut-parleur.
     const source = el('g', {}, scene);
-    el('rect', { x: -19, y: -10, width: 38, height: 20, rx: 6, fill: C.panneau, stroke: C.verre, 'stroke-width': TRAIT }, source);
-    const hp = el('circle', { cx: 0, cy: 0, r: 5, fill: C.orange }, source);
+    el('rect', { x: -17, y: -6, width: 38, height: 20, rx: 6, fill: C.ombre, opacity: opOmbre }, source);
+    el('rect', { x: -19, y: -10, width: 38, height: 20, rx: 6, fill: boitier, stroke: C.trait, 'stroke-width': TRAIT }, source);
+    el('path', { d: 'M-12 -7.5H12', stroke: C.blanc, 'stroke-width': 1.5, opacity: opReflet * 0.6, 'stroke-linecap': 'round' }, source);
+    const hp = el('circle', { cx: 0, cy: 0, r: 5, fill: C.orange, stroke: mix(C.orange, C.ombre, 0.35), 'stroke-width': 1 }, source);
+    el('circle', { cx: -1.5, cy: -1.5, r: 1.4, fill: C.blanc, opacity: 0.6 }, source);
     const etiqSource = etiquette(source, { x: 0, y: -20, texte: 'Source', ancre: 'middle', taille: 13, couleur: C.orange });
     const gVitesse = el('g', {}, scene);
     const vecteur = fleche(gVitesse, { x1: 0, y1: ROUTE, x2: 1, y2: ROUTE, couleur: C.jaune });
@@ -87,7 +107,9 @@ export default definirScene({
 
     // Encart de résultat (étape 5).
     const encart = el('g', {}, scene);
-    el('rect', { x: 396, y: 348, width: 228, height: 112, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
+    el('rect', { x: 398, y: 352, width: 228, height: 112, rx: 14, fill: C.ombre, opacity: opOmbre }, encart);
+    el('rect', { x: 396, y: 348, width: 228, height: 112, rx: 14, fill: boitier, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
+    el('path', { d: 'M410 350.5H610', stroke: C.blanc, 'stroke-width': 1.5, opacity: opReflet * 0.7, 'stroke-linecap': 'round' }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 412, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
     ligne(372, 13, C.discret, POLICE).textContent = L('Vitesse mesurée', 'Measured speed');
@@ -122,11 +144,14 @@ export default definirScene({
 
       // Étape 1 : la voie, la source, le micro et son câble entrent en scène.
       show(voie, seg(a0, 0, 0.15));
+      titre.style.opacity = String(seg(a0, 0, 0.15));
       source.setAttribute('transform', `translate(${xs.toFixed(1)} ${ROUTE})`);
       etiqSource.style.opacity = String(seg(a0, 0.45, 0.6) * (1 - seg(a2, 0, 0.08)));
       set(ligneD, { y2: my });
       set(halo, { cy: my });
       set(micro, { cy: my });
+      set(ombreMicro, { cy: my + 2.5 });
+      set(refletMicro, { cy: my - 2 });
       set(etiqMicro, { y: my + 5 });
       show(gMicro, seg(a0, 0.45, 0.65, ease.backOut), -18);
       cable.setAttribute('d', `M${XM} ${my}C${XM} ${my + 80} 102 ${my + 60} 102 372`);
@@ -195,7 +220,7 @@ export default definirScene({
           graphique.opacite('fe', enRoute ? 0.7 : 1);
         } else graphique.effacer('fe');
         graphique.courbe('f', enRoute ? pts.filter(([x]) => x <= tau) : [], { couleur: C.cyan, epaisseur: 3 });
-        if (enRoute && !fige) graphique.repere('mesure', tau, f, { couleur: C.blanc, rayon: 4 });
+        if (enRoute && !fige) graphique.repere('mesure', tau, f, { couleur: C.texte, rayon: 4 });
         else graphique.effacer('mesure');
         if (a3 > 0.45) {
           graphique.horizontale('fa', fA, { couleur: C.jaune, label: `fA = ${fmt(fA, 0)} Hz` });

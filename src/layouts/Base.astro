@@ -65,7 +65,15 @@ const nav = [
     <link rel="sitemap" href={actif('sitemap-index.xml')} />
     {gsc && <meta name="google-site-verification" content={gsc} />}
     <script type="application/ld+json" set:html={jsonLd} />
-    <meta name="theme-color" content="#0b1022" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbfaf7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1014" />
+    <!-- Thème choisi avec le bouton de l'en-tête, appliqué avant le premier affichage. Sans choix : réglage de l'appareil. -->
+    <script is:inline>
+      try {
+        const t = localStorage.getItem('paillasse-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
     <meta property="og:type" content={type} />
     <meta property="og:site_name" content={SITE.nom} />
     <meta property="og:locale" content={u.og} />
@@ -99,6 +107,28 @@ const nav = [
             <li>
               <a class="langue" href={lien(autre, sansTraduction ?? neutre)} lang={autre} hreflang={autre} aria-label={u.autreLangue}>{autre.toUpperCase()}</a>
             </li>
+            <li>
+              <button type="button" class="bascule-theme" data-bascule-theme aria-label={u.themeSombre} title={u.themeSombre} aria-pressed="false">
+                <svg class="lune" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>
+                <svg class="soleil" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+              </button>
+              <script is:inline>
+                (() => {
+                  const b = document.querySelector('[data-bascule-theme]'), r = document.documentElement;
+                  const mq = matchMedia('(prefers-color-scheme: dark)');
+                  const sombre = () => (r.dataset.theme ? r.dataset.theme === 'dark' : mq.matches);
+                  const maj = () => b.setAttribute('aria-pressed', String(sombre()));
+                  maj();
+                  mq.addEventListener('change', maj);
+                  b.addEventListener('click', () => {
+                    const t = sombre() ? 'light' : 'dark';
+                    r.dataset.theme = t;
+                    try { localStorage.setItem('paillasse-theme', t); } catch {}
+                    maj();
+                  });
+                })();
+              </script>
+            </li>
           </ul>
         </nav>
       </div>
@@ -124,10 +154,13 @@ const nav = [
   @media (min-width: 720px) { .entete { position: sticky; top: 0; z-index: 20; } }
   .entete-in { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; flex-wrap: wrap; }
   .logo { display: inline-flex; align-items: center; gap: .55rem; font: 650 1.4rem/1 var(--titre); letter-spacing: -.01em; color: var(--encre); text-decoration: none; min-height: 48px; }
-  nav ul { display: flex; gap: .2rem; list-style: none; margin: 0; padding: 0; overflow-x: auto; }
+  nav ul { display: flex; gap: .2rem; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; justify-content: flex-end; }
   nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .8rem; border-radius: 8px; color: var(--encre); text-decoration: none; font-weight: 550; font-size: .97rem; white-space: nowrap; }
   nav a:hover { background: var(--ligne); }
   nav a[aria-current='page'] { background: var(--encre); color: var(--fond); }
+  .bascule-theme { display: inline-grid; place-items: center; width: 44px; height: 44px; margin-left: .3rem; padding: 0; border: 1px solid var(--ligne); border-radius: 8px; background: transparent; color: var(--encre); cursor: pointer; }
+  .bascule-theme:hover { background: var(--ligne); }
+  .bascule-theme[aria-pressed='true'] .lune, .bascule-theme[aria-pressed='false'] .soleil { display: none; }
   nav a.langue { justify-content: center; min-width: 44px; margin-left: .3rem; border: 1px solid var(--ligne); font: 600 .82rem/1 var(--mono); letter-spacing: .06em; }
   .pied { border-top: 1px solid var(--ligne); margin-top: 3rem; padding-block: 2rem; color: var(--doux); font-size: .95rem; }
   .pied-in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem 2rem; align-items: center; }

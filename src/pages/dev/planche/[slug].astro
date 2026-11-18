@@ -2,6 +2,7 @@
 // Planche de contrôle (développement uniquement) : toutes les étapes d'une scène à t = 0,05 / 0,5 / 1.
 // Sert à vérifier une scène d'un seul coup d'œil : node scripts/capture.mjs dev/planche/<slug>/
 // Version anglaise de la scène : ajouter ?lang=en (dev/planche/<slug>/?lang=en).
+// Thème : ?theme=dark ou ?theme=light (sinon réglage de l'appareil), combinable avec ?lang=en.
 import '../../../styles/global.css';
 import '../../../styles/lecteur.css';
 import { actif } from '../../../i18n';
@@ -20,9 +21,13 @@ const { slug } = Astro.params;
     <meta name="robots" content="noindex" />
     <link rel="icon" type="image/svg+xml" href={actif('favicon.svg')} />
     <title>Planche : {slug}</title>
-    <!-- La langue doit être fixée avant le chargement des scènes : L() et fmt() lisent l'attribut lang du document. -->
+    <!-- Langue et thème fixés avant le chargement des scènes : L() et fmt() lisent l'attribut lang, C lit data-theme. -->
     <script is:inline>
-      if (new URLSearchParams(location.search).get('lang') === 'en') document.documentElement.lang = 'en';
+      {
+        const q = new URLSearchParams(location.search), theme = q.get('theme');
+        if (q.get('lang') === 'en') document.documentElement.lang = 'en';
+        if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme;
+      }
     </script>
   </head>
   <body>
@@ -67,10 +72,10 @@ const { slug } = Astro.params;
 </script>
 
 <style is:global>
-  body { background: #05070f; color: #eef1ff; padding: 12px; display: block; }
-  #planche h2 { font: 600 15px var(--mono); margin: 14px 0 6px; color: #4dd0e1; }
+  body { background: var(--fond); color: var(--encre); padding: 12px; display: block; }
+  #planche h2 { font: 600 15px var(--mono); margin: 14px 0 6px; color: var(--scene-accent); }
   #planche .rang { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  #planche figure { margin: 0; background: #0b1022; border: 1px solid #232a4d; border-radius: 8px; overflow: hidden; display: grid; grid-template-columns: 4fr 3fr; align-items: center; }
+  #planche figure { margin: 0; background: var(--scene); border: 1px solid var(--scene-ligne); border-radius: 8px; overflow: hidden; display: grid; grid-template-columns: 4fr 3fr; align-items: center; }
   #planche figure svg:only-of-type { grid-column: 1 / -1; }
-  #planche figcaption { grid-column: 1 / -1; font: 500 11px var(--mono); padding: 4px 8px; color: #9aa2c8; border-top: 1px solid #232a4d; }
+  #planche figcaption { grid-column: 1 / -1; font: 500 11px var(--mono); padding: 4px 8px; color: var(--scene-doux); border-top: 1px solid var(--scene-ligne); }
 </style>

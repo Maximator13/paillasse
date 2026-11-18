@@ -1,6 +1,6 @@
-import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, uid } from '../../lib/anim';
 import { appareil, etiquette, paillasse } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { activite, constanteRadioactive, instantDesintegration, noyauxRestants } from './model';
 
@@ -33,12 +33,32 @@ export default definirScene({
     paillasse(scene);
     const mono = (parent: Element, x: number, y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, parent);
+    // Relief accordé au kit : opacités selon le thème, dégradés à identifiant unique.
+    const selon = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
+    const degrade = (parent: Element, attrs: Record<string, string | number>, arrets: [number, string, number][], type: 'linearGradient' | 'radialGradient' = 'linearGradient') => {
+      const id = uid('rn');
+      const gr = el(type, { id, ...attrs }, el('defs', {}, parent));
+      for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+      return `url(#${id})`;
+    };
+    const vertical = { x1: 0, y1: 0, x2: 0, y2: 1 };
+    const metal = (parent: Element) => degrade(parent, vertical, [[0, mix(C.metal, C.blanc, 0.35), 1], [1, mix(C.metal, C.ombre, 0.35), 1]]);
+    // Volume d'une paroi de verre entre xa et xb : bords ombrés, liseré de lumière à gauche.
+    const reflet = (parent: Element, xa: number, xb: number) => degrade(parent, { gradientUnits: 'userSpaceOnUse', x1: xa, x2: xb, y1: 0, y2: 0 }, [
+      [0, C.ombre, selon(0.3, 0.08)], [0.03, C.ombre, 0], [0.04, C.blanc, 0], [0.06, C.blanc, selon(0.1, 0.5)],
+      [0.085, C.blanc, 0], [0.94, C.ombre, 0], [1, C.ombre, selon(0.34, 0.1)],
+    ]);
 
     // Enceinte et grille de noyaux.
     const enceinte = el('g', {}, scene);
-    el('rect', { x: 46, y: 428, width: 16, height: 12, fill: C.metal }, enceinte);
-    el('rect', { x: 294, y: 428, width: 16, height: 12, fill: C.metal }, enceinte);
-    el('rect', { x: 24, y: 176, width: 308, height: 252, rx: 14, fill: 'rgba(223,230,255,.05)', stroke: C.verre, 'stroke-width': TRAIT }, enceinte);
+    el('ellipse', { cx: 180, cy: 440, rx: 168, ry: 7, fill: degrade(enceinte, {}, [[0, C.ombre, selon(0.6, 0.22)], [0.6, C.ombre, selon(0.32, 0.1)], [1, C.ombre, 0]], 'radialGradient') }, enceinte);
+    const pied = metal(enceinte);
+    el('rect', { x: 46, y: 428, width: 16, height: 12, rx: 2, fill: pied }, enceinte);
+    el('rect', { x: 294, y: 428, width: 16, height: 12, rx: 2, fill: pied }, enceinte);
+    el('rect', { x: 24, y: 176, width: 308, height: 252, rx: 14, fill: C.verre, 'fill-opacity': selon(0.06, 0.22) }, enceinte);
+    el('rect', { x: 24, y: 176, width: 308, height: 252, rx: 14, fill: reflet(enceinte, 24, 332) }, enceinte);
+    el('rect', { x: 27.5, y: 179.5, width: 301, height: 245, rx: 11, fill: 'none', stroke: C.verre, 'stroke-width': 4, opacity: selon(0.18, 0.7) }, enceinte);
+    el('rect', { x: 24, y: 176, width: 308, height: 252, rx: 14, fill: 'none', stroke: C.trait, 'stroke-width': TRAIT }, enceinte);
     etiquette(enceinte, { x: 28, y: 166, texte: L('Radon 220', 'Radon-220') });
     const etiqN = etiquette(scene, { x: 332, y: 166, texte: '', ancre: 'end', mono: true, taille: 14, couleur: C.cyan });
     const gNoyaux = el('g', {}, scene);
@@ -49,13 +69,15 @@ export default definirScene({
     // Compteur : tube, câble, boîtier, chronomètre.
     const compteur = el('g', {}, scene);
     el('path', { d: 'M470 300C505 300 546 322 546 364', fill: 'none', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, compteur);
-    el('rect', { x: 380, y: 284, width: 90, height: 32, rx: 8, fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': TRAIT }, compteur);
+    el('rect', { x: 380, y: 284, width: 90, height: 32, rx: 8, fill: C.verre, 'fill-opacity': selon(0.08, 0.3) }, compteur);
+    el('rect', { x: 380, y: 284, width: 90, height: 32, rx: 8, fill: degrade(compteur, vertical, [[0, C.ombre, selon(0.3, 0.08)], [0.2, C.blanc, selon(0.18, 0.55)], [0.4, C.blanc, 0], [0.75, C.ombre, 0], [1, C.ombre, selon(0.36, 0.12)]]), stroke: C.trait, 'stroke-width': TRAIT }, compteur);
     el('line', { x1: 392, x2: 462, y1: 300, y2: 300, stroke: C.metal, 'stroke-width': 2 }, compteur);
     const lueur = el('circle', { cx: FENETRE.x, cy: FENETRE.y, r: 18, fill: C.jaune, opacity: 0 }, compteur);
-    el('rect', { x: 374, y: 282, width: 7, height: 36, rx: 3, fill: C.violet }, compteur);
+    el('rect', { x: 374, y: 282, width: 7, height: 36, rx: 3, fill: degrade(compteur, {}, [[0, mix(C.violet, C.blanc, 0.3), 1], [1, mix(C.violet, C.ombre, 0.3), 1]]) }, compteur);
     etiquette(compteur, { x: 425, y: 272, texte: L('Compteur', 'Counter'), ancre: 'middle', taille: 14 });
     const boitier = appareil(compteur, { x: 476, y: 364, w: 140, h: 76, titre: L('DÉSINTÉGRATIONS', 'DECAYS'), couleur: C.jaune });
-    el('circle', { cx: 584, cy: 300, r: 24, fill: C.panneau, stroke: C.verre, 'stroke-width': 2 }, compteur);
+    el('circle', { cx: 586, cy: 304, r: 24, fill: C.ombre, opacity: selon(0.35, 0.1) }, compteur);
+    el('circle', { cx: 584, cy: 300, r: 24, fill: degrade(compteur, vertical, [[0, mix(C.panneau, C.metal, selon(0.22, 0.14)), 1], [1, C.panneau, 1]]), stroke: C.metal, 'stroke-width': 2 }, compteur);
     for (let k = 0; k < 12; k++) {
       const a = (k * Math.PI) / 6;
       el('line', { x1: 584 + Math.sin(a) * 19, y1: 300 - Math.cos(a) * 19, x2: 584 + Math.sin(a) * 22, y2: 300 - Math.cos(a) * 22, stroke: C.discret, 'stroke-width': 1.5 }, compteur);
@@ -83,14 +105,19 @@ export default definirScene({
     const pere = el('g', {}, zoom);
     const halo = el('circle', { cx: 92, cy: 86, r: 30, fill: 'none', stroke: C.cyan, 'stroke-width': 2 }, pere);
     const rz = rng(11);
+    // Nucléon en volume : reflet décalé vers le haut à gauche.
+    const nucleon = (parent: Element, cx: number, cy: number, fill: string) => {
+      el('circle', { cx, cy, r: 5, fill, stroke: C.fond, 'stroke-width': 1 }, parent);
+      el('circle', { cx: cx - 1.6, cy: cy - 1.6, r: 1.7, fill: C.blanc, opacity: selon(0.45, 0.6) }, parent);
+    };
     for (let k = 0; k < 26; k++) {
       const ray = 21 * Math.sqrt((k + 0.5) / 26), a = k * 2.39996;
-      el('circle', { cx: 92 + ray * Math.cos(a), cy: 86 + ray * Math.sin(a), r: 5, fill: rz() < 0.4 ? C.corail : C.bleu, stroke: C.fond, 'stroke-width': 1 }, pere);
+      nucleon(pere, 92 + ray * Math.cos(a), 86 + ray * Math.sin(a), rz() < 0.4 ? C.corail : C.bleu);
     }
     const alpha = el('g', {}, zoom);
     const haloA = el('circle', { cx: 104, cy: 86, r: 14, fill: C.jaune, opacity: 0 }, alpha);
     [[-4.5, -4.5, C.corail], [4.5, -4.5, C.bleu], [-4.5, 4.5, C.bleu], [4.5, 4.5, C.corail]].forEach(([dx, dy, c]) =>
-      el('circle', { cx: 104 + (dx as number), cy: 86 + (dy as number), r: 5, fill: c, stroke: C.fond, 'stroke-width': 1 }, alpha));
+      nucleon(alpha, 104 + (dx as number), 86 + (dy as number), c as string));
     const etiqRn = etiquette(zoom, { x: 92, y: 138, texte: 'Rn 220', ancre: 'middle', mono: true, taille: 13, couleur: C.cyan });
     const etiqPo = etiquette(zoom, { x: 86, y: 138, texte: 'Po 216', ancre: 'middle', mono: true, taille: 13, couleur: C.discret });
     const etiqHe = etiquette(zoom, { x: 236, y: 138, texte: L('He 4 (particule α)', 'He 4 (α particle)'), ancre: 'middle', mono: true, taille: 13, couleur: C.jaune });
@@ -153,7 +180,7 @@ export default definirScene({
           stroke: fait ? C.metal : 'none', 'stroke-width': 1.2,
         });
         const vif = fait && enCours && q < 1;
-        set(eclair, { cx: x, cy: y, r: lerp(6, 22, ease.out(q)), opacity: vif ? 1 - q : 0 });
+        set(eclair, { cx: x, cy: y, r: lerp(6, 16, ease.out(q)), opacity: vif ? 1 - q : 0 });
         const v = (a3 - ad) / VOL;
         if (fait && enCours && v < 1) {
           const yc = FENETRE.y + ((i * 37) % 21) - 10, d = Math.hypot(FENETRE.x - x, yc - y);
@@ -162,7 +189,7 @@ export default definirScene({
         } else part.setAttribute('opacity', '0');
         if (enCours && v >= 1) pulse = Math.max(pulse, 1 - (v - 1) / 0.5);
       }
-      set(lueur, { opacity: 0.55 * clamp(pulse), r: 12 + 8 * clamp(pulse) });
+      set(lueur, { opacity: selon(0.55, 0.35) * clamp(pulse), r: 12 + 8 * clamp(pulse) });
       boitier.affiche(a1 > 0.9 ? String(comptes) : '');
       aiguille.setAttribute('transform', `rotate(${ts * 6} 584 300)`);
       etiqT.textContent = `t = ${fmt(ts, 0)} s`;
@@ -190,7 +217,7 @@ export default definirScene({
 
       if (graphique) {
         graphique.courbe('mesures', a3 > 0 ? [...escalier.slice(0, 1 + 2 * comptes), [ts, restants]] : [], { couleur: C.cyan, epaisseur: 2.5 });
-        if (enCours) graphique.repere('mesure', ts, restants, { couleur: C.blanc, rayon: 4, label: `N = ${restants}` });
+        if (enCours) graphique.repere('mesure', ts, restants, { couleur: C.texte, rayon: 4, label: `N = ${restants}` });
         else graphique.effacer('mesure');
         const xd = T_MAX * seg(a4, 0.05, 0.5, ease.inOut);
         graphique.courbe('loi', a4 > 0 ? Array.from({ length: 101 }, (_, k): [number, number] => [(xd * k) / 100, noyauxRestants(n0, lambda, (xd * k) / 100)]) : [], { couleur: C.jaune, epaisseur: 2.5, pointille: true });
@@ -198,7 +225,8 @@ export default definirScene({
           graphique.horizontale('moitie', n0 / 2, { couleur: C.discret, label: 'N0 / 2' });
           graphique.verticale('demi', p.t12, { couleur: C.jaune, label: `t1/2 = ${fmt(p.t12, 0)} s` });
           graphique.repere('p1', p.t12, n0 / 2, { couleur: C.jaune });
-          graphique.repere('p2', 2 * p.t12, n0 / 4, { couleur: C.orange, label: 'N0 / 4' });
+          // Sous 128 noyaux, l'étiquette N0 / 4 couperait la droite N0 / 2 : repère seul.
+          graphique.repere('p2', 2 * p.t12, n0 / 4, { couleur: C.orange, label: n0 >= 128 ? 'N0 / 4' : undefined });
           graphique.opacite('moitie', seg(a4, 0.55, 0.68));
           graphique.opacite('demi', seg(a4, 0.62, 0.78));
           graphique.opacite('p1', seg(a4, 0.7, 0.82));

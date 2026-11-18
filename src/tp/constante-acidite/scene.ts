@@ -1,13 +1,12 @@
-import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte } from '../../lib/anim';
+import { L, avancement, clamp, ease, el, fmt, lerp, mix, rng, seg, set, show, texte, uid } from '../../lib/anim';
 import { appareil, becher, etiquette, paillasse } from '../../lib/labkit';
-import { C, MONO, POLICE } from '../../lib/palette';
+import { C, MONO, POLICE, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { fractionBase, ka, pH, rapport, regression } from './model';
 
 // Cinq mélanges de 20 mL : volumes (mL) de solution d'acide AH et de solution de base conjuguée A-.
 const MELANGES = [{ va: 18, vb: 2 }, { va: 15, vb: 5 }, { va: 10, vb: 10 }, { va: 5, vb: 15 }, { va: 2, vb: 18 }];
 const XB = [74, 190, 306, 422, 538]; // centres des béchers
-const ACIDE = C.corail, BASE = C.bleu;
 const PLEIN = 0.62; // niveau d'un bécher rempli
 const N = 12; // entités dessinées par bécher
 const X_LOG = 1.2; // demi-largeur de l'axe log([A-]/[AH])
@@ -15,6 +14,20 @@ const X_LOG = 1.2; // demi-largeur de l'axe log([A-]/[AH])
 const D = { x0: 40, x1: 440, y: 40, h: 22, min: 2, max: 8 };
 const xD = (ph: number) => lerp(D.x0, D.x1, clamp((ph - D.min) / (D.max - D.min)));
 const SONDE_DX = 27, Y_IMMERGE = 428, LEVEE = 112, L_SONDE = 100;
+/** Valeur selon le thème courant (un même voile ne se voit pas pareil sur fond nuit et sur fond blanc). */
+const selon = (sombre: number, clair: number) => (themeSombre() ? sombre : clair);
+/** Dégradé horizontal en coordonnées de l'objet, renvoie la valeur de fill. */
+function degrade(g: Element, arrets: [number, string, number][], vertical = false) {
+  const id = uid('ka');
+  const gr = el('linearGradient', { id, x1: 0, y1: 0, x2: vertical ? 0 : 1, y2: vertical ? 1 : 0 }, el('defs', {}, g));
+  for (const [offset, c, o] of arrets) el('stop', { offset, 'stop-color': c, 'stop-opacity': o }, gr);
+  return `url(#${id})`;
+}
+/** Volume d'un tube de verre : bord gauche ombré, liseré de lumière, bord droit plus sombre (comme le kit). */
+const relief = (g: Element) => degrade(g, [
+  [0, C.ombre, selon(0.32, 0.1)], [0.1, C.ombre, 0], [0.18, C.blanc, 0], [0.3, C.blanc, selon(0.25, 0.6)],
+  [0.42, C.blanc, 0], [0.75, C.ombre, 0], [1, C.ombre, selon(0.38, 0.14)],
+]);
 
 export default definirScene({
   etapes: [
@@ -35,10 +48,12 @@ export default definirScene({
   affiche: { etape: 2, t: 0.56 },
 
   monter({ scene, graphique }) {
+    const ACIDE = C.corail, BASE = C.bleu;
     paillasse(scene);
 
     // Diagramme de prédominance (haut de la scène).
     const diag = el('g', {}, scene);
+    el('rect', { x: D.x0 + 1, y: D.y + 3, width: D.x1 - D.x0, height: D.h, rx: 5, fill: C.ombre, opacity: selon(0.35, 0.1) }, diag);
     el('rect', { x: D.x0, y: D.y, width: D.x1 - D.x0, height: D.h, rx: 5, fill: C.panneau }, diag);
     const NB = 50, lw = (D.x1 - D.x0) / NB;
     const bandes = Array.from({ length: NB }, (_, j) => el('rect', { x: D.x0 + j * lw, y: D.y, width: lw + 0.6, height: D.h }, diag));
@@ -57,8 +72,8 @@ export default definirScene({
     const etiqPka = etiquette(gPka, { x: 0, y: D.y - 12, texte: '', ancre: 'middle', mono: true, taille: 14, couleur: C.jaune });
     const jalons = MELANGES.map(() => el('circle', { cy: D.y + D.h / 2, r: 4.5, fill: C.fond, stroke: C.blanc, 'stroke-width': 2 }, diag));
     const curseur = el('g', {}, diag);
-    el('line', { x1: 0, x2: 0, y1: D.y - 3, y2: D.y + D.h + 3, stroke: C.blanc, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, curseur);
-    el('polygon', { points: `0,${D.y + D.h + 3} -6,${D.y + D.h + 13} 6,${D.y + D.h + 13}`, fill: C.blanc }, curseur);
+    el('line', { x1: 0, x2: 0, y1: D.y - 3, y2: D.y + D.h + 3, stroke: C.texte, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, curseur);
+    el('polygon', { points: `0,${D.y + D.h + 3} -6,${D.y + D.h + 13} 6,${D.y + D.h + 13}`, fill: C.texte }, curseur);
 
     // Légende des entités.
     const legende = el('g', {}, scene);
@@ -83,23 +98,34 @@ export default definirScene({
 
     // Pipette de préparation (étape 1).
     const pip = el('g', {}, scene);
+    const corpsPip = 'M-6 196V300L-2 318H2L6 300V196';
+    el('path', { d: corpsPip, fill: C.verre, 'fill-opacity': selon(0.08, 0.3) }, pip);
     const contenu = el('rect', { x: -5, y: 214, width: 10, height: 84, fill: ACIDE, opacity: 0.85 }, pip);
-    el('path', { d: 'M-6 196V300L-2 318H2L6 300V196', fill: 'none', stroke: C.verre, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, pip);
+    el('path', { d: corpsPip, fill: relief(pip) }, pip);
+    el('path', { d: corpsPip, fill: 'none', stroke: C.trait, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, pip);
     const nomPip = etiquette(pip, { x: 14, y: 262, texte: '', taille: 13 });
     const filet = el('line', { 'stroke-width': 3, 'stroke-linecap': 'round' }, scene);
 
     // pH-mètre et sonde mobile (étapes 2 et 3).
     const gPhm = el('g', {}, scene);
     const phm = appareil(gPhm, { x: 484, y: 18, w: 140, h: 74, titre: L('pH-MÈTRE', 'pH METER') });
-    const cable = el('path', { fill: 'none', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, scene);
+    const cable = el('g', {}, scene);
+    const cables = [
+      el('path', { fill: 'none', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, cable),
+      el('path', { fill: 'none', stroke: C.blanc, 'stroke-width': 0.8, opacity: selon(0.25, 0.5), 'stroke-linecap': 'round' }, cable),
+    ];
     const gSonde = el('g', {}, scene);
-    el('rect', { x: -5, y: -L_SONDE, width: 10, height: 18, rx: 3, fill: C.metal }, gSonde);
-    el('rect', { x: -3.5, y: -L_SONDE + 16, width: 7, height: L_SONDE - 16, rx: 3.5, fill: 'rgba(223,230,255,.18)', stroke: C.verre, 'stroke-width': 1.6 }, gSonde);
-    el('circle', { cx: 0, cy: -5, r: 3, fill: C.verre, opacity: 0.8 }, gSonde);
+    el('rect', { x: -5, y: -L_SONDE, width: 10, height: 18, rx: 3, fill: degrade(gSonde, [[0, mix(C.metal, C.ombre, 0.1), 1], [0.3, mix(C.metal, C.blanc, 0.4), 1], [1, mix(C.metal, C.ombre, 0.35), 1]]) }, gSonde);
+    const tige = { x: -3.5, y: -L_SONDE + 16, width: 7, height: L_SONDE - 16, rx: 3.5 };
+    el('rect', { ...tige, fill: C.verre, 'fill-opacity': selon(0.18, 0.35) }, gSonde);
+    el('rect', { ...tige, fill: relief(gSonde), stroke: C.trait, 'stroke-width': 1.6 }, gSonde);
+    el('circle', { cx: 0, cy: -5, r: 3, fill: C.trait, opacity: 0.8 }, gSonde);
+    el('circle', { cx: -1, cy: -6, r: 1, fill: C.blanc, opacity: 0.7 }, gSonde);
 
     // Encart de résultat (étapes 4 et 5).
     const encart = el('g', {}, scene);
-    el('rect', { x: 40, y: 140, width: 300, height: 108, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
+    el('rect', { x: 42, y: 144, width: 300, height: 108, rx: 14, fill: C.ombre, opacity: selon(0.35, 0.1) }, encart);
+    el('rect', { x: 40, y: 140, width: 300, height: 108, rx: 14, fill: degrade(encart, [[0, mix(C.panneau, C.metal, selon(0.12, 0.08)), 1], [1, C.panneau, 1]], true), stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 56, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
     ligne(166, 13, C.discret, POLICE).textContent = L('Relation attendue (droite de pente 1)', 'Expected relation (line of gradient 1)');
@@ -157,7 +183,8 @@ export default definirScene({
       gSonde.setAttribute('transform', `translate(${xS} ${yS})`);
       gSonde.style.opacity = cable.style.opacity = String(seg(a2, 0.4, 0.55));
       const yTete = yS - L_SONDE;
-      cable.setAttribute('d', `M554 92C554 ${Math.max(200, yTete - 60)} ${xS} ${yTete - 40} ${xS} ${yTete}`);
+      const dCable = `M554 92C554 ${Math.max(200, yTete - 60)} ${xS} ${yTete - 40} ${xS} ${yTete}`;
+      cables.forEach((c) => c.setAttribute('d', dCable));
 
       const lu = seg(u, 0.45, 0.7, ease.out); // stabilisation de la lecture
       const mesure = a3 > 0 && (k > 0 || u >= 0.45);
@@ -186,7 +213,7 @@ export default definirScene({
       etiqPka.setAttribute('x', String(xp));
       etiqPka.textContent = `pKa = ${fmt(p.pKa, 1)}`;
       show(gPka, pk, -10);
-            zAH.style.opacity = zA.style.opacity = String(seg(a5, 0.4, 0.55));
+      zAH.style.opacity = zA.style.opacity = String(seg(a5, 0.4, 0.55));
       jalons.forEach((j, i) => {
         j.setAttribute('cx', String(xD(phs[i])));
         j.style.opacity = String(seg(a5, 0.55 + i * 0.07, 0.65 + i * 0.07));
@@ -194,7 +221,7 @@ export default definirScene({
 
       if (graphique) {
         graphique.nuage('points', pts.slice(0, nMes), { couleur: C.cyan, rayon: 5 });
-        if (a3 > 0 && a3 < 1 && u >= 0.7) graphique.repere('mesure', pts[k][0], pts[k][1], { couleur: C.blanc, rayon: 5, label: `pH = ${fmt(phs[k], 2)}` });
+        if (a3 > 0 && a3 < 1 && u >= 0.7) graphique.repere('mesure', pts[k][0], pts[k][1], { couleur: C.texte, rayon: 5, label: `pH = ${fmt(phs[k], 2)}` });
         else graphique.effacer('mesure');
         const xd = lerp(-X_LOG, X_LOG, seg(a4, 0.05, 0.55));
         graphique.courbe('droite', a4 > 0 ? [[-X_LOG, reg.ordonnee - reg.pente * X_LOG], [xd, reg.ordonnee + reg.pente * xd]] : [], { couleur: C.jaune, epaisseur: 2.5 });

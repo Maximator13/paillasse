@@ -1,6 +1,6 @@
 import { avancement, clamp, ease, el, fmt, L, lerp, mix, rng, seg, set, show, texte, uid } from '../../lib/anim';
 import { agitateur, appareil, barreau, becher, burette, etiquette, gouttes, paillasse, potence } from '../../lib/labkit';
-import { C, MONO, POLICE, TRAIT } from '../../lib/palette';
+import { C, MONO, POLICE, TRAIT, themeSombre } from '../../lib/palette';
 import { definirScene } from '../../lib/scene';
 import { conductivite, contributions, deuxDroites, IONS, M_NACL, releve, volumeEquivalent, type Droite, type Ion, type Titrage } from './model';
 
@@ -9,7 +9,6 @@ const C1 = 0.1; // mol/L, nitrate d'argent
 const V_MAX = 25; // mL, capacité de la burette
 const BECHER = 400; // mL, contenance du bécher
 const N = 6; // ions chlorure représentés dans la loupe
-const COULEUR: Record<Ion, string> = { Na: C.bleu, Cl: C.menthe, Ag: C.orange, NO3: C.rose };
 const NOM: Record<Ion, string> = { Na: 'Na+', Cl: 'Cl-', Ag: 'Ag+', NO3: 'NO3-' };
 const SIGNE: Record<Ion, string> = { Na: '+', Cl: '−', Ag: '+', NO3: '−' };
 // Loupe : centre et rayon ; point du bécher qu'elle agrandit.
@@ -37,6 +36,11 @@ export default definirScene({
   affiche: { etape: 3, t: 0.6 },
 
   monter({ scene, graphique }) {
+    // Couleurs lues au montage : le lecteur remonte la scène au changement de thème.
+    const COULEUR: Record<Ion, string> = { Na: C.bleu, Cl: C.menthe, Ag: C.orange, NO3: C.rose };
+    const sombre = themeSombre();
+    // Liquide incolore : sur fond blanc, le verre seul ne se distingue pas.
+    const incolore = sombre ? C.verre : mix(C.verre, C.trait, 0.35);
     paillasse(scene);
     const agit = agitateur(scene, { x: 262, y: 440, w: 160 });
     const bec = becher(scene, { x: 262, y: agit.yPlateau, w: 140, h: 130 });
@@ -46,16 +50,24 @@ export default definirScene({
 
     // Pipette jaugée (étape 1).
     const pip = el('g', {}, scene);
-    el('path', { d: 'M259 20V110M265 20V110M259 170V252L262 262L265 252V170', fill: 'none', stroke: C.verre, 'stroke-width': 2, 'stroke-linecap': 'round' }, pip);
-    const ventre = el('ellipse', { cx: 262, cy: 140, rx: 13, ry: 32, fill: C.cyan, 'fill-opacity': 0.8, stroke: C.verre, 'stroke-width': 2 }, pip);
+    el('path', { d: 'M259 20V110H265V20ZM259 170V252L262 262L265 252V170Z', fill: C.verre, 'fill-opacity': sombre ? 0.12 : 0.35 }, pip);
+    el('path', { d: 'M259 20V110M265 20V110M259 170V252L262 262L265 252V170', fill: 'none', stroke: C.trait, 'stroke-width': 1.6, 'stroke-linecap': 'round' }, pip);
+    const ventre = el('ellipse', { cx: 262, cy: 140, rx: 13, ry: 32, fill: C.cyan, 'fill-opacity': 0.8 }, pip);
+    el('ellipse', { cx: 262, cy: 140, rx: 13, ry: 32, fill: C.verre, 'fill-opacity': sombre ? 0.08 : 0.2, stroke: C.trait, 'stroke-width': 1.6 }, pip);
+    el('path', { d: 'M255 122Q253 140 255 158', fill: 'none', stroke: C.blanc, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: sombre ? 0.35 : 0.8 }, pip);
     const filet = el('line', { x1: 262, x2: 262, y1: 262, y2: 398, stroke: C.cyan, 'stroke-width': 3, 'stroke-linecap': 'round' }, scene);
 
     // Pissette d'eau distillée (étape 1).
     const pis = el('g', {}, scene);
-    el('rect', { x: 352, y: 200, width: 46, height: 30, fill: C.bleu, opacity: 0.45 }, pis);
-    el('rect', { x: 352, y: 176, width: 46, height: 84, rx: 10, fill: 'rgba(223,230,255,.06)', stroke: C.verre, 'stroke-width': TRAIT }, pis);
+    // Eau au fond du flacon, épousant ses coins arrondis.
+    el('path', { d: 'M352 214H398V250Q398 260 388 260H362Q352 260 352 250Z', fill: C.bleu, opacity: 0.45 }, pis);
+    el('rect', { x: 352, y: 176, width: 46, height: 84, rx: 10, fill: C.verre, 'fill-opacity': sombre ? 0.08 : 0.3, stroke: C.trait, 'stroke-width': TRAIT }, pis);
+    // Volume du flacon : bord droit ombré, reflet vertical à gauche.
+    el('path', { d: 'M390 182Q396 218 390 254', fill: 'none', stroke: C.ombre, 'stroke-width': 5, 'stroke-linecap': 'round', opacity: sombre ? 0.3 : 0.1 }, pis);
+    el('path', { d: 'M359 186V250', stroke: C.blanc, 'stroke-width': 3, 'stroke-linecap': 'round', opacity: sombre ? 0.3 : 0.8 }, pis);
     el('rect', { x: 363, y: 165, width: 24, height: 12, rx: 3, fill: C.bleu }, pis);
-    el('path', { d: 'M375 165V150Q375 140 365 142L318 160', fill: 'none', stroke: C.verre, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, pis);
+    el('path', { d: 'M366 167H384', stroke: C.blanc, 'stroke-width': 1.5, 'stroke-linecap': 'round', opacity: 0.45 }, pis);
+    el('path', { d: 'M375 165V150Q375 140 365 142L318 160', fill: 'none', stroke: C.trait, 'stroke-width': TRAIT, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, pis);
     const jet = el('path', { fill: 'none', stroke: C.bleu, 'stroke-width': 3, 'stroke-linecap': 'round' }, scene);
 
     // Montage de titrage (étape 2).
@@ -64,7 +76,7 @@ export default definirScene({
     const bur = burette(montage, { x: 262, yHaut: 30, h: 150 });
     etiquette(montage, { x: 294, y: 40, texte: L('Nitrate d\'argent', 'Silver nitrate'), taille: 14 });
     etiquette(montage, { x: 294, y: 59, texte: L('C1 = 0,100 mol/L', 'C1 = 0.100 mol/L'), mono: true, taille: 13, couleur: C.discret });
-    const gtt = gouttes(scene, { x: 262, y1: bur.bec.y, y2: 340, couleur: C.verre });
+    const gtt = gouttes(scene, { x: 262, y1: bur.bec.y, y2: 340, couleur: incolore });
 
     // Cellule conductimétrique : deux plaques en regard, reliées au conductimètre. Plaques placées bas pour rester immergées avec 50 mL d'eau.
     const cond = appareil(scene, { x: 440, y: 364, w: 160, h: 76, titre: L('CONDUCTIMÈTRE', 'CONDUCTIMETER'), couleur: C.jaune });
@@ -72,7 +84,9 @@ export default definirScene({
     const cable = el('path', { fill: 'none', stroke: C.metal, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, gCell);
     const cellule = el('g', {}, gCell);
     el('rect', { x: 301, y: 250, width: 10, height: 16, rx: 3, fill: C.metal }, cellule);
-    el('rect', { x: 300, y: 264, width: 12, height: 132, rx: 4, fill: 'rgba(223,230,255,.16)', stroke: C.verre, 'stroke-width': 1.6 }, cellule);
+    el('rect', { x: 303, y: 252, width: 2, height: 12, rx: 1, fill: C.blanc, opacity: 0.4 }, cellule);
+    el('rect', { x: 300, y: 264, width: 12, height: 132, rx: 4, fill: C.verre, 'fill-opacity': sombre ? 0.16 : 0.35, stroke: C.trait, 'stroke-width': 1.6 }, cellule);
+    el('path', { d: 'M302.5 268V380', stroke: C.blanc, 'stroke-width': 1.5, 'stroke-linecap': 'round', opacity: sombre ? 0.3 : 0.8 }, cellule);
     el('rect', { x: 302.5, y: 385, width: 2.5, height: 9, fill: C.jaune }, cellule);
     el('rect', { x: 307, y: 385, width: 2.5, height: 9, fill: C.jaune }, cellule);
 
@@ -94,20 +108,23 @@ export default definirScene({
     const loupe = el('g', {}, scene);
     const clip = uid('loupe');
     el('circle', { r: LR }, el('clipPath', { id: clip }, loupe));
+    el('circle', { cx: 3, cy: 5, r: LR, fill: C.ombre, opacity: sombre ? 0.35 : 0.1 }, loupe);
     el('circle', { r: LR, fill: C.panneau }, loupe);
     const gIons = el('g', { 'clip-path': `url(#${clip})` }, loupe);
-    const solide = etiquette(gIons, { x: 0, y: 92, texte: 'AgCl (s)', ancre: 'middle', taille: 13, couleur: C.verre });
+    const solide = etiquette(gIons, { x: 0, y: 92, texte: 'AgCl (s)', ancre: 'middle', taille: 13, couleur: C.discret });
     el('circle', { r: LR, fill: 'none', stroke: C.jaune, 'stroke-width': TRAIT }, loupe);
     etiquette(loupe, { x: 0, y: -LR - 12, texte: L('Les ions, vus à la loupe', 'The ions, magnified'), ancre: 'middle', taille: 14, couleur: C.jaune });
 
     const ion = (i: Ion) => {
       const g = el('g', {}, gIons);
-      const c = el('circle', { r: 8, fill: COULEUR[i] }, g);
+      const c = el('circle', { r: 8, fill: COULEUR[i], stroke: C.trait, 'stroke-width': 1, 'stroke-opacity': 0 }, g);
       const s = texte(g, 0, 4.5, SIGNE[i], { fill: C.fond, 'font-family': MONO, 'font-size': 13, 'font-weight': 700, 'text-anchor': 'middle' });
       return (x: number, y: number, op = 1, blanc = 0) => {
         g.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
         g.style.opacity = String(op);
         c.setAttribute('fill', mix(COULEUR[i], C.verre, blanc));
+        // Le précipité blanc reste détouré sur le fond clair de la loupe.
+        c.setAttribute('stroke-opacity', String(sombre ? 0 : 0.6 * blanc));
         s.style.opacity = String(1 - blanc);
       };
     };
@@ -133,6 +150,7 @@ export default definirScene({
 
     // Encart de résultat (étape 6).
     const encart = el('g', {}, scene);
+    el('rect', { x: 406, y: 88, width: 220, height: 150, rx: 14, fill: C.ombre, opacity: sombre ? 0.35 : 0.1 }, encart);
     el('rect', { x: 404, y: 84, width: 220, height: 150, rx: 14, fill: C.panneau, stroke: C.jaune, 'stroke-width': 1.5 }, encart);
     const ligne = (y: number, taille: number, couleur: string, police = MONO) =>
       el('text', { x: 420, y, fill: couleur, 'font-family': police, 'font-size': taille, 'font-weight': 600 }, encart);
@@ -192,7 +210,7 @@ export default definirScene({
 
       // Étapes 3 et 4 : on verse le nitrate d'argent.
       const coule = (a3 > 0 && a3 < 1) || (a4 > 0 && a4 < 1);
-      bur.liquide(remplie * (1 - v / V_MAX), C.verre);
+      bur.liquide(remplie * (1 - v / V_MAX), incolore);
       bur.robinet(coule ? 1 : 0);
       gtt.maj(T, coule ? 0.6 : 0);
       // Le précipité de chlorure d'argent trouble la solution.
@@ -235,14 +253,14 @@ export default definirScene({
       const trouve = a5 > 0.68;
       if (graphique) {
         graphique.nuage('pts', a3 > 0 ? pts.filter(([x]) => x <= v + 1e-9) : [], { couleur: C.jaune, rayon: 3.5 });
-        if (a3 > 0 && a4 < 1) graphique.repere('mesure', v, sigma, { couleur: C.blanc, rayon: 4 });
+        if (a3 > 0 && a4 < 1) graphique.repere('mesure', v, sigma, { couleur: C.texte, rayon: 4 });
         else graphique.effacer('mesure');
         const d1 = seg(a5, 0.05, 0.35), d2 = seg(a5, 0.33, 0.63);
         graphique.courbe('avant', d1 > 0 ? [sur(fit.avant, 0), sur(fit.avant, (fit.vE + 3) * d1)] : [], { couleur: C.cyan, epaisseur: 2 });
         graphique.courbe('apres', d2 > 0 ? [sur(fit.apres, V_MAX), sur(fit.apres, lerp(V_MAX, fit.vE - 3, d2))] : [], { couleur: C.corail, epaisseur: 2 });
         if (trouve) {
           graphique.verticale('ve', fit.vE, { couleur: C.jaune, label: `VE = ${fmt(fit.vE, 1)} mL` });
-          graphique.repere('eq', ...sur(fit.avant, fit.vE), { couleur: C.blanc });
+          graphique.repere('eq', ...sur(fit.avant, fit.vE), { couleur: C.texte });
           graphique.opacite('ve', seg(a5, 0.68, 0.85));
           graphique.opacite('eq', seg(a5, 0.68, 0.85));
         } else {

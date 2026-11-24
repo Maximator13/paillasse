@@ -42,9 +42,9 @@ export const CYCLES = [
     en: { titre: 'Lycée', classes: 'Terminale speciality (ages 17 to 18)', resume: "The whole speciality syllabus: titrations, kinetics, Newton's mechanics, waves, the RC circuit." },
   },
   {
-    id: 'prepa', chemin: '/prepa/', dispo: false,
-    fr: { titre: 'Prépa', classes: 'MPSI, PCSI', resume: 'Mécanique du point, thermodynamique, optique, cinétique et équilibres chimiques.' },
-    en: { titre: 'Prépa', classes: 'MPSI, PCSI (preparatory classes)', resume: 'Particle mechanics, thermodynamics, optics, kinetics and chemical equilibria.' },
+    id: 'prepa', chemin: '/prepa/', dispo: true,
+    fr: { titre: 'Prépa', classes: 'TSI, puis MPSI, PCSI, PTSI', resume: 'Fiches condensées, formules à retenir, QCM et exercices type concours : physique, chimie, maths et SI.' },
+    en: { titre: 'Prépa', classes: 'TSI, then MPSI, PCSI, PTSI (in French)', resume: 'Condensed lesson sheets, formulas, quizzes and exam-style exercises for the French competitive exams.' },
   },
 ] as const;
 

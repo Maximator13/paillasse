@@ -1,0 +1,129 @@
+---
+// Chapitre de prépa : sommaire, fiche et exercices (corps Markdown), formules à retourner, QCM.
+import { render } from 'astro:content';
+import 'katex/dist/katex.min.css';
+import Base from '../../../layouts/Base.astro';
+import Qcm from '../../../components/Qcm.astro';
+import { FILIERES, MATIERES, classe, lesChapitres, lienChapitre, type Chapitre } from '../../../data/prepa';
+import { slugDe } from '../../../data/site';
+import { UI, lien } from '../../../i18n';
+import { formule, texteMaths } from '../../../lib/maths';
+
+export async function getStaticPaths() {
+  const chemins = [];
+  for (const f of FILIERES.filter((x) => x.dispo)) {
+    const tous = await lesChapitres(f.id);
+    for (const c of tous) {
+      // Voisins : même année et même matière.
+      const memes = tous.filter((x) => x.data.annee === c.data.annee && x.data.matiere === c.data.matiere);
+      const i = memes.indexOf(c);
+      chemins.push({ params: { filiere: f.id, slug: slugDe(c.id) }, props: { c, nomFiliere: f.nom as string, precedent: memes[i - 1], suivant: memes[i + 1] } });
+    }
+  }
+  return chemins;
+}
+interface Props {
+  c: Chapitre;
+  nomFiliere: string;
+  precedent?: Chapitre;
+  suivant?: Chapitre;
+}
+const { c, nomFiliere, precedent, suivant } = Astro.props;
+const d = c.data;
+const u = UI.fr;
+const { Content, headings } = await render(c);
+const exercices = headings.find((h) => h.depth === 2 && h.text.startsWith('Exercices type concours'))?.slug;
+const titre = `${d.titre} : prépa ${classe(c)}`.length <= 55 ? `${d.titre} : prépa ${classe(c)}` : d.titre;
+---
+
+<Base lang="fr" titre={titre} description={d.description} type="article" sansTraduction="/prepa/">
+  <article class="section conteneur">
+    <ol class="fil">
+      <li><a href={lien('fr', '/')}>{u.accueil}</a></li>
+      <li><a href={lien('fr', '/prepa/')}>Prépa</a></li>
+      <li><a href={lien('fr', `/prepa/${d.filiere}/`)}>{nomFiliere}</a></li>
+      <li aria-current="page">{d.titre}</li>
+    </ol>
+    <p class="surtitre">{classe(c)} · {MATIERES[d.matiere]} · {d.partie}</p>
+    <h1>{d.titre}</h1>
+    <p class="chapo">{d.description}</p>
+    <p class="infos">{d.duree} · {d.formules.length} formules · {d.qcm.length} questions</p>
+
+    <nav class="sommaire" aria-label="Sommaire du chapitre">
+      <ol>
+        <li><a href="#fiche">Fiche</a></li>
+        {exercices && <li><a href={`#${exercices}`}>Exercices</a></li>}
+        <li><a href="#formules">Formules à retenir</a></li>
+        <li><a href="#qcm">Testez-vous</a></li>
+      </ol>
+    </nav>
+
+    <div class="prose" id="fiche"><Content /></div>
+
+    <section class="bloc" id="formules" aria-labelledby="titre-formules">
+      <h2 id="titre-formules">Formules à retenir</h2>
+      <p class="aide">Lisez le nom, retrouvez la formule de tête, puis retournez la carte pour vérifier.</p>
+      <ul class="formules">
+        {d.formules.map((f) => (
+          <li>
+            <details class="formule">
+              <summary><span set:html={texteMaths(f.nom)} /><span class="retourner" aria-hidden="true">Retourner</span></summary>
+              <div class="verso">
+                <Fragment set:html={formule(f.formule)} />
+                {f.conditions && <p set:html={texteMaths(f.conditions)} />}
+              </div>
+            </details>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="bloc" id="qcm" aria-labelledby="titre-qcm">
+      <h2 id="titre-qcm">Testez-vous</h2>
+      <Qcm id={slugDe(c.id)} questions={d.qcm} />
+    </section>
+
+    <nav class="voisins" aria-label="Chapitres voisins">
+      {precedent ? <a href={lienChapitre(precedent)}><span>Chapitre précédent</span>{precedent.data.titre}</a> : <span />}
+      {suivant ? <a class="droite" href={lienChapitre(suivant)}><span>Chapitre suivant</span>{suivant.data.titre}</a> : <a class="droite" href={lien('fr', `/prepa/${d.filiere}/`)}><span>Programme</span>Tous les chapitres {nomFiliere}</a>}
+    </nav>
+  </article>
+</Base>
+
+<style>
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
+  .infos { font: 500 .85rem/1.4 var(--mono); color: var(--doux); }
+  .sommaire { margin-top: 1.5rem; }
+  .sommaire ol { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0; padding: 0; }
+  .sommaire a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1rem; border: 1px solid var(--ligne); border-radius: 999px; color: var(--encre); text-decoration: none; font-weight: 600; font-size: .95rem; background: var(--surface); }
+  .sommaire a:hover { border-color: var(--accent); }
+  .prose { margin-top: 2.5rem; }
+  .prose :global(h2), .bloc { scroll-margin-top: 90px; }
+  /* Une formule ne se coupe pas dans une cellule : le tableau défile horizontalement s'il manque de place. */
+  .prose :global(td .katex) { white-space: nowrap; }
+  .bloc { margin-top: 4rem; }
+  .aide { color: var(--doux); max-width: 62ch; }
+  .formules { list-style: none; margin: 1.2rem 0 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); align-items: start; }
+  .formule { border: 1.5px solid var(--ligne); border-radius: var(--rayon); background: var(--surface); }
+  .formule summary { display: flex; flex-direction: column; justify-content: space-between; gap: .8rem; min-height: 7.5rem; padding: 1rem 1.1rem; cursor: pointer; list-style: none; font: 600 1.05rem/1.35 var(--titre); }
+  .formule summary::-webkit-details-marker { display: none; }
+  .retourner { font: 600 .72rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .retourner::after { content: ' ↻'; }
+  .formule summary:hover { background: color-mix(in srgb, var(--accent) 6%, var(--surface)); border-radius: var(--rayon); }
+  .formule[open] { border-color: var(--accent); }
+  .formule[open] summary { min-height: 0; padding-bottom: .4rem; }
+  .formule[open] .retourner { display: none; }
+  /* Téléphone : cartes en une colonne, recto compact (nom à gauche, « Retourner » à droite). */
+  @media (max-width: 599px) {
+    .formules { gap: .6rem; }
+    .formule summary { min-height: 0; flex-direction: row; align-items: center; }
+    .retourner { flex: none; }
+  }
+  .verso { padding: 0 1.1rem 1rem; }
+  .verso :global(.katex-display) { margin: .4rem 0 .6rem; overflow-x: auto; overflow-y: hidden; padding-block: .2rem; }
+  .verso p { margin: 0; color: var(--doux); font-size: .95rem; }
+  .voisins { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 4rem; border-top: 1.5px solid var(--ligne); padding-top: 1.5rem; }
+  .voisins a { display: flex; flex-direction: column; gap: .3rem; text-decoration: none; font-weight: 650; color: var(--encre); padding: .5rem 0; }
+  .voisins a span { font: 500 .75rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--doux); }
+  .voisins .droite { text-align: right; align-items: flex-end; }
+</style>

@@ -66,6 +66,7 @@ const T = {
     },
   },
   prepa: {
+    // Plus servie : /prepa/ est désormais l'accueil des filières (src/pages/prepa/index.astro).
     fr: {
       titre: 'Physique-chimie en prépa',
       description: 'Programme prévu pour les classes préparatoires MPSI et PCSI : chapitres et TP animés en préparation, de la mécanique aux équilibres chimiques.',
@@ -87,38 +88,34 @@ const T = {
         },
       ],
     },
+    // Page d'attente anglaise : la prépa (concours français) n'existe qu'en français.
     en: {
-      titre: 'Physics and chemistry in prépa',
-      description: 'Planned syllabus for the MPSI and PCSI preparatory classes: chapters and animated practicals in preparation, from mechanics to chemical equilibria.',
+      titre: 'Prépa revision, in French',
+      description: 'Revision sheets, quizzes and exam-style exercises for the French TSI preparatory class, written in French only. MPSI, PCSI and PTSI will follow.',
       fil: 'Prépa',
       surtitre: 'Preparatory classes',
-      h1: 'Prépa is in preparation.',
-      chapo: 'The lessons and animated practicals for the first year of the science preparatory classes (prépa) are being written. Here is the planned syllabus. To revise the essential foundations, start with Terminale.',
-      cta: 'Revise Terminale',
-      classes: [
-        {
-          nom: 'MPSI',
-          chapitres: ['Particle mechanics and oscillators', 'Electric circuits in the transient regime', 'Geometrical optics', 'First and second laws of thermodynamics', 'Structure of matter and crystallography'],
-          tp: ['Simple pendulum and non-linearity', 'Series RLC circuit: free oscillations', 'Measuring the focal length of thin lenses'],
-        },
-        {
-          nom: 'PCSI',
-          chapitres: ['Chemical kinetics and mechanisms', 'Acid-base and precipitation equilibria', 'Redox reactions and E-pH diagrams', 'Mechanics of particles and rigid bodies', 'Thermodynamics of heat engines'],
-          tp: ['Method of initial rates', 'Precipitation titration', 'Cycle of a heat engine working between two reservoirs'],
-        },
-      ],
+      h1: 'Prépa revision is in French.',
+      chapo: 'The revision material for the science preparatory classes (prépa) prepares students for the French competitive entrance exams, so it is written in French only. The TSI track comes first: condensed lesson sheets, formulas to learn, quizzes and exam-style exercises with full solutions.',
+      cta: 'Open the French version',
+      classes: [],
     },
   },
 }[cycle][lang];
+// La prépa n'a pas de version anglaise : le bouton mène à la page française et aucune balise hreflang n'est émise.
+const francais = cycle === 'prepa';
 ---
 
-<Base lang={lang} titre={T.titre} description={T.description}>
+<Base lang={lang} titre={T.titre} description={T.description} sansTraduction={francais ? '/prepa/' : undefined}>
   <section class="section conteneur">
     <ol class="fil"><li><a href={lien(lang, '/')}>{u.accueil}</a></li><li aria-current="page">{T.fil}</li></ol>
-    <p class="surtitre">{T.surtitre} · {u.aVenir}</p>
+    <p class="surtitre">{T.surtitre}{!francais && ` · ${u.aVenir}`}</p>
     <h1>{T.h1}</h1>
     <p class="chapo">{T.chapo}</p>
-    <p class="actions"><a class="btn principal" href={lien(lang, '/terminale/')}>{T.cta}</a></p>
+    <p class="actions">
+      {francais
+        ? <a class="btn principal" href={lien('fr', '/prepa/')} hreflang="fr">{T.cta}</a>
+        : <a class="btn principal" href={lien(lang, '/terminale/')}>{T.cta}</a>}
+    </p>
 
     <div class="grille">
       {T.classes.map((c) => (

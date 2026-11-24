@@ -1,5 +1,81 @@
 ---
-import Vue from '../../components/vues/CycleAVenir.astro';
+// Accueil de la prépa (français seulement) : méthode de révision et filières.
+import Base from '../../layouts/Base.astro';
+import { FILIERES, lesChapitres } from '../../data/prepa';
+import { UI, lien } from '../../i18n';
+
+const u = UI.fr;
+const nombres = Object.fromEntries(await Promise.all(FILIERES.map(async (f) => [f.id, (await lesChapitres(f.id)).length] as const)));
+const METHODE = [
+  { titre: 'La fiche', texte: "Le cours condensé : définitions, résultats encadrés, démonstrations clés, méthodes et pièges classiques." },
+  { titre: 'Les exercices', texte: 'Deux ou trois exercices originaux dans l\'esprit des concours (CCINP, Centrale-Supélec, e3a-Polytech), corrigés en détail.' },
+  { titre: 'Les formules', texte: 'Des cartes à retourner : on lit le nom, on retrouve la formule de tête, puis on vérifie.' },
+  { titre: 'Le QCM', texte: 'Dix questions au moins, corrigées et expliquées, avec votre meilleur score gardé sur cet appareil.' },
+];
 ---
 
-<Vue lang="fr" cycle="prepa" />
+<Base
+  lang="fr"
+  titre="Prépa scientifique : réviser pour les concours"
+  description="Classes préparatoires scientifiques : fiches de cours condensées, formules à retenir, QCM corrigés et exercices type concours. La filière TSI d'abord, puis MPSI et PCSI."
+  sansTraduction="/prepa/"
+>
+  <section class="section conteneur">
+    <ol class="fil"><li><a href={lien('fr', '/')}>{u.accueil}</a></li><li aria-current="page">Prépa</li></ol>
+    <p class="surtitre">Classes préparatoires scientifiques</p>
+    <h1>Réviser la prépa, chapitre par chapitre.</h1>
+    <p class="chapo">Pour chaque chapitre du programme officiel&nbsp;: une fiche condensée, des exercices type concours corrigés, les formules à savoir par cœur et un QCM pour vérifier que tout est acquis. On commence par la filière TSI.</p>
+    <p class="actions"><a class="btn principal" href={lien('fr', '/prepa/tsi/')}>Commencer en TSI</a></p>
+  </section>
+
+  <section class="section conteneur bloc">
+    <p class="surtitre">La méthode</p>
+    <h2>Quatre temps par chapitre</h2>
+    <ol class="methode">
+      {METHODE.map((m, i) => (
+        <li>
+          <span class="num" aria-hidden="true">{i + 1}</span>
+          <h3>{m.titre}</h3>
+          <p>{m.texte}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="section conteneur bloc">
+    <p class="surtitre">Les filières</p>
+    <h2>Une filière après l'autre</h2>
+    <ul class="grille filieres">
+      {FILIERES.map((f) => {
+        const corps = (
+          <div class="carte-corps">
+            <span class:list={['etat', { dispo: f.dispo }]}>{!f.dispo ? 'Bientôt' : nombres[f.id] === 0 ? 'En relecture' : `${u.disponible} · ${nombres[f.id]} chapitre${nombres[f.id] > 1 ? 's' : ''}`}</span>
+            <h3>{f.nom}</h3>
+            <p class="intitule">{f.intitule}</p>
+            <p>{f.resume}</p>
+          </div>
+        );
+        return <li>{f.dispo ? <a class="carte" href={lien('fr', `/prepa/${f.id}/`)}>{corps}</a> : <div class="carte bientot">{corps}</div>}</li>;
+      })}
+    </ul>
+    <p class="note">Les bases de Terminale à revoir avant la rentrée&nbsp;? <a href={lien('fr', '/terminale/')}>Tout le programme de spécialité physique-chimie</a>.</p>
+  </section>
+</Base>
+
+<style>
+  .actions { margin: 1.6rem 0 0; }
+  .bloc { padding-top: 0; }
+  .methode { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 2rem 3rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .methode li { border-top: 2px solid var(--encre); padding-top: 1rem; }
+  .methode .num { font: italic 400 2.6rem/1 var(--titre); color: var(--accent); display: block; margin-bottom: .6rem; }
+  .methode p { color: var(--doux); margin: 0; }
+  .filieres { list-style: none; margin: 2rem 0 0; padding: 0; }
+  .filieres li { display: flex; }
+  .filieres .carte { flex: 1; }
+  .bientot { border-style: dashed; background: transparent; }
+  .etat { font: 600 .72rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--doux); }
+  .etat.dispo { color: var(--t-matiere); }
+  .filieres h3 { font-size: 1.7rem; }
+  .intitule { font: 600 .9rem/1.3 var(--mono); color: var(--encre) !important; }
+  .note { margin-top: 2rem; color: var(--doux); }
+</style>

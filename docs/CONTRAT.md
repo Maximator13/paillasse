@@ -178,6 +178,92 @@ Le site est bilingue : français à la racine, anglais sous `/en/` avec les mêm
 - Textes d'interface (navigation, boutons, libellés du lecteur) : dictionnaire `UI` de `src/i18n/index.ts`, une entrée par langue. Liens internes : toujours `lien(lang, '/chemin/')`, jamais de `href="/..."` en dur.
 - Vérification : planche anglaise avec `node scripts/capture.mjs "dev/planche/<slug>/?lang=en" .captures/<slug>-planche-en.png`, page avec `node scripts/capture.mjs en/terminale/tp/<slug>/ .captures/<slug>-en.png`. Aucun texte français ne doit rester sur la page.
 
+## Prépa : `src/content/prepa/<filiere>/<slug>.md`
+
+Révisions des classes préparatoires scientifiques, en **français seulement** (pas de version anglaise : la page `/en/prepa/` renvoie vers `/prepa/`). Un fichier = un chapitre du programme officiel de la filière, publié sur `/prepa/<filiere>/<slug>/`. Modèle complet à imiter : `src/content/prepa/tsi/phys1-circuits-arqs.md`. Schéma : `schemaPrepa` dans `src/content.config.ts`.
+
+Les règles générales ci-dessus s'appliquent, sauf la référence au programme : ici, c'est le **programme officiel de la classe préparatoire visée** (TSI1, TSI2...), au niveau attendu aux concours, avec les notations usuelles de prépa.
+
+### Emplacement et nom
+
+- Dossier = filière : `tsi/` (puis `mpsi/`, `pcsi/`, `ptsi/`... quand ces filières ouvriront).
+- Nom du fichier : `<prefixe><annee>-<nom-court>.md`, en minuscules, chiffres et tirets. Préfixes : `phys` (physique), `chim` (chimie), `maths`, `si` (sciences de l'ingénieur) ; année `1` ou `2`. Exemples : `phys1-circuits-arqs.md`, `chim2-diagrammes-e-ph.md`, `maths1-suites-reelles.md`, `si2-asservissements.md`. Le nom est unique dans la filière et ne change plus une fois publié (il sert d'adresse et de clé de score).
+
+### Frontmatter
+
+| Champ | Contenu |
+|---|---|
+| `titre` | Titre court du chapitre, sans la classe ni la matière (ajoutées par la page). |
+| `description` | 50 à 170 caractères, unique sur tout le site, sans redite du titre : ce que le chapitre couvre. |
+| `filiere` | `tsi` (identique au dossier). |
+| `annee` | `1` ou `2` (identique au chiffre du préfixe). |
+| `matiere` | `physique`, `chimie`, `maths` ou `si` (cohérent avec le préfixe). |
+| `partie` | Intitulé de la partie du programme officiel (ex. `"Électrocinétique"`), **écrit à l'identique** pour tous les chapitres de la même partie : la page de la filière regroupe par cette chaîne. |
+| `ordre` | Rang du chapitre dans sa matière et son année (1, 2, 3...), selon la progression du programme. Fixe aussi les liens « chapitre précédent / suivant ». |
+| `duree` | Temps de révision indicatif, ex. `"45 min"`. |
+| `motsCles` | 5 à 10 notions clés. |
+| `relu` | `true` seulement après une relecture indépendante (exactitude, programme, QCM, corrigés recalculés). Absent ou `false` : le chapitre est visible en développement mais **pas publié**. Le rédacteur ne le met jamais. |
+| `formules` | **Au moins 6** cartes `{ nom, formule, conditions? }`. |
+| `qcm` | **Au moins 10** questions `{ question, choix, reponse, explication }`. |
+
+Formules (`formules`) :
+
+- `nom` : ce que l'élève doit retrouver (« Pont diviseur de tension »), sans donner la formule. Recto de la carte.
+- `formule` : LaTeX **sans délimiteurs** (ni `$` ni `$$`), affiché en bloc sur une carte d'environ 250 px de large : une relation courte par ligne. Plusieurs relations sur une carte : `\begin{gathered} u = R\,i \\ i = C\,\frac{\mathrm{d}u}{\mathrm{d}t} \end{gathered}`, jamais côte à côte avec `\qquad`. Une forme équivalente ou un commentaire va dans `conditions`, pas dans la formule.
+- `conditions` (facultatif mais attendu) : hypothèses de validité, conventions, unités ; texte avec LaTeX en ligne entre `$...$`.
+
+QCM (`qcm`) :
+
+- `question` : énoncé autonome (pas de « voir le cours »), LaTeX en ligne entre `$...$` admis.
+- `choix` : 3 à 5 réponses distinctes, plausibles, de longueur comparable ; les distracteurs correspondent à des erreurs réelles (signe, facteur 2, hypothèse oubliée).
+- `reponse` : **index** de la bonne réponse dans `choix`, en partant de **0**. Varier la position de la bonne réponse d'une question à l'autre.
+- `explication` : pourquoi la bonne réponse est juste et, si utile, pourquoi le piège principal est faux. Calcul détaillé quand il y en a un.
+- Couvrir tout le chapitre : définitions, conditions de validité, applications numériques, pièges classiques.
+
+Écriture YAML (source d'erreurs n°1) :
+
+- Toujours des **guillemets simples** autour des chaînes qui contiennent du LaTeX : `'$u = R\,i$'`. Entre guillemets doubles, `\t`, `\f`, `\r`, `\n` deviennent des caractères de contrôle (`\theta`, `\frac`, `\rho`, `\nu` cassés). Dans une chaîne entre guillemets simples, l'apostrophe se double : `'l''intensité'`.
+- `$` est réservé au LaTeX : un nombre impair de `$` dans une chaîne fait échouer la page et le test.
+- Mêmes conventions qu'en cours : unités en `\mathrm{}` séparées par `\ `, virgule décimale `{,}`, puissances de dix `\times 10^{-3}`. Fraction dans un texte en ligne : `\dfrac` si elle doit rester lisible.
+
+### Corps
+
+Dans cet ordre, sans titre `#` :
+
+1. `> **L'essentiel.** ...` : 3 à 5 phrases qui disent ce qu'il faut absolument savoir faire.
+2. La **fiche de cours condensée** : sections `## 1. ...`, `## 2. ...` (4 à 7) qui suivent le programme officiel, puis `## Méthodes` (liste numérotée de savoir-faire) et `## Pièges classiques` (liste). Définitions, lois et résultats à connaître encadrés en citation (`> **Définition.** ...`, `> **Loi des nœuds.** ...`), formules en bloc selon la règle des citations ci-dessus. Lisibilité sur téléphone : une équation par ligne dans un bloc (`\begin{aligned} a &= ... \\ b &= ... \end{aligned}` plutôt que deux équations séparées par `\qquad`), calcul long coupé après un signe `=`, et commentaire en texte sous le bloc plutôt que `\text{...}` à droite de la formule. Démonstrations clés en quelques lignes, ordres de grandeur, tableaux récapitulatifs. Dense : 1200 à 2000 mots pour la fiche.
+3. `## Exercices type concours` : **dernière section** `##` du fichier, avec 2 ou 3 exercices de difficulté croissante, chacun sous la forme exacte :
+
+```markdown
+### Exercice 1 : Titre court (facile, 15 min)
+
+Énoncé, questions numérotées 1., 2., 3.
+
+<details>
+<summary>Corrigé</summary>
+
+**1.** Corrigé détaillé, avec les étapes de calcul et les applications numériques.
+
+</details>
+```
+
+- Niveau : `facile`, `moyen` ou `difficile` ; durée en minutes (`15 min`). Numérotation 1, 2, 3 sans trou.
+- Un seul `<details>` par exercice, avec `<summary>Corrigé</summary>` exactement ; une ligne vide après `<summary>` et avant `</details>`.
+- Énoncés **originaux** dans l'esprit des épreuves de la filière (pour TSI : CCINP, Centrale-Supélec, e3a-Polytech) : situation concrète, questions progressives, au moins une application numérique et une question d'interprétation. **Jamais de copie ni de paraphrase d'annales** ou de manuels (droit d'auteur).
+- Corrigé complet : chaque résultat justifié, valeurs numériques recalculées et cohérentes avec l'énoncé (chiffres significatifs), contrôle d'homogénéité ou de cas limite quand il s'impose.
+
+Pas d'image externe, pas de HTML hors `<details>` et `<summary>`.
+
+### Ce que la page génère (ne pas l'écrire)
+
+Fil d'Ariane, titre, sommaire (Fiche, Exercices, Formules à retenir, Testez-vous), cartes recto-verso des formules (`<details>` natif), QCM corrigé dans la page (meilleur score gardé dans le navigateur, clé `paillasse-qcm-<slug>`), liens vers les chapitres précédent et suivant de la même matière et de la même année.
+
+### Vérification obligatoire
+
+1. `node --test src/content/prepa/chapitres.test.ts` : tout vert. Le test contrôle le nom et l'emplacement, la cohérence préfixe / `matiere` / `annee`, l'unicité des descriptions, le nombre de formules (6 au moins) et de questions (10 au moins), les bornes de `reponse`, le LaTeX (rendu KaTeX de chaque chaîne), les caractères de contrôle, l'ordre du corps, le format des titres d'exercices et leurs `<details>`, l'absence de tiret cadratin ou demi-cadratin.
+2. Page réelle, regardée dans les deux thèmes et en mobile : `node scripts/capture.mjs prepa/tsi/<slug>/ .captures/<slug>.png` puis `--sombre` et `--mobile`. Ouvrir les images : formules du corps et des cartes lisibles, tableaux non tronqués, aucune `ERREURS CONSOLE`.
+3. Relire chaque application numérique de la fiche, des exercices et du QCM : une erreur dans un corrigé coûte plus cher qu'un chapitre manquant.
+
 ## Fichiers de référence
 
 | Fichier | Rôle |

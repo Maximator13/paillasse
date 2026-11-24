@@ -1,0 +1,157 @@
+---
+// QCM corrigé dans la page : boutons radio, correction question par question, score, meilleur score mémorisé.
+// Sans JavaScript, les questions restent lisibles ; la correction demande le script ci-dessous.
+import { texteMaths } from '../lib/maths';
+
+interface Props {
+  /** Identifiant stable (slug du chapitre) : clé localStorage paillasse-qcm-<id>. */
+  id: string;
+  questions: { question: string; choix: string[]; reponse: number; explication: string }[];
+}
+const { id, questions } = Astro.props;
+const LETTRES = 'ABCDE';
+---
+
+<form class="qcm" data-qcm={id} data-lettres={LETTRES} novalidate>
+  <p class="consigne">{questions.length} questions, une seule bonne réponse par question. Répondez à tout, puis corrigez.</p>
+  <ol class="questions">
+    {questions.map((q, i) => (
+      <li>
+        <fieldset data-reponse={q.reponse}>
+          <legend><span class="num">Question {i + 1}</span> <span set:html={texteMaths(q.question)} /></legend>
+          <div class="choix">
+            {q.choix.map((c, j) => (
+              <label>
+                <input type="radio" name={`${id}-q${i}`} value={j} />
+                <span class="lettre" aria-hidden="true">{LETTRES[j]}</span>
+                <span class="sr">{LETTRES[j]}.</span>
+                <span class="texte" set:html={texteMaths(c)} />
+              </label>
+            ))}
+          </div>
+          <p class="verdict" hidden></p>
+          <p class="explication" hidden><strong>Explication.</strong> <span set:html={texteMaths(q.explication)} /></p>
+        </fieldset>
+      </li>
+    ))}
+  </ol>
+  <div class="bilan">
+    <p class="score" data-score aria-live="polite" tabindex="-1"></p>
+    <p class="meilleur" data-meilleur hidden></p>
+    <div class="actions">
+      <button type="submit" class="btn principal" data-corriger>Corriger</button>
+      <button type="button" class="btn" data-recommencer hidden>Recommencer</button>
+    </div>
+  </div>
+</form>
+
+<script>
+  const lire = (cle: string) => { try { return localStorage.getItem(cle); } catch { return null; } };
+  const ecrire = (cle: string, v: string) => { try { localStorage.setItem(cle, v); } catch {} };
+
+  for (const form of document.querySelectorAll<HTMLFormElement>('form[data-qcm]')) {
+    const cle = `paillasse-qcm-${form.dataset.qcm}`;
+    const lettres = form.dataset.lettres!;
+    const questions = [...form.querySelectorAll<HTMLFieldSetElement>('fieldset')];
+    const total = questions.length;
+    const score = form.querySelector<HTMLElement>('[data-score]')!;
+    const meilleur = form.querySelector<HTMLElement>('[data-meilleur]')!;
+    const corriger = form.querySelector<HTMLButtonElement>('[data-corriger]')!;
+    const recommencer = form.querySelector<HTMLButtonElement>('[data-recommencer]')!;
+
+    const afficherMeilleur = () => {
+      const m = lire(cle);
+      meilleur.hidden = m === null;
+      if (m !== null) meilleur.textContent = `Votre meilleur score : ${m} / ${total}.`;
+    };
+    afficherMeilleur();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let n = 0;
+      for (const q of questions) {
+        const bonne = q.dataset.reponse!;
+        const choisi = q.querySelector<HTMLInputElement>('input:checked')?.value;
+        const juste = choisi === bonne;
+        if (juste) n++;
+        q.dataset.etat = juste ? 'juste' : 'faux';
+        for (const input of q.querySelectorAll<HTMLInputElement>('input')) {
+          input.disabled = true;
+          const label = input.closest('label')!;
+          label.dataset.marque = input.value === bonne ? 'bonne' : input.value === choisi ? 'choisie' : '';
+        }
+        const verdict = q.querySelector<HTMLElement>('.verdict')!;
+        const lettre = lettres[Number(bonne)];
+        verdict.textContent = juste ? 'Juste.' : `${choisi === undefined ? 'Sans réponse' : 'Faux'}. La bonne réponse est ${lettre}.`;
+        verdict.hidden = false;
+        q.querySelector<HTMLElement>('.explication')!.hidden = false;
+      }
+      const avant = lire(cle);
+      const record = avant === null || n > Number(avant);
+      if (record) ecrire(cle, String(n));
+      score.textContent = `Score : ${n} / ${total}.${record && avant !== null ? ' Nouveau meilleur score.' : ''} Les explications sont affichées sous chaque question.`;
+      afficherMeilleur();
+      corriger.hidden = true;
+      recommencer.hidden = false;
+      score.focus();
+    });
+
+    recommencer.addEventListener('click', () => {
+      form.reset();
+      for (const q of questions) {
+        delete q.dataset.etat;
+        for (const input of q.querySelectorAll<HTMLInputElement>('input')) {
+          input.disabled = false;
+          delete input.closest('label')!.dataset.marque;
+        }
+        q.querySelector<HTMLElement>('.verdict')!.hidden = true;
+        q.querySelector<HTMLElement>('.explication')!.hidden = true;
+      }
+      score.textContent = '';
+      corriger.hidden = false;
+      recommencer.hidden = true;
+      questions[0]?.scrollIntoView({ block: 'start' });
+      questions[0]?.querySelector('input')?.focus({ preventScroll: true });
+    });
+  }
+</script>
+
+<style>
+  .qcm { --ok: var(--t-matiere); --ko: var(--t-energie); max-width: 72ch; }
+  .qcm [hidden] { display: none !important; }
+  .consigne { color: var(--doux); }
+  .questions { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; }
+  fieldset { margin: 0; padding: 1rem 1.1rem 1.1rem; border: 1.5px solid var(--ligne); border-radius: var(--rayon); background: var(--surface); min-width: 0; }
+  fieldset[data-etat='juste'] { border-color: var(--ok); }
+  fieldset[data-etat='faux'] { border-color: var(--ko); }
+  legend { padding: 0 .3rem; margin-left: -.3rem; font-weight: 600; float: left; width: 100%; margin-bottom: .8rem; }
+  legend + * { clear: both; }
+  .num { display: block; font: 600 .75rem/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--doux); margin-bottom: .25rem; }
+  .choix { display: grid; gap: .45rem; }
+  label { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .7rem; min-height: 44px; padding: .45rem .7rem; border: 1px solid var(--ligne); border-radius: 8px; cursor: pointer; background: var(--fond); overflow-x: auto; }
+  label:hover { border-color: var(--doux); }
+  label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  input { accent-color: var(--accent); width: 1.15rem; height: 1.15rem; margin: 0; flex: none; }
+  input:disabled { cursor: default; }
+  label:has(input:disabled) { cursor: default; }
+  .lettre { flex: none; font: 600 .85rem/1 var(--mono); color: var(--doux); }
+  /* Le texte occupe la ligne ; faute de place, le badge de correction passe dessous au lieu de l'écraser. */
+  .texte { flex: 1 1 12rem; min-width: 0; }
+  /* Préfixe .qcm : la correction l'emporte sur le style de la case cochée. */
+  .qcm label[data-marque='bonne'] { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); background: color-mix(in srgb, var(--ok) 10%, var(--fond)); }
+  .qcm label[data-marque='choisie'] { border-color: var(--ko); box-shadow: inset 0 0 0 1px var(--ko); background: color-mix(in srgb, var(--ko) 10%, var(--fond)); }
+  label[data-marque]:not([data-marque=''])::after { margin-left: auto; padding-left: .6rem; font: 600 .72rem/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+  label[data-marque='bonne']::after { content: 'Bonne réponse'; color: var(--ok); }
+  label[data-marque='choisie']::after { content: 'Votre réponse'; color: var(--ko); }
+  .verdict { margin: .9rem 0 .3rem; font-weight: 650; }
+  [data-etat='juste'] .verdict { color: var(--ok); }
+  [data-etat='faux'] .verdict { color: var(--ko); }
+  .explication { margin: 0; color: var(--encre); }
+  .bilan { margin-top: 1.5rem; display: grid; gap: .6rem; }
+  .score { margin: 0; font: 600 1.15rem/1.4 var(--texte); }
+  .score:empty { display: none; }
+  .score:focus { outline: none; }
+  .meilleur { margin: 0; color: var(--doux); }
+  .actions { display: flex; flex-wrap: wrap; gap: .8rem; }
+</style>
